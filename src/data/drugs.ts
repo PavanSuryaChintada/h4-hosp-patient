@@ -110,3 +110,85 @@ export const DRUGS: Drug[] = [
 ];
 
 export const DRUG: Record<string, Drug> = Object.fromEntries(DRUGS.map((d) => [d.code, d]));
+
+export type TableSeverity = 'major' | 'moderate' | 'minor';
+/** renal: worse at low eGFR · bleed: worse at age 75+ or weight under 50 kg · cns: worse at age 65+ · elderly: worse at age 75+ */
+export type Modifier = '' | 'renal' | 'bleed' | 'cns' | 'elderly';
+
+export type Interaction = {
+  id: string;
+  a: string; // drug code, or @CLASS
+  b: string;
+  severity: TableSeverity;
+  mod: Modifier;
+  mechanism: string;
+  action: string; // {a} and {b} are filled with the matched drug names
+};
+
+const I = (id: string, a: string, b: string, severity: TableSeverity, mod: Modifier, mechanism: string, action: string): Interaction =>
+  ({ id, a, b, severity, mod, mechanism, action });
+
+export const INTERACTIONS: Interaction[] = [
+  I('WAR-NSAID-01', 'WAR', '@NSAID', 'major', 'bleed', 'NSAID adds platelet inhibition and gastric erosion to anticoagulation', 'Stop {b}; use paracetamol for pain'),
+  I('WAR-ASA-01', 'WAR', 'ASA', 'major', 'bleed', 'Anticoagulant plus antiplatelet: bleeding risk', 'Confirm aspirin is indicated alongside warfarin'),
+  I('WAR-CLO-01', 'WAR', 'CLO', 'major', 'bleed', 'Anticoagulant plus antiplatelet: bleeding risk', 'Confirm clopidogrel is indicated alongside warfarin'),
+  I('WAR-FLU-01', 'WAR', 'FLU', 'major', '', 'Fluconazole inhibits CYP2C9 and raises INR', 'Switch fluconazole to topical clotrimazole, or check INR within 3 days'),
+  I('WAR-MTZ-01', 'WAR', 'MTZ', 'major', '', 'Metronidazole inhibits warfarin metabolism and raises INR', 'Check INR within 3 days of starting metronidazole'),
+  I('WAR-CLR-01', 'WAR', 'CLR', 'major', '', 'Clarithromycin inhibits warfarin metabolism and raises INR', 'Check INR within 3 days of starting clarithromycin'),
+  I('WAR-AMI-01', 'WAR', 'AMI', 'major', '', 'Amiodarone inhibits CYP2C9 and raises INR', 'Reduce warfarin by a third and check INR weekly'),
+  I('WAR-PHE-01', 'WAR', 'PHE', 'major', '', 'Phenytoin alters warfarin metabolism unpredictably', 'Check INR twice weekly until stable'),
+  I('WAR-FQ-01', 'WAR', '@FQ', 'moderate', 'bleed', 'Fluoroquinolones raise INR', 'Check INR within 3 days of starting {b}'),
+  I('WAR-SSRI-01', 'WAR', '@SSRI', 'moderate', 'bleed', 'SSRIs impair platelet function', 'Check INR at 1 week; watch for bleeding'),
+  I('WAR-PRD-01', 'WAR', 'PRD', 'moderate', 'bleed', 'Steroid adds GI bleeding risk and can shift INR', 'Check INR within 1 week; add gastric protection'),
+  I('WAR-AMC-01', 'WAR', 'AMC', 'moderate', 'bleed', 'Antibiotic course can raise INR', 'Check INR at the end of the course'),
+  I('WAR-PCM-01', 'WAR', 'PCM', 'minor', '', 'Regular paracetamol above 2 g/day can raise INR', 'Keep paracetamol at or below 2 g/day'),
+
+  I('NSAID-ACEI-01', '@NSAID', '@ACEI', 'major', 'renal', 'NSAID reduces renal perfusion under ACE inhibition: acute kidney injury', 'Stop {a}; check creatinine'),
+  I('NSAID-ARB-01', '@NSAID', '@ARB', 'major', 'renal', 'NSAID reduces renal perfusion under angiotensin blockade: acute kidney injury', 'Stop {a}; check creatinine'),
+  I('NSAID-KSP-01', '@NSAID', 'SPI', 'moderate', 'renal', 'NSAID with potassium-sparing diuretic: hyperkalaemia and renal impairment', 'Stop {a}; check potassium'),
+  I('NSAID-LOOP-01', '@NSAID', '@LOOP', 'moderate', 'renal', 'NSAID blunts the diuretic; with an ACE inhibitor it completes the triple-whammy kidney injury pattern', 'Stop {a}; check creatinine'),
+  I('NSAID-THZ-01', '@NSAID', '@THZ', 'moderate', 'renal', 'NSAID blunts the diuretic and reduces renal perfusion', 'Stop {a}; check creatinine'),
+  I('NSAID-ASA-01', '@NSAID', 'ASA', 'moderate', 'bleed', 'Two NSAID-class agents: GI bleeding, and ibuprofen blocks the antiplatelet effect of aspirin', 'Stop {a}; add gastric protection if both are needed'),
+  I('NSAID-CLO-01', '@NSAID', 'CLO', 'moderate', 'bleed', 'NSAID with antiplatelet: GI bleeding', 'Stop {a}; use paracetamol for pain'),
+  I('NSAID-PRD-01', '@NSAID', 'PRD', 'moderate', 'bleed', 'NSAID with steroid: GI ulceration', 'Add a proton pump inhibitor, or stop {a}'),
+  I('NSAID-MTX-01', '@NSAID', 'MTX', 'major', 'renal', 'NSAID reduces methotrexate clearance: marrow toxicity', 'Stop {a}; check blood count'),
+  I('NSAID-LIT-01', '@NSAID', 'LIT', 'major', 'renal', 'NSAID raises lithium levels', 'Stop {a}; check lithium level within 1 week'),
+  I('NSAID-SSRI-01', '@NSAID', '@SSRI', 'moderate', 'bleed', 'NSAID with SSRI: GI bleeding', 'Stop {a}, or add a proton pump inhibitor'),
+
+  I('ACEI-KSP-01', '@ACEI', 'SPI', 'major', 'renal', 'ACE inhibitor with potassium-sparing diuretic: hyperkalaemia', 'Check potassium within 1 week'),
+  I('ARB-KSP-01', '@ARB', 'SPI', 'major', 'renal', 'ARB with potassium-sparing diuretic: hyperkalaemia', 'Check potassium within 1 week'),
+  I('ACEI-ARB-01', '@ACEI', '@ARB', 'major', 'renal', 'Dual renin-angiotensin blockade: hyperkalaemia and kidney injury, no added benefit', 'Stop one of {a} or {b}'),
+  I('ACEI-LIT-01', '@ACEI', 'LIT', 'major', 'renal', 'ACE inhibitor reduces lithium clearance', 'Check lithium level within 1 week'),
+  I('ARB-LIT-01', '@ARB', 'LIT', 'major', 'renal', 'ARB reduces lithium clearance', 'Check lithium level within 1 week'),
+  I('THZ-LIT-01', '@THZ', 'LIT', 'major', 'renal', 'Thiazide reduces lithium clearance', 'Check lithium level within 1 week'),
+  I('ACEI-LOOP-01', '@ACEI', '@LOOP', 'minor', '', 'First-dose hypotension', 'Check standing blood pressure'),
+  I('ARB-LOOP-01', '@ARB', '@LOOP', 'minor', '', 'First-dose hypotension', 'Check standing blood pressure'),
+  I('ARB-THZ-01', '@ARB', '@THZ', 'minor', '', 'Additive blood pressure lowering', 'Check standing blood pressure'),
+  I('ACEI-SU-01', '@ACEI', '@SU', 'minor', '', 'ACE inhibitor may enhance hypoglycaemia', 'Advise on hypoglycaemia symptoms'),
+  I('ACEI-INS-01', '@ACEI', 'INS', 'minor', '', 'ACE inhibitor may enhance hypoglycaemia', 'Advise on hypoglycaemia symptoms'),
+  I('ASA-ACEI-01', 'ASA', '@ACEI', 'minor', '', 'Aspirin at analgesic doses can blunt ACE inhibitor effect', 'No change at 75 mg'),
+  I('BB-CCB-01', '@BB', 'AML', 'minor', '', 'Additive blood pressure lowering', 'Check standing blood pressure'),
+];
+
+const matches = (ref: string, code: string) =>
+  ref.startsWith('@') ? DRUG[code].cls === ref.slice(1) : ref === code;
+
+/** Find the rule for a pair, returning the drugs in rule order. */
+export function findInteraction(x: string, y: string): { rule: Interaction; a: string; b: string } | null {
+  const sameClass = DRUG[x].cls === DRUG[y].cls;
+  for (const rule of INTERACTIONS) {
+    if (sameClass && rule.a === rule.b) continue;
+    if (matches(rule.a, x) && matches(rule.b, y)) return { rule, a: x, b: y };
+    if (matches(rule.a, y) && matches(rule.b, x)) return { rule, a: y, b: x };
+  }
+  return null;
+}
+
+/** How many concrete drug pairs the class-level rules expand to. */
+export const EXPANDED_PAIR_COUNT = (() => {
+  let n = 0;
+  for (let i = 0; i < DRUGS.length; i++)
+    for (let j = i + 1; j < DRUGS.length; j++)
+      if (findInteraction(DRUGS[i].code, DRUGS[j].code)) n++;
+  return n;
+})();
