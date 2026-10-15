@@ -189,7 +189,7 @@ export function analyse(p: Patient): Analysis {
   const collapsed = [
     ...clusters,
     ...all.filter((x) => x.severity !== 'low' && !folded.has(x.key)),
-  ].sort(byPriority);
+  ].sort(byPriority).slice(0, 5);
 
   const unresolved = p.meds.length - resolved.length;
   const top = collapsed[0]?.severity ?? 'cleared';
