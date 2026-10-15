@@ -207,3 +207,32 @@ export function analyse(p: Patient): Analysis {
 
 export const ANALYSES: Analysis[] = PATIENTS.map(analyse);
 export const BY_ID: Record<string, Analysis> = Object.fromEntries(ANALYSES.map((x) => [x.patient.id, x]));
+
+// ---- cohort metrics -------------------------------------------------------
+
+const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
+const countBy = (alerts: Alert[], sev: Severity) => alerts.filter((x) => x.severity === sev).length;
+
+const everyAll = ANALYSES.flatMap((x) => x.all);
+const everyCollapsed = ANALYSES.flatMap((x) => x.collapsed);
+
+export const RESOLUTION_ROWS = PATIENTS.flatMap((p) => p.meds.map((m) => ({ patient: p.id, ...m })));
+const fuzzy = RESOLUTION_ROWS.filter((r) => r.method === 'fuzzy');
+
+export const METRICS = {
+  patients: PATIENTS.length,
+  alertsBefore: mean(ANALYSES.map((x) => x.all.length)),
+  alertsAfter: mean(ANALYSES.map((x) => x.collapsed.length)),
+  bySeverity: (['high', 'medium', 'low'] as Severity[]).map((sev) => ({
+    sev, before: countBy(everyAll, sev), after: countBy(everyCollapsed, sev),
+  })),
+  totalBefore: everyAll.length,
+  totalAfter: everyCollapsed.length,
+  resolution: {
+    total: RESOLUTION_ROWS.length,
+    exact: RESOLUTION_ROWS.filter((r) => r.method === 'exact').length,
+    fuzzy: fuzzy.length,
+    abstained: RESOLUTION_ROWS.filter((r) => r.method === 'abstained').length,
+    fuzzyCorrect: fuzzy.filter((r) => !r.truth).length,
+  },
+};
