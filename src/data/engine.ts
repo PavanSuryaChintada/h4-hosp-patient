@@ -1,7 +1,7 @@
 // Deterministic rule pass over the hardcoded cohort. Runs once at import time;
 // the output is the same on every load, so every screen agrees with every other.
 
-import { DRUG, findInteraction, type Modifier, type TableSeverity } from './drugs';
+import { CLASS_LABEL, DRUG, DUPLICATE_CLASSES, findInteraction, type Modifier, type TableSeverity } from './drugs';
 import { PATIENTS, type Patient } from './patients';
 
 export type Severity = 'high' | 'medium' | 'low';
@@ -85,7 +85,60 @@ export function analyse(p: Patient): Analysis {
     }
   }
 
-  const all = interactions.slice().sort(byPriority);
+  // Renal dose vs eGFR
+  const renal: Alert[] = [];
+  for (const code of generics) {
+    const r = DRUG[code].renal;
+    if (!r) continue;
+    let severity: Severity = 'low';
+    let action = `No adjustment at eGFR ${p.egfr}; recheck yearly`;
+    if (r.stop !== undefined && p.egfr < r.stop) { severity = 'high'; action = r.stopText!; }
+    else if (p.egfr < r.reduce) { severity = p.egfr < 30 ? 'high' : 'medium'; action = r.reduceText; }
+    renal.push({
+      key: `renal:${code}`, kind: 'renal', type: 'Renal dose', drugs: [code],
+      action: action.replace('{e}', String(p.egfr)), source: `Renal rule ${code}-R`,
+      tableSeverity: 'renal flag', severity, rescored: `eGFR ${p.egfr}`, confidence: conf[code],
+    });
+  }
+
+  // Duplicate therapy: the same generic twice, or two of one class
+  const dupes: Alert[] = [];
+  for (const code of generics) {
+    const entries = resolved.filter((m) => m.code === code);
+    if (entries.length < 2) continue;
+    dupes.push({
+      key: `dup:${code}`, kind: 'duplicate', type: 'Duplicate therapy', drugs: [code, code],
+      action: `Keep one ${name(code)} product: "${entries[0].raw}" and "${entries[1].raw}" are the same drug`,
+      source: 'Duplicate rule: same generic', tableSeverity: 'duplicate', severity: 'medium',
+      confidence: Math.min(...entries.map((m) => m.confidence)),
+    });
+  }
+  for (const cls of DUPLICATE_CLASSES) {
+    const same = generics.filter((c) => DRUG[c].cls === cls);
+    if (same.length < 2) continue;
+    dupes.push({
+      key: `dupcls:${cls}`, kind: 'duplicate', type: 'Duplicate therapy', drugs: same,
+      action: `Keep one ${CLASS_LABEL[cls]}: ${same.map(name).join(' and ')}`,
+      source: `Duplicate rule: same class (${CLASS_LABEL[cls]})`, tableSeverity: 'duplicate', severity: 'medium',
+      confidence: Math.min(...same.map((c) => conf[c])),
+    });
+  }
+
+  // Pregnancy
+  const preg: Alert[] = [];
+  if (p.pregnant) {
+    for (const code of generics) {
+      const rule = DRUG[code].preg;
+      if (!rule) continue;
+      preg.push({
+        key: `preg:${code}`, kind: 'pregnancy', type: 'Pregnancy', drugs: [code], action: rule.text,
+        source: `Pregnancy rule ${code}-P`, tableSeverity: rule.level === 'avoid' ? 'contraindicated' : 'caution',
+        severity: rule.level === 'avoid' ? 'high' : 'medium', confidence: conf[code],
+      });
+    }
+  }
+
+  const all = [...interactions, ...renal, ...dupes, ...preg].sort(byPriority);
 
   const serious = interactions.filter((x) => x.severity === 'high');
   const anchors: string[] = [];
