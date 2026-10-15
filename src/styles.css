@@ -92,6 +92,27 @@ h1, h2, h3, p { margin: 0; }
 .page-head { margin-bottom: 16px; }
 .page-head .meta { margin-top: 4px; }
 
+/* ---- panels & tables ------------------------------------------------- */
+
+.panel { background: var(--paper); border: var(--border); }
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 16px; border-bottom: var(--border);
+}
+
+table.t { width: 100%; border-collapse: collapse; background: var(--paper); }
+.t th {
+  height: 32px; padding: 0 12px; text-align: left; white-space: nowrap;
+  font-size: 11px; line-height: 14px; font-weight: 500; color: var(--ink-2);
+  border-bottom: 1px solid var(--hairline-firm); background: var(--paper);
+}
+.t th.num { text-align: right; }
+.t td { height: 40px; padding: 0 12px; border-bottom: var(--border); vertical-align: middle; }
+.t tbody tr:last-child td { border-bottom: 0; }
+.t tr.click { cursor: pointer; }
+.t tr.click:hover td { background: var(--canvas); }
+.t tr.click:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
 /* ---- status ----------------------------------------------------------- */
 
 .sev { position: relative; padding-left: 16px !important; white-space: nowrap; }
