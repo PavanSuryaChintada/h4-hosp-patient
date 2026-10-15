@@ -46,6 +46,7 @@ const byPriority = (x: Alert, y: Alert) =>
   SEV_RANK[x.severity] - SEV_RANK[y.severity] || KIND_RANK[x.kind] - KIND_RANK[y.kind] || y.confidence - x.confidence;
 
 const fill = (tpl: string, a: string, b: string) => tpl.replace('{a}', name(a)).replace('{b}', name(b));
+const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
 function rescore(sev: TableSeverity, mod: Modifier, p: Patient): [Severity, string?] {
   if (sev === 'minor') return ['low'];
@@ -140,10 +141,55 @@ export function analyse(p: Patient): Analysis {
 
   const all = [...interactions, ...renal, ...dupes, ...preg].sort(byPriority);
 
+  // Collapse: the drug whose removal clears the most serious edges. Only drugs the rule
+  // table marks as stoppable can anchor a cluster — warfarin or lithium never will.
   const serious = interactions.filter((x) => x.severity === 'high');
+  const folded = new Set<string>();
+  const clusters: Alert[] = [];
   const anchors: string[] = [];
-  const clearedByAnchor = 0;
-  const collapsed = all.filter((x) => x.severity !== 'low');
+  let open = serious.slice();
+  let clearedByAnchor = 0;
+  for (let round = 0; round < 2; round++) {
+    const deg: Record<string, number> = {};
+    for (const x of open) for (const d of x.drugs) deg[d] = (deg[d] ?? 0) + 1;
+    const anchor = generics
+      .filter((c) => DRUG[c].stop && (deg[c] ?? 0) >= 2)
+      .sort((x, y) => deg[y] - deg[x] || (DRUG[y].stopRank ?? 0) - (DRUG[x].stopRank ?? 0))[0];
+    if (!anchor) break;
+
+    const cleared = open.filter((x) => x.drugs.includes(anchor));
+    const partners = cleared.map((x) => x.drugs.find((d) => d !== anchor)!);
+    const remainingInside = open.filter((x) => !x.drugs.includes(anchor) && x.drugs.every((d) => partners.includes(d)));
+    const notes: string[] = [];
+
+    for (const x of interactions) if (x.drugs.includes(anchor) && x.severity !== 'low') folded.add(x.key);
+    const mediums = interactions.filter((x) => x.drugs.includes(anchor) && x.severity === 'medium');
+    if (mediums.length) notes.push(`Also clears ${mediums.map((x) => `${name(anchor)} + ${name(x.drugs.find((d) => d !== anchor)!)}`).join(', ')} (medium).`);
+    const anchorRenal = renal.find((x) => x.drugs[0] === anchor && x.severity !== 'low');
+    if (anchorRenal) { folded.add(anchorRenal.key); notes.push(`Also flagged by the renal rule at eGFR ${p.egfr}.`); }
+    if (remainingInside.length === 1) {
+      const r = remainingInside[0];
+      folded.add(r.key);
+      notes.push(`Remaining: ${name(r.drugs[0])} + ${name(r.drugs[1])}, ${lowerFirst(r.action)}.`);
+    }
+
+    const involved = [anchor, ...partners];
+    clusters.push({
+      key: `cluster:${anchor}`, kind: 'cluster', type: 'Interaction cluster', drugs: involved,
+      action: `${DRUG[anchor].stop} — clears ${cleared.length} of the ${serious.length} serious interactions`,
+      note: notes.join(' '), source: `Graph collapse over ${cleared.map((x) => x.source.replace('Matched ', '')).join(', ')}`,
+      tableSeverity: cleared.some((x) => x.tableSeverity === 'major') ? 'major' : 'moderate', severity: 'high',
+      confidence: Math.min(...involved.map((c) => conf[c])),
+    });
+    anchors.push(anchor);
+    if (round === 0) clearedByAnchor = cleared.length;
+    open = open.filter((x) => !x.drugs.includes(anchor) && !folded.has(x.key));
+  }
+
+  const collapsed = [
+    ...clusters,
+    ...all.filter((x) => x.severity !== 'low' && !folded.has(x.key)),
+  ].sort(byPriority);
 
   const unresolved = p.meds.length - resolved.length;
   const top = collapsed[0]?.severity ?? 'cleared';
