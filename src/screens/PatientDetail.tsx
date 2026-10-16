@@ -64,6 +64,10 @@ export function PatientDetail() {
       ? `${x.serious} interactions → 1 change, not ${x.serious} alerts.`
       : `${x.serious} serious interaction${x.serious > 1 ? 's' : ''}. No single drug the rule table allows stopping clears more than one.`;
 
+  const limits = x.collapsed.length === 0 && x.unresolved === 0
+    ? `No issue was found in the ${p.meds.length} medicines listed. This list may be incomplete. A clinician decides.`
+    : `Checked ${x.checked} of the ${p.meds.length} medicines listed${x.unresolved ? `; ${x.unresolved} could not be resolved and was not checked` : ''}. Only issues in the rule tables are shown. This list may be incomplete. A clinician decides.`;
+
   return (
     <div className="content">
       <section className="strip" aria-label="Patient summary">
@@ -155,6 +159,8 @@ export function PatientDetail() {
           ))}
         </section>
       </div>
+
+      <footer className="limits" role="note">{limits}</footer>
     </div>
   );
 }
