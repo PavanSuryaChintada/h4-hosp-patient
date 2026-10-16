@@ -5,6 +5,7 @@ import { Shell } from './components/Shell';
 import { Queue } from './screens/Queue';
 import { PatientDetail } from './screens/PatientDetail';
 import { Resolution } from './screens/Resolution';
+import { Method } from './screens/Method';
 import './styles.css';
 
 // Keyed by id so the collapse toggle resets when moving between patients.
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<Queue />} />
           <Route path="/patient/:id" element={<PatientRoute />} />
           <Route path="/resolution" element={<Resolution />} />
+          <Route path="/method" element={<Method />} />
           <Route path="*" element={<Queue />} />
         </Routes>
       </Shell>

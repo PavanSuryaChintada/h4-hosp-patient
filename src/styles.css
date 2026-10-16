@@ -211,6 +211,29 @@ table.t { width: 100%; border-collapse: collapse; background: var(--paper); }
 
 .limits { margin-top: 24px; background: var(--sunken); padding: 12px; font-size: 12px; line-height: 16px; color: var(--ink-2); }
 
+/* ---- method & evaluation ------------------------------------------------- */
+
+.prose p { margin-top: 12px; color: var(--ink-2); }
+.prose h2 { margin-top: 48px; }
+.prose h2:first-of-type { margin-top: 32px; }
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.card { background: var(--paper); border: var(--border); padding: 16px; }
+.card .head { display: flex; justify-content: space-between; align-items: baseline; }
+.card .big { font-family: var(--mono); font-size: 22px; line-height: 28px; font-weight: 500; margin-top: 8px; }
+.card .row { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; line-height: 16px; }
+.card .row .k { color: var(--ink-3); }
+.card .act { margin-top: 12px; font-weight: 500; }
+
+.truth { background: var(--sunken); padding: 16px; margin-top: 16px; }
+.truth dt { font-weight: 600; margin-top: 12px; }
+.truth dt:first-child { margin-top: 0; }
+.truth dd { margin: 4px 0 0; color: var(--ink-2); }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.stats .panel { padding: 24px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
