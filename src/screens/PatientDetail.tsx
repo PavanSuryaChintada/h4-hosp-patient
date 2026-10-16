@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BY_ID, name, type Alert } from '../data/engine';
-import { StatusCell } from '../components/ui';
+import { Segmented, StatusCell } from '../components/ui';
+
+type Mode = 'collapsed' | 'all';
 
 const DEFAULT_SEV = { major: 'high', moderate: 'medium', minor: 'low' } as Record<string, string>;
 
@@ -28,6 +31,7 @@ function DrugsCell({ a }: { a: Alert }) {
 
 export function PatientDetail() {
   const { id = '' } = useParams();
+  const [mode, setMode] = useState<Mode>('collapsed');
   const x = BY_ID[id];
 
   if (!x) {
@@ -40,7 +44,15 @@ export function PatientDetail() {
   }
 
   const p = x.patient;
-  const rows = x.collapsed;
+  const rows = mode === 'collapsed' ? x.collapsed : x.all;
+  const lows = x.all.filter((a) => a.severity === 'low').length;
+  const anchor = x.anchors[0];
+  const aboutAnchor = anchor ? x.all.filter((a) => a.drugs.includes(anchor)).length : 0;
+
+  const fatigue = x.all.length === 0 ? null
+    : anchor
+      ? `Every pair: ${x.all.length} alerts, ${aboutAnchor} of them about ${name(anchor)}, ${lows} low severity. This is what a prescriber dismisses.`
+      : `Every pair: ${x.all.length} alerts, ${lows} of them low severity. This is what a prescriber dismisses.`;
 
   return (
     <div className="content">
@@ -60,12 +72,16 @@ export function PatientDetail() {
       <section className="panel" aria-label="Alerts">
         <div className="panel-head">
           <h2 className="section">Alerts</h2>
-          <span className="meta">Collapsed and capped at five</span>
+          <Segmented label="Alert view" value={mode} onChange={setMode} segments={[
+            { value: 'collapsed', label: `Collapsed (${x.collapsed.length})` },
+            { value: 'all', label: `Every pair (${x.all.length})` },
+          ]} />
         </div>
+        {mode === 'all' && fatigue && <div className="fatigue">{fatigue}</div>}
         {rows.length === 0 ? (
           <div className="empty">
-            {x.all.length > 0
-              ? `No high or medium issue found. ${x.all.length} low-severity note${x.all.length > 1 ? 's' : ''} hidden.`
+            {mode === 'collapsed' && x.all.length > 0
+              ? `No high or medium issue found. ${x.all.length} low-severity note${x.all.length > 1 ? 's' : ''} hidden; see every pair.`
               : 'No issue was found in the medicines that resolved.'}
           </div>
         ) : (
