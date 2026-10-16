@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CLASS_LABEL, DRUG } from '../data/drugs';
 import { BY_ID, name, type Alert } from '../data/engine';
+import { AlertGraph } from '../components/AlertGraph';
 import { Segmented, StatusCell } from '../components/ui';
 
 type Mode = 'collapsed' | 'all';
@@ -56,6 +57,12 @@ export function PatientDetail() {
     : anchor
       ? `Every pair: ${x.all.length} alerts, ${aboutAnchor} of them about ${name(anchor)}, ${lows} low severity. This is what a prescriber dismisses.`
       : `Every pair: ${x.all.length} alerts, ${lows} of them low severity. This is what a prescriber dismisses.`;
+
+  const caption = x.serious === 0
+    ? 'No serious interactions among the medicines that resolved.'
+    : anchor
+      ? `${x.serious} interactions → 1 change, not ${x.serious} alerts.`
+      : `${x.serious} serious interaction${x.serious > 1 ? 's' : ''}. No single drug the rule table allows stopping clears more than one.`;
 
   return (
     <div className="content">
@@ -115,6 +122,12 @@ export function PatientDetail() {
       </section>
 
       <div className="split">
+        <section className="panel" aria-label="Alert graph">
+          <div className="panel-head"><h2 className="section">Alert graph</h2></div>
+          <div className="graph-wrap"><AlertGraph analysis={x} /></div>
+          <p className="graph-cap">{caption}</p>
+        </section>
+
         <section className="panel" aria-label="Medicines as written">
           <div className="panel-head">
             <h2 className="section">Medicines as written</h2>
