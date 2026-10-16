@@ -1,0 +1,99 @@
+import { Link, useParams } from 'react-router-dom';
+import { BY_ID, name, type Alert } from '../data/engine';
+import { StatusCell } from '../components/ui';
+
+const DEFAULT_SEV = { major: 'high', moderate: 'medium', minor: 'low' } as Record<string, string>;
+
+function IssueCell({ a }: { a: Alert }) {
+  let re: string | null = null;
+  if (a.kind === 'cluster') re = `${a.drugs.length - 1} interactions, 1 drug`;
+  else if (a.kind === 'renal') re = `Renal flag, ${a.rescored}`;
+  else if (a.rescored && DEFAULT_SEV[a.tableSeverity] !== a.severity) re = `Table ${a.tableSeverity}, re-scored for ${a.rescored}`;
+  else if (a.kind === 'interaction') re = `Table ${a.tableSeverity}`;
+  return <td className="issue">{a.type}{re && <span className="re">{re}</span>}</td>;
+}
+
+function DrugsCell({ a }: { a: Alert }) {
+  if (a.kind === 'cluster') {
+    return (
+      <td className="drugs">
+        <span className="anchor">{name(a.drugs[0])}</span>
+        <span className="ink-2" style={{ display: 'block' }}>with {a.drugs.slice(1).map(name).join(', ')}</span>
+      </td>
+    );
+  }
+  if (a.kind === 'duplicate' && a.drugs[0] === a.drugs[1]) return <td className="drugs">{name(a.drugs[0])} ×2</td>;
+  return <td className="drugs">{a.drugs.map(name).join(' + ')}</td>;
+}
+
+export function PatientDetail() {
+  const { id = '' } = useParams();
+  const x = BY_ID[id];
+
+  if (!x) {
+    return (
+      <div className="content">
+        <h1 className="display">Patient {id}</h1>
+        <p className="empty" style={{ marginTop: 16 }}>No patient with this id in the queue. <Link to="/">Back to patients</Link></p>
+      </div>
+    );
+  }
+
+  const p = x.patient;
+  const rows = x.collapsed;
+
+  return (
+    <div className="content">
+      <section className="strip" aria-label="Patient summary">
+        <h1 className="display">Patient <span className="mono">{p.id}</span></h1>
+        <div className="facts">
+          <span><span className="mono">{p.age}</span> y</span><span className="dot">·</span>
+          <span>{p.sex === 'F' ? 'female' : 'male'}</span><span className="dot">·</span>
+          <span><span className="mono">{p.weight}</span> kg</span><span className="dot">·</span>
+          <span>eGFR <span className="mono">{p.egfr}</span>{p.egfr < 45 && <span className="tag tag-warn" style={{ marginLeft: 8 }}>low</span>}</span><span className="dot">·</span>
+          <span>{p.pregnant ? <span className="tag tag-warn">pregnant</span> : p.sex === 'F' ? 'not pregnant' : 'pregnancy n/a'}</span><span className="dot">·</span>
+          <span><span className="mono">{p.meds.length}</span> meds</span>
+        </div>
+        <div className="dx">{p.dx.join(' · ')}</div>
+      </section>
+
+      <section className="panel" aria-label="Alerts">
+        <div className="panel-head">
+          <h2 className="section">Alerts</h2>
+          <span className="meta">Collapsed and capped at five</span>
+        </div>
+        {rows.length === 0 ? (
+          <div className="empty">
+            {x.all.length > 0
+              ? `No high or medium issue found. ${x.all.length} low-severity note${x.all.length > 1 ? 's' : ''} hidden.`
+              : 'No issue was found in the medicines that resolved.'}
+          </div>
+        ) : (
+          <table className="t alerts">
+            <colgroup>
+              <col style={{ width: 104 }} /><col style={{ width: 200 }} /><col style={{ width: 232 }} /><col /><col style={{ width: 96 }} />
+            </colgroup>
+            <thead>
+              <tr><th>Severity</th><th>Issue</th><th>Drugs involved</th><th>Suggested action</th><th className="num">Confidence</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((a) => (
+                <tr key={a.key} className={a.severity === 'low' ? 'low' : undefined}>
+                  <StatusCell level={a.severity} />
+                  <IssueCell a={a} />
+                  <DrugsCell a={a} />
+                  <td className="act">
+                    {a.action}
+                    {a.note && <span className="note">{a.note}</span>}
+                    <span className="src">{a.source}</span>
+                  </td>
+                  <td className="num">{a.confidence.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    </div>
+  );
+}

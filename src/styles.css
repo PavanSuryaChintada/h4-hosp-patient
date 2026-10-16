@@ -171,6 +171,46 @@ table.t { width: 100%; border-collapse: collapse; background: var(--paper); }
 
 .empty { padding: 24px 16px; color: var(--muted-fail); background: var(--paper); }
 
+/* ---- patient detail ------------------------------------------------------ */
+
+.strip { background: var(--paper); border: var(--border); padding: 16px; margin-bottom: 24px; }
+.strip .facts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.strip .facts .dot { color: var(--ink-3); }
+.strip .dx { margin-top: 4px; color: var(--ink-2); }
+
+.alerts td { height: 48px; padding-top: 12px; padding-bottom: 12px; vertical-align: top; }
+.alerts td.sev::before { top: 8px; bottom: 8px; }
+.alerts tr.low td { color: var(--ink-3); }
+.alerts tr.low .act { color: var(--ink-2); }
+.alerts .issue { font-weight: 500; }
+.alerts .issue .re { display: block; font-weight: 400; font-size: 11px; line-height: 14px; color: var(--ink-3); margin-top: 4px; }
+.alerts .drugs { font-family: var(--mono); font-size: 12px; }
+.alerts .drugs .anchor { color: var(--critical); font-weight: 500; }
+.alerts .act { font-weight: 500; }
+.alerts .act .note { display: block; font-weight: 400; font-size: 12px; line-height: 16px; color: var(--ink-2); margin-top: 4px; }
+.alerts .act .src { display: block; font-weight: 400; font-size: 11px; line-height: 14px; color: var(--ink-3); margin-top: 4px; font-family: var(--mono); }
+
+.fatigue { padding: 8px 16px; font-size: 12px; line-height: 16px; color: var(--ink-2); background: var(--sunken); border-bottom: var(--border); }
+
+.split { display: grid; grid-template-columns: 472px minmax(0, 1fr); gap: 24px; margin-top: 24px; align-items: start; }
+.graph-wrap { padding: 16px; }
+.graph-cap { font-size: 11px; line-height: 14px; color: var(--ink-3); padding: 0 16px 16px; }
+
+.medrow { display: grid; grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr) 56px; align-items: center; gap: 8px; min-height: 32px; padding: 4px 16px 4px 13px; border-bottom: var(--border); border-left: 3px solid transparent; }
+.medrow:last-child { border-bottom: 0; }
+.medrow .raw { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.medrow .arr { font-size: 10px; color: var(--ink-3); text-align: center; }
+.medrow .res { font-weight: 500; }
+.medrow .res .cls { font-weight: 400; font-size: 11px; color: var(--ink-3); margin-left: 8px; }
+.medrow .cf { font-family: var(--mono); font-size: 12px; text-align: right; }
+.medrow.abst { border-left-color: var(--warn); }
+.medrow.abst .res { color: var(--warn); }
+.medrow .verify { display: block; font-size: 11px; line-height: 14px; font-weight: 400; color: var(--ink-2); }
+.medrow .cand { display: block; font-family: var(--mono); font-size: 11px; line-height: 14px; font-weight: 400; color: var(--ink-3); }
+.medrow .dupe { font-size: 11px; font-weight: 400; color: var(--warn); margin-left: 8px; }
+
+.limits { margin-top: 24px; background: var(--sunken); padding: 12px; font-size: 12px; line-height: 16px; color: var(--ink-2); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
