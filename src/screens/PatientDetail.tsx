@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { CLASS_LABEL, DRUG } from '../data/drugs';
 import { BY_ID, name, type Alert } from '../data/engine';
 import { Segmented, StatusCell } from '../components/ui';
 
@@ -48,6 +49,8 @@ export function PatientDetail() {
   const lows = x.all.filter((a) => a.severity === 'low').length;
   const anchor = x.anchors[0];
   const aboutAnchor = anchor ? x.all.filter((a) => a.drugs.includes(anchor)).length : 0;
+  const counts: Record<string, number> = {};
+  for (const m of p.meds) if (m.code) counts[m.code] = (counts[m.code] ?? 0) + 1;
 
   const fatigue = x.all.length === 0 ? null
     : anchor
@@ -110,6 +113,35 @@ export function PatientDetail() {
           </table>
         )}
       </section>
+
+      <div className="split">
+        <section className="panel" aria-label="Medicines as written">
+          <div className="panel-head">
+            <h2 className="section">Medicines as written</h2>
+            <span className="meta">As written → resolved generic · confidence</span>
+          </div>
+          {p.meds.map((m, i) => (
+            <div key={i} className={`medrow${m.code ? '' : ' abst'}`}>
+              <span className="raw" title={m.raw}>"{m.raw}"</span>
+              <span className="arr" aria-hidden="true">→</span>
+              {m.code ? (
+                <span className="res">
+                  {DRUG[m.code].name}
+                  <span className="cls">{CLASS_LABEL[DRUG[m.code].cls]}</span>
+                  {counts[m.code] > 1 && <span className="dupe">duplicate</span>}
+                </span>
+              ) : (
+                <span className="res">
+                  could not resolve
+                  <span className="verify">Verify manually. Not checked against the rules.</span>
+                  <span className="cand">{m.candidates!.map(([c, s]) => `${c} ${s.toFixed(2)}`).join(' · ')}</span>
+                </span>
+              )}
+              <span className="cf" style={{ color: m.code ? undefined : 'var(--warn)' }}>{m.confidence.toFixed(2)}</span>
+            </div>
+          ))}
+        </section>
+      </div>
     </div>
   );
 }
