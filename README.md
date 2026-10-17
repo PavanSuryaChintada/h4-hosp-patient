@@ -48,6 +48,17 @@ npm run build    # type-check and production build
 
 There is no backend, no API and no network access at runtime.
 
+## Deploying
+
+The repo is ready for Vercel as-is: import it, keep the detected settings, deploy. `vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/patient/2291` survive a refresh.
+
+From the command line:
+
+```bash
+npx vercel          # preview
+npx vercel --prod   # production
+```
+
 ## Project layout
 
 ```
