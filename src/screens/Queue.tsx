@@ -7,7 +7,7 @@ type Filter = 'all' | 'high' | 'medium' | 'cleared';
 const RANK = { high: 0, medium: 1, low: 2, cleared: 3 };
 
 const sorted = ANALYSES.slice().sort((x, y) =>
-  RANK[x.top] - RANK[y.top] || y.collapsed.length - x.collapsed.length || y.all.length - x.all.length || x.patient.id.localeCompare(y.patient.id));
+  RANK[x.top] - RANK[y.top] || y.all.length - x.all.length || y.collapsed.length - x.collapsed.length || x.patient.id.localeCompare(y.patient.id));
 
 export function Queue() {
   const [filter, setFilter] = useState<Filter>('all');
