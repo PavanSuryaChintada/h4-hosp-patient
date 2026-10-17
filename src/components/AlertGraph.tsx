@@ -27,7 +27,6 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
   order.forEach((g, i) => { at[g] = pos(i); });
 
   const serious = edges.filter((e) => e.severity === 'high');
-  const shown = removed ? edges.filter((e) => e.a !== anchor && e.b !== anchor) : edges;
   const cleared = anchor ? serious.filter((e) => e.a === anchor || e.b === anchor).length : 0;
 
   const aria = anchor
@@ -46,15 +45,17 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
 
   return (
     <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={aria} style={{ display: 'block', maxWidth: width, overflow: 'visible' }}>
-      {shown.map((e) => {
+      {edges.map((e) => {
         const p = at[e.a], q = at[e.b];
         const isSerious = e.severity === 'high';
-        const onAnchor = !removed && (e.a === anchor || e.b === anchor) && isSerious;
+        const touchesAnchor = e.a === anchor || e.b === anchor;
+        const gone = removed && touchesAnchor;
+        // Edges are always rendered so stopping the anchor fades them out rather than cutting them.
         return (
-          <line key={e.rule + e.a + e.b} x1={p.x} y1={p.y} x2={q.x} y2={q.y}
+          <line key={e.rule + e.a + e.b} x1={p.x} y1={p.y} x2={q.x} y2={q.y} className="ag-edge"
             stroke={isSerious ? 'var(--critical)' : 'var(--ink-3)'}
-            strokeOpacity={isSerious ? 1 : 0.55}
-            strokeWidth={onAnchor ? 2.5 : isSerious ? 1.5 : 1}>
+            style={{ opacity: gone ? 0 : isSerious ? 1 : 0.55 }}
+            strokeWidth={!removed && touchesAnchor && isSerious ? 2.5 : isSerious ? 1.5 : 1}>
             <title>{`${name(e.a)} + ${name(e.b)} (${e.severity})`}</title>
           </line>
         );
@@ -65,7 +66,7 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
         const gone = removed && chosen;
         return (
           <g key={g}>
-            <circle cx={p.x} cy={p.y} r={11}
+            <circle cx={p.x} cy={p.y} r={11} className="ag-node"
               fill={chosen && !gone ? 'var(--critical)' : 'var(--paper)'}
               stroke={gone ? 'var(--ink-3)' : chosen ? 'var(--critical)' : 'var(--action)'}
               strokeWidth={1.3} strokeDasharray={gone ? '3 2' : undefined} />
