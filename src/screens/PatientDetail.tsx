@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CLASS_LABEL, DRUG } from '../data/drugs';
 import { BY_ID, name, type Alert } from '../data/engine';
 import { AlertGraph } from '../components/AlertGraph';
@@ -33,7 +33,8 @@ function DrugsCell({ a }: { a: Alert }) {
 
 export function PatientDetail() {
   const { id = '' } = useParams();
-  const [mode, setMode] = useState<Mode>('collapsed');
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState<Mode>(params.get('view') === 'all' ? 'all' : 'collapsed');
   const x = BY_ID[id];
 
   if (!x) {
