@@ -3,6 +3,7 @@ import { METRICS } from '../data/engine';
 import { NEAR_MISS } from '../data/evaluation';
 import { GroupedBars } from '../components/Charts';
 import { Stat } from '../components/ui';
+import { Meter, Units, repeat } from '../components/viz';
 
 const LABEL = { high: 'High', medium: 'Medium', low: 'Low' };
 
@@ -20,11 +21,20 @@ export function Evaluation() {
           <Stat caption="Alerts per patient" color="var(--ok)"
             figure={<>{m.alertsBefore.toFixed(1)}<span className="arrow">→</span>{m.alertsAfter.toFixed(1)}</>}
             sub={<>Down. Mean alerts shown per patient across <span className="mono">{m.patients}</span>, every pair against collapsed and capped.</>} />
+          <div className="stat-viz kpi-bars">
+            <span>Every pair</span><Meter value={m.alertsBefore} max={m.alertsBefore} width={280} height={10} color="var(--ink-3)" /><span className="mono">{m.alertsBefore.toFixed(1)}</span>
+            <span>Collapsed</span><Meter value={m.alertsAfter} max={m.alertsBefore} width={280} height={10} color="var(--ok)" /><span className="mono">{m.alertsAfter.toFixed(1)}</span>
+          </div>
         </div>
         <div className="panel">
           <Stat caption="Near-miss recall" color="var(--ink)"
             figure={<>{NEAR_MISS.caught} / {NEAR_MISS.seeded}</>}
             sub={<>Held. Seeded subtle-but-serious issues still flagged after the collapse.</>} />
+          <div className="stat-viz">
+            <Units label={`${NEAR_MISS.caught} caught, ${NEAR_MISS.seeded - NEAR_MISS.caught} missed`} size={16} gap={4} columns={15}
+              items={[...repeat(NEAR_MISS.caught, { color: 'var(--action)' }), ...repeat(NEAR_MISS.seeded - NEAR_MISS.caught, { color: 'var(--critical)', hollow: true, title: 'Missed: see below' })]} />
+            <span className="legend"><span><span className="sw" style={{ background: 'var(--action)' }} />caught <span className="mono">{NEAR_MISS.caught}</span></span><span><span className="sw sw-hollow" />missed <span className="mono">{NEAR_MISS.seeded - NEAR_MISS.caught}</span></span></span>
+          </div>
         </div>
       </div>
 
