@@ -17,17 +17,37 @@ Patient `2291`: 74 years, eGFR 28, nine medicines, eleven raw warnings.
 
 Use the `Collapsed / Every pair` toggle on any patient to switch between the two views.
 
+## Live demo
+
+**https://pavansuryachintada.github.io/h4-hosp-patient/**
+
+Sign in with any demo account below; clicking an account on the sign-in page signs you in directly. A guided walkthrough starts after the first sign-in and can be restarted from the top bar.
+
+| Role | Email | Password |
+|---|---|---|
+| Consultant physician | `prescriber@medsafe.demo` | `Medsafe@2026` |
+| Clinical pharmacist | `pharmacist@medsafe.demo` | `Pharma@2026` |
+| Reviewer | `reviewer@medsafe.demo` | `Review@2026` |
+
+These are hardcoded demo accounts. There is no real authentication; the session is kept in the browser.
+
 ## Screens
 
 | Route | What it shows |
 |---|---|
-| `/` | Patient queue, ranked by severity, with filter counts |
-| `/patient/:id` | Context strip, capped alert list with collapse toggle, alert graph, medicines as written → resolved, limitations footer |
-| `/resolution` | Every raw medicine string in the cohort, what it resolved to, confidence, method, and a ground-truth check |
-| `/method` | The four-step pipeline, the same renal flag on two patients, the graph before and after the collapse |
-| `/evaluation` | Alerts per patient against near-miss recall, alerts by severity, and the cases that were missed |
+| `/` | Overview: live collapse demo, architecture, a worked end-to-end example, comparison with a typical checker, tech stack |
+| `/login` | Sign-in with the demo accounts listed underneath |
+| `/app` | Patient queue, ranked by severity, with filter counts |
+| `/app/patient/:id` | Context strip, capped alert list with collapse toggle, alert graph, medicines as written → resolved, limitations footer |
+| `/app/resolution` | Every raw medicine string in the cohort, what it resolved to, confidence, method, and a ground-truth check |
+| `/app/method` | The four-step pipeline, the same renal flag on two patients, the graph before and after the collapse |
+| `/app/evaluation` | Alerts per patient against near-miss recall, alerts by severity, and the cases that were missed |
 
-`/patient/2291?view=all` opens straight into the every-pair view.
+`/app/patient/2291?view=all` opens straight into the every-pair view.
+
+## Guided walkthrough
+
+Thirteen steps that move through the app on their own and highlight one thing at a time: the queue, patient 2291's context, the three collapsed alerts, the every-pair view, the alert graph, the slip as written, the limitations footer, name resolution, the method and the evaluation. Arrow keys move between steps; Esc closes it.
 
 ## How it works
 
@@ -50,9 +70,9 @@ There is no backend, no API and no network access at runtime.
 
 ## Deploying
 
-The repo is ready for Vercel as-is: import it, keep the detected settings, deploy. `vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/patient/2291` survive a refresh.
+**GitHub Pages (live now).** `.github/workflows/pages.yml` builds on every push to `main` with `BASE_PATH=/h4-hosp-patient/` and copies `index.html` to `404.html`, so deep links work on Pages.
 
-From the command line:
+**Vercel.** Import the repo, keep the detected settings, deploy. `vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/app/patient/2291` survive a refresh. Vercel serves from the root, so no base path is needed.
 
 ```bash
 npx vercel          # preview
@@ -68,8 +88,9 @@ src/
     patients.ts     simulated cohort, medicine lists as written
     engine.ts       rule pass: re-scoring, duplicates, renal, pregnancy, collapse, cap, metrics
     evaluation.ts   near-miss labels and the reported misses
-  components/       shell, status primitives, alert graph, hand-written SVG charts
-  screens/          queue, patient detail, resolution, method, evaluation
+  components/       shell, status primitives, alert graph, SVG charts, guided walkthrough
+  screens/          landing, sign-in, queue, patient detail, resolution, method, evaluation
+  auth.tsx          hardcoded demo accounts and the protected-route guard
 spec docs/          technical requirements and design specifications
 ```
 
