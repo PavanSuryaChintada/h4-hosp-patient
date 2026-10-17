@@ -13,7 +13,7 @@ function RenalCard({ id }: { id: string }) {
   return (
     <div className="card">
       <div className="head">
-        <Link to={`/patient/${id}`} className="mono">Patient {id}</Link>
+        <Link to={`/app/patient/${id}`} className="mono">Patient {id}</Link>
         <StatusInline level={alert.severity} />
       </div>
       <div className="big">eGFR {x.patient.egfr}</div>
@@ -44,7 +44,7 @@ export function Method() {
           A rule table says a pair or a drug is risky in general. Whether it is risky for <em>this</em> patient depends on kidney
           function, age and weight. The same metformin 500 mg flag, on two patients:
         </p>
-        <div className="pair">
+        <div className="pair" data-tour="method-pair">
           <RenalCard id={HERO_ID} />
           <RenalCard id={CONTROL_ID} />
         </div>
@@ -56,7 +56,7 @@ export function Method() {
         <h2 className="section">One change, not five alerts</h2>
         <p>
           Drugs are nodes; serious interactions are edges. The system checks which single drug, among those the rule table
-          allows stopping, clears the most serious edges. For patient <Link to={`/patient/${HERO_ID}`} className="mono">{HERO_ID}</Link>,
+          allows stopping, clears the most serious edges. For patient <Link to={`/app/patient/${HERO_ID}`} className="mono">{HERO_ID}</Link>,
           stopping <strong>{name(anchor)}</strong> clears <span className="mono">{hero.clearedByAnchor}</span> of
           the <span className="mono">{hero.serious}</span>. Warfarin, lithium and insulin are never suggested for stopping,
           however many edges they carry.

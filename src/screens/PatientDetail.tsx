@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CLASS_LABEL, DRUG } from '../data/drugs';
 import { BY_ID, name, type Alert } from '../data/engine';
@@ -33,15 +32,16 @@ function DrugsCell({ a }: { a: Alert }) {
 
 export function PatientDetail() {
   const { id = '' } = useParams();
-  const [params] = useSearchParams();
-  const [mode, setMode] = useState<Mode>(params.get('view') === 'all' ? 'all' : 'collapsed');
+  const [params, setParams] = useSearchParams();
+  const mode: Mode = params.get('view') === 'all' ? 'all' : 'collapsed';
+  const setMode = (m: Mode) => setParams(m === 'all' ? { view: 'all' } : {}, { replace: true });
   const x = BY_ID[id];
 
   if (!x) {
     return (
       <div className="content">
         <h1 className="display">Patient {id}</h1>
-        <p className="empty" style={{ marginTop: 16 }}>No patient with this id in the queue. <Link to="/">Back to patients</Link></p>
+        <p className="empty" style={{ marginTop: 16 }}>No patient with this id in the queue. <Link to="/app">Back to patients</Link></p>
       </div>
     );
   }
@@ -71,7 +71,7 @@ export function PatientDetail() {
 
   return (
     <div className="content">
-      <section className="strip" aria-label="Patient summary">
+      <section className="strip" aria-label="Patient summary" data-tour="strip">
         <h1 className="display">Patient <span className="mono">{p.id}</span></h1>
         <div className="facts">
           <span><span className="mono">{p.age}</span> y</span><span className="dot">·</span>
@@ -84,13 +84,13 @@ export function PatientDetail() {
         <div className="dx">{p.dx.join(' · ')}</div>
       </section>
 
-      <section className="panel" aria-label="Alerts">
+      <section className="panel" aria-label="Alerts" data-tour="alerts">
         <div className="panel-head">
           <h2 className="section">Alerts</h2>
-          <Segmented label="Alert view" value={mode} onChange={setMode} segments={[
+          <div data-tour="alert-toggle"><Segmented label="Alert view" value={mode} onChange={setMode} segments={[
             { value: 'collapsed', label: `Collapsed (${x.collapsed.length})` },
             { value: 'all', label: `Every pair (${x.all.length})` },
-          ]} />
+          ]} /></div>
         </div>
         {mode === 'all' && fatigue && <div className="fatigue">{fatigue}</div>}
         {rows.length === 0 ? (
@@ -127,13 +127,13 @@ export function PatientDetail() {
       </section>
 
       <div className="split">
-        <section className="panel" aria-label="Alert graph">
+        <section className="panel" aria-label="Alert graph" data-tour="graph">
           <div className="panel-head"><h2 className="section">Alert graph</h2></div>
           <div className="graph-wrap"><AlertGraph analysis={x} /></div>
           <p className="graph-cap">{caption}</p>
         </section>
 
-        <section className="panel" aria-label="Medicines as written">
+        <section className="panel" aria-label="Medicines as written" data-tour="meds">
           <div className="panel-head">
             <h2 className="section">Medicines as written</h2>
             <span className="meta">As written → resolved generic · confidence</span>
@@ -161,7 +161,7 @@ export function PatientDetail() {
         </section>
       </div>
 
-      <footer className="limits" role="note">{limits}</footer>
+      <footer className="limits" role="note" data-tour="limits">{limits}</footer>
     </div>
   );
 }

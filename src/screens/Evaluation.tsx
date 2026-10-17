@@ -15,7 +15,7 @@ export function Evaluation() {
         <p className="meta">Two numbers, reported together. One should fall and the other should hold.</p>
       </div>
 
-      <div className="stats">
+      <div className="stats" data-tour="eval-stats">
         <div className="panel">
           <Stat caption="Alerts per patient" color="var(--ok)"
             figure={<>{m.alertsBefore.toFixed(1)}<span className="arrow">→</span>{m.alertsAfter.toFixed(1)}</>}
@@ -52,7 +52,7 @@ export function Evaluation() {
           <tbody>
             {NEAR_MISS.missed.map((x) => (
               <tr key={x.patient}>
-                <td className="mono"><Link to={`/patient/${x.patient}`}>{x.patient}</Link></td>
+                <td className="mono"><Link to={`/app/patient/${x.patient}`}>{x.patient}</Link></td>
                 <td style={{ fontWeight: 500 }}>{x.issue}</td>
                 <td className="ink-2">{x.expected}</td>
                 <td className="ink-2">{x.reason}</td>

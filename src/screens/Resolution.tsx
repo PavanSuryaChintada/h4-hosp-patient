@@ -21,7 +21,7 @@ export function Resolution() {
         <p className="meta">Every medicine string in the cohort, exactly as written on the slip, and what it resolved to.</p>
       </div>
 
-      <div className="panel" style={{ padding: 24, marginBottom: 24, maxWidth: 720 }}>
+      <div className="panel" style={{ padding: 24, marginBottom: 24, maxWidth: 720 }} data-tour="resolution-stat">
         <Stat caption="Resolution accuracy on misspelled inputs" figure={`${pct}%`}
           sub={<><span className="mono">{r.fuzzyCorrect}</span> of <span className="mono">{r.fuzzy}</span> fuzzy-matched strings resolved to the right generic, checked against the dataset's ground-truth labels. <span className="mono">{r.abstained}</span> abstained and went to manual check; they are not counted as correct.</>} />
       </div>
@@ -47,7 +47,7 @@ export function Resolution() {
           <tbody>
             {rows.map((x, i) => (
               <tr key={i}>
-                <td className="mono"><Link to={`/patient/${x.patient}`}>{x.patient}</Link></td>
+                <td className="mono"><Link to={`/app/patient/${x.patient}`}>{x.patient}</Link></td>
                 <td className="mono ink-2">"{x.raw}"</td>
                 <td className="mono" style={{ color: x.code ? undefined : 'var(--warn)' }}>
                   {x.code ? DRUG[x.code].name : `could not resolve: ${x.candidates!.map(([c, s]) => `${c} ${s.toFixed(2)}`).join(' / ')}`}

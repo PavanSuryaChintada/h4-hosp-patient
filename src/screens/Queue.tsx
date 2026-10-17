@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ANALYSES } from '../data/engine';
+import { HERO_ID } from '../data/patients';
 import { Segmented, StatusCell } from '../components/ui';
 
 type Filter = 'all' | 'high' | 'medium' | 'cleared';
@@ -22,7 +23,7 @@ export function Queue() {
         <p className="meta">{ANALYSES.length} prescriptions awaiting review. Highest severity first.</p>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16 }} data-tour="queue-filter">
         <Segmented label="Filter by severity" value={filter} onChange={setFilter} segments={[
           { value: 'all', label: 'All', count: count('all') },
           { value: 'high', label: 'High', count: count('high') },
@@ -46,9 +47,9 @@ export function Queue() {
           <tbody>
             {rows.map((x) => {
               const p = x.patient;
-              const go = () => navigate(`/patient/${p.id}`);
+              const go = () => navigate(`/app/patient/${p.id}`);
               return (
-                <tr key={p.id} className="click" tabIndex={0} onClick={go}
+                <tr key={p.id} className="click" tabIndex={0} onClick={go} data-tour={p.id === HERO_ID ? 'hero-row' : undefined}
                   onKeyDown={(e) => { if (e.key === 'Enter') go(); }} aria-label={`Patient ${p.id}`}>
                   <td className="mono">{p.id}</td>
                   <td className="num">{p.age}</td>
