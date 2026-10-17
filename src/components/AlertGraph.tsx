@@ -15,9 +15,10 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
   const unresolved = patient.meds.filter((m) => !m.code);
   const total = order.length + unresolved.length;
 
-  const scale = width / 440;
+  const compact = width < 440;
   const cx = width / 2, cy = height / 2;
-  const rx = 120 * scale, ry = (height / 2) - 40;
+  const rx = compact ? width / 2 - 80 : 120, ry = (height / 2) - 40;
+  const short = (g: string) => DRUG[g].name.replace(/ \+.*$/, '');
   const pos = (i: number) => {
     const t = -Math.PI / 2 + (i / total) * Math.PI * 2;
     return { x: cx + rx * Math.cos(t), y: cy + ry * Math.sin(t), cos: Math.cos(t), sin: Math.sin(t) };
@@ -44,7 +45,7 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
   };
 
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={aria} style={{ display: 'block', maxWidth: width }}>
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={aria} style={{ display: 'block', maxWidth: width, overflow: 'visible' }}>
       {shown.map((e) => {
         const p = at[e.a], q = at[e.b];
         const isSerious = e.severity === 'high';
@@ -70,7 +71,7 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
               strokeWidth={1.3} strokeDasharray={gone ? '3 2' : undefined} />
             <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={9} fontFamily="var(--mono)" fontWeight={500}
               fill={chosen && !gone ? '#fff' : gone ? 'var(--ink-3)' : 'var(--ink)'}>{g}</text>
-            {label(p.x, p.y, p.cos, p.sin, gone ? `${DRUG[g].name} (stopped)` : DRUG[g].name, false, chosen && !gone ? 'var(--critical)' : gone ? 'var(--ink-3)' : 'var(--ink-2)')}
+            {label(p.x, p.y, p.cos, p.sin, gone ? `${short(g)} (stopped)` : short(g), false, chosen && !gone ? 'var(--critical)' : gone ? 'var(--ink-3)' : 'var(--ink-2)')}
           </g>
         );
       })}
@@ -80,7 +81,7 @@ export function AlertGraph({ analysis, width = 440, height = 260, removed = fals
           <g key={m.raw}>
             <circle cx={p.x} cy={p.y} r={11} fill="var(--paper)" stroke="var(--warn)" strokeWidth={1.3} strokeDasharray="3 2" />
             <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={9} fontFamily="var(--mono)" fill="var(--warn)">?</text>
-            {label(p.x, p.y, p.cos, p.sin, `"${m.raw}" unchecked`, true, 'var(--warn)')}
+            {label(p.x, p.y, p.cos, p.sin, compact ? 'unchecked' : `"${m.raw}" unchecked`, true, 'var(--warn)')}
           </g>
         );
       })}
