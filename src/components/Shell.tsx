@@ -36,7 +36,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <>
       <aside className="rail">
         <div className="rail-brand">
-          <Link to="/" className="name">Medsafe</Link>
+          <Link to="/" className="name"><span className="brand-mark" aria-hidden="true" />Medsafe</Link>
           <div className="sub">Medication safety, a second pair of eyes</div>
         </div>
         <nav aria-label="Main">

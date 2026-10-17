@@ -37,7 +37,7 @@ export function Login() {
   return (
     <div className="login">
       <main className="login-main">
-        <Link to="/" className="lp-brand">Medsafe</Link>
+        <Link to="/" className="lp-brand"><span className="brand-mark" aria-hidden="true" />Medsafe</Link>
 
         <div className="login-form-wrap">
           <h1 className="display">Sign in</h1>
