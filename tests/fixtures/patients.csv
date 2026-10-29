@@ -1,0 +1,201 @@
+patient_id,age,weight_kg,egfr,pregnant,diagnoses,medications
+P0001,50,63,61,N,Gastroenteritis|Acid reflux,Pan 40|ciprofloxacin 500mg|Vomikind 4|domstal 10
+P0002,51,55,55,N,Gout,Cap. Nicardia 20|Shelcal|Atenolol 25|Colchicine 0.5
+P0003,45,61.5,,N,Hypothyroidism|Rheumatoid arthritis,HYDROXYCHLOROQUINNE 200 MG|Cap. Levothyroxine 50mcg|T Naprosyn 250mg|Omez 20 mg|folic acid 5 mg OD|PANTOCID 40MG|Calcium + vitamin d3500|T Ramistar 5|Tab Folitrax 7.5|prednisolnoe 10|FERROUS SULFATE
+P0004,52,93,71,N,Hypothyroidism|Anxiety|Depression|Insomnia,Alprazolam 0.25|Levothyroxine 50 mcg|sertraline|Shelcal 500|Cap Neito 10|zolpidem 5|Clonoril
+P0005,53,57.6,71,N,Epilepsy,clonazepam 0.5 mg|sodium valproate 200 mg|Tab. Licab 300|Eptoin 100
+P0006,41,78,54,N,Chronic kidney disease|Chronic back pain|Osteoarthritis,Tab. diclofenac|Cap. Lasix|brufen 400|Dolo 650|Allopurinol 100|Pregabid 75|CALCIUM + VITAMIN D3|Nifedipine
+P0007,84,76.4,47,N,Atrial fibrillation|Heart failure|Dyslipidaemia|Hypertension|Ischaemic heart disease,lasix 40|Telsor|Metformin500|Atorvastatin 20|Hydrochlorothiazide 12.5 mg 1-0-0|Tab Losar|Pantoprazole 40|Cardace|Enam 5mg|Cap. Disprin 75|ISTAVEL
+P0008,40,68.3,71,,Rheumatoid arthritis|Chronic back pain,Cap Shelcal 500mg|T folic acid 5 mg|PREDINSOLONE 10|Vovera 50 mg BD|Cap. Pan 40 mg 1-0-0|Cap Gabapentin 300|Ibugesic400|Naprosyn 250 mg|HCQS 200 mg
+P0009,63,67.7,84,N,Atrial fibrillation|Dyslipidaemia|Hypertension,Amaryl 2 mg 1-0-0|spirenolactone25|Inj Insuiln glargine|Ramistar5|Januvia 100|frusenex 40 mg 1-0-0|Tab. Telmisartan40
+P0010,48,62,88,N,Hypertension|Acid reflux,Ondansetron 4 mg SOS|Nifedipine 20|Januvia 100|Tab. Omez 20|Atenolol 25
+P0011,89,80.5,32,N,Hypothyroidism|Hypertension,cardace|Cap Amoldipine 5|Levothyroxine50|Tab Shelcla 500|Omez20|telimsartan 40 mg
+P0012,61,56,83,N,Type 2 diabetes|Osteoarthritis|Chronic back pain,Brufen 400mg|Enam 5|sitagliptin 100mg|hydrochlorothiazide 12.5|Cap Pan40|Tab Naprosyn|Losar50|Glyciphage 500|T. glibenclamide 5mg
+P0013,70,69,52,N,Heart failure|Rheumatoid arthritis,Envsa 5 mg|Folitrax 7.5 mg weekly|Alactone|BISOPROLOL 5 MG
+P0014,79,60.2,38,N,Bipolar disorder|Epilepsy|Osteoarthritis,Naprosyn 250 mg 1-0-1|Eptoin 100mg|Crocin 650 mg 1-1-1|Clonazepam 0.5|Cap Lithium 300 mg 1-0-1|Pan 40 mg 1-0-0|zerodol 100 mg 1-0-1|Encoratee200|Gabapiin 300|T. Shelcal 500|Brufen 400
+P0015,31,54,101,N,Dyslipidaemia|Ischaemic heart disease,Sitagliptin|Cardace 5 mg OD|vildaglipin 50 mg 1-0-1|rosuvastatin 10mg
+P0016,86,68,15,N,Gout|Lower respiratory infection,azithral 500|allopurinol 100|Augmentin 625|Tab Shelcal 500|clarithromycin 500
+P0017,79,62,57,N,Hypothyroidism|Rheumatoid arthritis,Eltroxin 50 mcg|Folvite|Cap. Methotrexatee 7.5mg|calcium + vitamin D3
+P0018,25,48.5,110,N,Hypertension|Insomnia,Daxid 50|T Restyl0.25|Atenolol 25|Tenormin 25
+P0019,47,41.6,,N,Hypothyroidism,Omez20|Eltroxin 50 mcg|calcium + vitamin D3|T Ferrous sulfatte|eptoin 100
+P0020,23,71.5,110,Y,Pregnancy|Hypertension,folic acid5|Teormin 25|Cardace5|Cap Dolo 650mg|Losar|aquazide12.5|Tab. Hydrochlorothiazide12.5|telmisartan 40 mg OD|Labebet-XR|ENALAPRIL 5 MG 1-0-0|Nifedipine 20
+P0021,84,,29,N,Chronic kidney disease|Gout|COPD,T. prednisolone 10 mg|levvofloxacin|atenolol|Zylroic 100|Ciplox|Frusenex 40
+P0022,43,79,83,N,Gastroenteritis|Acid reflux|Ischaemic heart disease|Lower respiratory infection,cifra 500 mg 1-0-1|CARDAC|tab meotprolol 25 mg bd|tab okacet10
+P0023,27,62.9,100,Y,Pregnancy|Epilepsy,Livogen|Emeset 4 mg SOS|labetalol 100 mg|licab 300|shelcal 500|Prigabid|Clonotril 0.5|Paracetamol 650|cap. encorata 200|Nicardia 20|folic acid 5|Cap phenytoin 100 mg 1-1-1
+P0024,22,55,110,Y,Pregnancy,Labebet 100|FOLUC ACID 5MG|Cap paracetamol650|Deepin 20|Tab. ferrous sulfate|Cap Vomikind 4mg
+P0025,38,78.2,95,N,Chronic kidney disease|Atrial fibrillation|Heart failure,Aldactoone 25|Cap. Warfarin 5 mg OD|Atenolo 25 mg 1-0-0|t atorva 20mg
+P0026,34,79,105,N,Insomnia|Depression|Hypothyroidism,Livogen|Serta 50|Evion 400|Eltroxin 50|TAB OMEZ 20|TRYPTOMER 10|Zolfresh 5 mg|clonazepam 0.5
+P0027,39,48,93,Y,Pregnancy,Tab Dein 20 mg 1-0-1|Cap. Folic acid 5 mg|T. Nicardia20|Paracetamol 650|ondansetron 4mg|Tab. Labetalol-ER 100 mg
+P0028,43,72.7,82,N,Lower respiratory infection|COPD,levofloxacin 500 mg|Cifran 500mg|prednisoloe 10|Tab Cetirizine 10
+P0029,55,68.5,66,N,Dyslipidaemia|Type 2 diabetes,rosuvastatin 10mg|Inj Lantus|Atorva 20 mg|Glimepiride 2 mg|Envas 5|Amlopres 5|Galvus50|Telmisartan 40|Daonil5|Tab Aquazide 12.5 mg 1-0-0|Losar 50|sitagliptin 100
+P0030,37,54.5,101,N,Chronic back pain|Osteoarthritis|Depression|Anxiety|Insomnia,Tab amitriptyline 10|Cap tramadol|Alprazolam 0.25 mg 0-0-1|aceclofenac 100|clonazepam 0.5mg|pantoprazole40|Tab Brufen 400mg
+P0031,59,65,59,,Ischaemic heart disease|Dyslipidaemia|Epilepsy|Bipolar disorder|Rheumatoid arthritis,FOLIC ACID5|Ecoprin 75|Concor5|HCQS200
+P0032,23,63,110,N,Hypothyroidism|Epilepsy|Lower respiratory infection|COPD,lithium 300mg|Tab. Omnacortil10|Cifran500|clonazepam 0.5|levothyroxine 50
+P0033,42,57,72,N,Hypertension|Dyslipidaemia|Acid reflux,pantoprazole 40|insulen glargine|Cap Amaryl 2|Amlopres 5mg|Tab. Telsar 40|Istavel 100 mg 1-0-0|Rablet 20
+P0034,70,66,59,N,Heart failure|Atrial fibrillation|Hypertension,DAONIL 5 MG|Warf 5 mg|vildagliptin 50|Tab. Lasix40|Januia 100|Losartan 50|T Telmisartan|amlodipine 5 mg 1-0-0|Rosuvas|disprin 75mg|Insulin glargine|Lipitor 20
+P0035,41,76,110,N,Osteoarthritis|COPD,ibuprofen 400 mg 1-1-1|ciplox|Cap. Ibugesic400|Coontramal50|Moxikind-CV 625|pantoprazole40|T Paracetamol 650
+P0036,88,65.1,30,N,Dyslipidaemia|Type 2 diabetes|Hypertension|Acid reflux|Gastroenteritis,Rablett 20|Domperidone 10 mg 1-1-1|Sitagluptin 100|telmisartan 40mg|Amaryl 2 mg|AMLONG-SR 5|Galvus 50mg
+P0037,32,74,107,N,Osteoarthritis|Rheumatoid arthritis|Gastroenteritis,Cap Diclofenoc|CLACIUM + VITAMIN D3 500 MG|Cifran 500|Flagyl 400 mg TDS|Brufen 400mg|acclofenac 100 mg
+P0038,66,50,63,N,Hypertension,Nifedipine|Telma 40 mg|ramipril 5mg|Stamlo5
+P0039,20,65.7,110,N,Type 2 diabetes|Gastroenteritis|Acid reflux|Lower respiratory infection,T Aquazide 12.5mg|Salbutamol inhaler|TELMISARTAN 40 MG OD|Tab pantoprazole 40|Claribid 500|Enalapril 5 mg|amlopres er5|Aspirin75|glimepiride-DS 2 mg|Cap. Domstal|Metformin
+P0040,69,84,34,N,Chronic kidney disease|Atrial fibrillation,Zycolchin 0.5|Concor 5 mg|Amiodarone 200 mg OD|Caalcium + vitamin d3 500|Zyloric|Cap. Atorvastatin|Betaloc 25 mg 1-0-1
+P0041,40,44.8,88,N,Anxiety|Depression|Insomnia|COPD|Hypertension,Clinazepam 0.5|Evion 400|clarithromycin|Aten 25|SERTRALINE
+P0042,79,61,62,N,Insomnia|Anxiety|Hypertension,Telmisartan 40 mg 1-0-0|Enam 5|Repace 50 mg|clnoazepam 0.5
+P0043,38,52,102,N,Acid reflux|Gastroenteritis|Hypothyroidism|Osteoarthritis|Chronic back pain,ONDANSETRON 4|calcium + vitamin D3500|Pregabid 75 mg BD|FLAGYL 400|Cap Domstal 10 mg 1-1-1|Cap. Gabapentin 300 mg|T. Contramall 50|T. fluconazole|Cfran 500 mg 1-0-1
+P0044,71,61,79,N,Hypertension|Type 2 diabetes,asprin75|Tab Ramipril 5|amlodipine 5|Cap. hydrochlorothiazide 12.5 mg OD|Januvia 100|Nucardia 20 mg 1-0-1|Obimet 500mg
+P0045,68,58.6,74,N,Atrial fibrillation|Rheumatoid arthritis,Folvite 5mg|Furoesmide|Cardaace 5|uniwarfn 5|Enam|panotprazole 40|Concor 5 mg
+P0046,66,41,65,N,Bipolar disorder|Chronic back pain,T. Clonotril 0.5 mg|Eptoin 100 mg 1-1-1|Gabapin 300mg|Reactin|LRICA 75MG|Evion 400|Brufen400
+P0047,29,55,97,Y,Pregnancy|Anxiety,zolpdem|Nicardia 20|Tab Vomikind 4 mg SOS|Escitalopram 10|sertraline 50mg|crcoin 650
+P0048,38,39.7,103,N,Gastroenteritis|Bipolar disorder,Pantoprazole 40mg|clonazepam|ciprofloxacin 500 mg 1-0-1|Cap Vlparin 200|fluconazole150|cap eptoin 100 mg|Cap Rabblet 20 mg 1-0-0|Lithimu 300mg
+P0049,47,57,72,,Gastroenteritis|Acid reflux|Hypothyroidism,Rablet20|TAB FERROUS SULFATE|levothyroxine50|Cap Emset|Cap. Domstal 10|Metrogyl400|Becosules
+P0050,60,,49,N,Insomnia,Tab. Zolpidem 5 mg HS|Tab. Alprax 0.25|Sert 50|Tab Uniwarfin 5mg|clonazepam 0.5|Tryptomer|Cipralex
+P0051,37,60,93,N,Insomnia|Depression,Rivotril|Cipralex|Zolpidem5|Tyrptomer 10|Serta 50|Alprazolam 0.25mg
+P0052,74,46,64,N,Osteoarthritis|Chronic back pain|Bipolar disorder|Epilepsy,aceclofeenac|Licab 300 mg BD|clonazepam 0.5 mg 0-0-1|T IBUGESIC 400 MG TDS|PANTOPRAZOLE 40|Naproxen 250|Phenytoin|T. Paracetamol 650 mg 1-1-1|tramadol 50 mg|Sodium valproate 200
+P0053,39,76,84,N,Hypertension|Type 2 diabetes|Dyslipidaemia,Glimy 2|Sitagliptin|Atorvastatin|Ramistar|apsirin 75|Galvus 50|Tab. Enam5|inj insulin glargine|Tab. Amlong|T. Aquazide 12.5 mg|Rosuvas 10|Daoniil 5 mg
+P0054,91,75.2,25,N,COPD|Lower respiratory infection|Hypertension,Tab. Augmentin625|LOSARTAN 50 MG|t. envas5|azithral 500|cetirizine 10 mg HS|Claribid 500|ASTHALIN INHALER|ramistar 5 mg od|prednisolone 10|levofloxacin500|T Depin 20
+P0055,18,,101,N,Anxiety|Epilepsy|Bipolar disorder,alprax 0.25 mg|T Valparin 200mg|Zolfresh 5 mg 0-0-1|Alprazolam 0.25|Daxdi 50mg|clonazepam 0.5|Tryptomer
+P0056,19,71.8,71,N,Anxiety|Depression|Gout|Chronic kidney disease|Acid reflux|Gastroenteritis,ZULFRESH 5|ciprofloxxacin 500 mg BD|T. Zycolchin 0.5 mg|Tab fluconazole 150 mg
+P0057,88,83,63,N,Lower respiratory infection|COPD,Cetirizine 10|Cifran 500|Tab Azithromycin 500|Claribid 500mg|T Flvite|Augmentin625|Cap Montair10|salbuttamol inhaler|Cap. Prednisolone|levooflox500
+P0058,29,68,106,N,Rheumatoid arthritis|Insomnia|Anxiety,Alpazolam 0.25|sertraline 50mg|Naprosyn 250|Cap. clonazepam 0.5
+P0059,39,73.4,110,N,Hypertension|Rheumatoid arthritis,Rmipril 5 mg OD|Omnacortil 10 mg 1-0-0|Nicardia20|Aquazide 12.5|Folvite 5|Digene|methotrexate 7.5 mg|hcqs 200 mg
+P0060,39,49.2,86,Y,Pregnancy,paracetamol|SHELCAL 500 MG BD|Folvite5|Livogen|Labebet 100 mg BD|Depin 20
+P0061,85,80,43,N,Ischaemic heart disease|Dyslipidaemia|Hypothyroidism,Tab. Pantop|Cap. Simvotin 20|Tab Omez 20|ROSUVASTATIN|ferrous sulfate|calcium + vitamin D3 500|Eltroxin50|Storvas 20 mg
+P0062,78,64.8,34,N,Gout|Chronic kidney disease|Gastroenteritis|Chronic back pain|Osteoarthritis,Paracetamol 650|Gabapin300|Omez 20 mg|pantocid 40|fluconazole150
+P0063,81,,44,N,Gastroenteritis|Acid reflux|Heart failure|Atrial fibrillation,Becosules|bisoprlool|T. Ramistar 5|Rabeprazole 20 mg OD|Flagl 400mg|Cordarone 200mg|Metolar 25mg|Omez|Storvas 20 mg HS|Pan 40mg|Ondansetron
+P0064,27,73.2,,N,Gout|Dyslipidaemia,rosuvastaten 10 mg|Atorvastatin 20|Furosemide 40 mg|metoprolol-CR 25mg|Zycolchin 0.5 mg 1-0-1|Zyloric 100mg|tab niacrdia 20|zocor 20mg|Pantopraozle 40 mg OD|T clopidogrel 75|ramipril 5 mg|Omez 20
+P0065,38,76.1,101,N,Insomnia|Depression|Gastroenteritis|Acid reflux,alprazolam|Rablet|OMEPRAZOLE20|Cap. Domstal 10mg
+P0066,33,68,107,Y,Pregnancy,Calcium + vitamin d3 500|Ferrous sulfate|Croccin 650|Labebet DS 100 mg|Folvtie 5mg|Eemset 4
+P0067,44,65,78,N,Ischaemic heart disease|Dyslipidaemia|Depression|Bipolar disorder|Epilepsy,Alprax 0.25 mg HS|Tab. Zoor 20|RAMIIPRIL 5 MG 1-0-0|rosuvastatin 10|Escitalopram 10 mg|Lipitor20|T. Tryptomer 10|Cap. Concorr 5 mg 1-0-0|Sertraline 50|Eptoin 100|Pantoprazole 40 mg OD|Lithium 300mg
+P0068,71,,77,N,Type 2 diabetes|Dyslipidaemia|Anxiety|Depression|Insomnia,TAB. TELMISIRTAN 40 MG OD|rosuvastatin|Ecosprin 75|Daonil-CR 5|zolpidem 5|Ramipril 5|GLIY 2 MG OD|Istaveel 100 mg
+P0069,84,78,67,N,Rheumatoid arthritis|Acid reflux|Gastroenteritis,Ondansetron 4|HCQS 200 mg|Tab. ciprofloxacin500|Tab. Naprosyn250|T Pantocid 40mg|Omez 20 mg|Domperidone10|Folitrax|folic acid 5
+P0070,29,79,77,N,Acid reflux|Hypertension,Amlodpiine 5|pantoprazole 40|TELMISRTAN 40MG|T Vomikind 4mg
+P0071,67,41,62,N,Hypothyroidism,eltroxin 50|Tryptomer 10 mg|FUROSEMIDE 40|calcium + vitamin d3|Cap Livoegn|Omez 20 mg 1-0-0
+P0072,92,57,26,N,Osteoarthritis|Chronic back pain|Heart failure|Atrial fibrillation,Metoprolol 25 mg BD|Pregabidd 75|amiodarone 200mg|Tramazac 50|gabapentin 300|Cap. Shelcal 500mg
+P0073,45,70,85,N,Hypothyroidism|Lower respiratory infection|Ischaemic heart disease|Dyslipidaemia,monteluakst|SALBTUAMOL INHALER|Levolfox500|Storvass 20|Omez 20
+P0074,60,90,74,N,Atrial fibrillation|Heart failure,Spironolactone 25|warf 5 mg od|metoprolol 25 mg 1-0-1|ramipril 5 mg OD|Tab Frusenex|enlapril 5 mg 1-0-0
+P0075,25,69.1,110,N,Dyslipidaemia,Ramipril5|Metoprolol 25mg|tab atorvastatin|Rosuvastatin 10|Pantoprazole 40|T. Zocor 20|Concor 5|Plavix|Ecosprin 75 mg|Cap. Omez
+P0076,81,70,65,N,Hypertension|Dyslipidaemia|Type 2 diabetes,aenolol 25|Jalra 50 mg|Vildagliptin 50|Istavel 100|Aqazide 12.5 mg|Zincovit|Cap. Telma40|Tab. Lipitor 20
+P0077,80,64,51,N,Hypertension|Type 2 diabetes,glimepiride 2|DISPRIN 75MG|Cap. Losar 50|tab. telsar 40 mg od|T. sitagliptin 100 mg OD|Glibenclamide5|inj lantus|Enas 5|stamlo
+P0078,28,49,98,N,Hypertension|Depression|Anxiety|Insomnia,Sertraline50|Nexito|Depin XR 20|Tab Restyl 0.25 mg|Amlodipine|Aquazide 12.5
+P0079,87,50.7,66,N,COPD|Osteoarthritis|Chronic back pain,Tab amoxicillin-clavulanate 625 mg|Gabapin 300|Cap Naprosyn 250|T Crocin 650 mg 1-1-1|Claribid 500|cifran 500 mg 1-0-1
+P0080,30,67,100,N,Acid reflux|Lower respiratory infection|COPD,Cap. levofloxacin 500|domperidon 10 mg 1-1-1|emeset 4 mg sos|Tab Montair|zoco 150 mg once|clarithromycin|ASTHALIN INHALER|Omez 20|Okacet 10
+P0081,76,65,38,N,Bipolar disorder|Epilepsy|Type 2 diabetes,T metformin|VILDAGLIPTIN|Telsra 40|ASPIRIN 75 MG|Encorate 200|Amlodipine|Cardace5|ENVAS 5 MG|Eptoin 100
+P0082,,74,47,N,Atrial fibrillation|Heart failure|Chronic kidney disease|Gout,Cordarone 200|atenolol 25|Nicardia 20|Enavs 5 mg|Aldactone 25|Zycolchin 0.5mg|Betaloc 25|Concor
+P0083,29,64,69,N,Hypothyroidism,Tab. Ferrous sulfate|T Shelcal 500mg|Thyrnoorm 50|Tab Omeprazole 20 mg 1-0-0
+P0084,91,,58,,Insomnia,alprazolam 0.25|tryptomer|Tab Rivotril 0.5 mg HS|sertraline 50|stilnoct 5 mg
+P0085,42,75,49,N,Dyslipidaemia|Chronic kidney disease,Cardace 5mg|ramipril 5mg|Simvotin20|Crestor|clopidogrel75|Tab Nicardia 20|LASIX 40|calcium + vitamin D3 500 mg|Concor 5|colchiccine
+P0086,28,50,110,N,COPD|Lower respiratory infection|Bipolar disorder,Levofloxacin 500|t. clonazepam0.5|lithium|Claribbid 500 mg|amoxicillin-clavulanate|Montari 10|Prednisolone 10 mg OD|Phenytoin
+P0087,42,64,110,N,Chronic back pain|Ischaemic heart disease|Dyslipidaemia,Omez 20 mg 1-0-0|NAPROSYN 250|Cap. Aceclofenac 100|calcium + vitamin D3500|diclofenac 50 mg BD|Cap Ecosprin 75|Tab. Gobapin|Tab. Rosuvas 10
+P0088,44,69,103,N,Depression|Insomnia|Anxiety|Osteoarthritis|Bipolar disorder,Diclofenac 50|Dolo 650|CIPRELEX 10|pantoprazole|Gabapentin 300mg|Ibugesic 400|calcium + vitamin D3 500|Cap. Eptoin 100 mg|Cap Hifenac 100 mg BD|sodium valproate 200|Lciab
+P0089,51,,86,N,Hypertension|Dyslipidaemia,T metoprolol 25|Pantop 40|concor 5|Aten XR 25 mg OD|Enam 5 mg|cap omeprazole 20mg|clopidogrel 75|crestor 10|Simvastatin 20 mg|RAIMSTAR 5 MG OD|hydrochlorothiazide 12.5 mg 1-0-0
+P0090,19,81,110,N,Hypertension|Anxiety|Acid reflux,Revital H|Tab. Tenormin 25mg|Sertraline|alprazolam0.25|Cap. Fluconazole|Domstal 10 mg|t tryptomeer 10|tab. rabeprazole 20 mg 1-0-0|Losar 50|Tab Clonotril0.5
+P0091,45,52,73,N,Anxiety|Depression|Gastroenteritis|Acid reflux,Cap. Serta50|Alprax|Nexito 10|Domstal 10 mg|pantoprazole 40|Zolfresh5|amitriptyline|Metrogyl 400|Emeset 4|Rvotril 0.5 mg|Ciprofloxacin 500 mg 1-0-1
+P0092,76,62.8,26,N,Chronic kidney disease|Osteoarthritis|Chronic back pain,Dynapir 50|Pantoprazole 40mg|Lasix 40|Colchicine 0.5 mg|T. Crocin 650|Pregabalin CR 75 mg|HIFENAC 100|Tab. Ibugesic 400|aten25
+P0093,29,71,106,Y,Pregnancy,Livogen|Cap. Labetalol 100|Nifedipine 20|Cap Folvite 5mg
+P0094,61,61,59,N,Hypertension|Dyslipidaemia|Ischaemic heart disease,T Betaloc 25|Cap. Zocor 20|omeprazole20|Pantocidd 40mg|Clopidogrel75|AQUAZIDE|Telsar 40mg|BISPOROLOL 5|Tab. rmipril 5mg|Stamlo 5
+P0095,28,72.1,,N,Gastroenteritis|Acid reflux|Dyslipidaemia,Ecosprin 75|storvas 20mg|Mterogyl 400 mg 1-1-1|Zocor|Pantop|T ciproflooxacin 500|Clopidogrul 75|Cresotr 10 mg 0-0-1|Ondansetron 4 mg SOS|Concor
+P0096,22,,110,Y,Pregnancy,Emeest4|Cap Nicardia XR 20|Tab. Shelcal 500|livogen|Folic acid 5
+P0097,18,73.2,110,N,Type 2 diabetes|Osteoarthritis,Daonil 5 mg OD|losartan 50mg|t. enalapril|Lyrica XR 75mg|Gabapin 300mg|Ibuprofen 400 mg
+P0098,50,63.8,92,N,Hypertension|Type 2 diabetes|Chronic back pain,Glimy 2 mg|Vildagliptin50|Nicardiaa 20|Tab Tramazac|Amlopres 5|T Gabapentin 300|Tenormin 25|T Shelcal
+P0099,43,76,94,N,Insomnia|Anxiety|Depression|Epilepsy|Bipolar disorder,clonazepam 0.5|Tryptomer 10 mg 0-0-1|Lcab 300mg|Valparin 200
+P0100,87,57.2,50,N,Hypertension|Chronic back pain,T Stamlo 5|Nicardia 20 mg|Cap. pregabalin75|Gabapentin 300 mg TDS|Tab. Enam 5 mg|Calpol|dicloofenac
+P0101,85,67,27,N,Hypertension|Gout,T. Allopurinol 100 mg 1-0-0|t envas 5|Telsar 40 mg|Cardace 5|Cap Aquazidee 12.5 mg OD|Colchicino|Cap. Shelcal 500
+P0102,18,54.3,88,,Hypertension,T. Telma 40|Cardace5|Becosules|T Ramistar 5
+P0103,79,96,64,N,Hypothyroidism,Calciium + vitamin d3 500 mg|Thyronorm 50 mcg|Ferroas sulfate|omperazole
+P0104,79,69.7,70,N,Hypothyroidism,Thyronorm|Shelcall 500|Omez|T. Ferrous sulfate
+P0105,52,67,31,N,Gout,T. Tenormin 25|Shelcal 500|Dpein CR|Tab Furosmide 40
+P0106,87,48.0,44,N,Hypertension|Dyslipidaemia|Type 2 diabetes,Amaryl 2|Ecosprin 75 mg OD|Rosuvas 10mg|Metformin|Istavel 100mg|Inj Insulin glargine|Glibenclamide5|Telmisartan 40mg|Amlon 5 mg|Aten
+P0107,27,49.9,100,N,Depression|Insomnia,T. ZOLPIDEM 5 MG|Cipralex 10|alprazolam 0.25|Rivotril 0.5 mg HS
+P0108,50,71,70,N,Bipolar disorder,Rivotril 0.5|sodium valproate|Eptoi 100 mg|Liceb 300mg|Tab. Warf 5mg
+P0109,25,67.9,110,N,Rheumatoid arthritis,naproxen 250 mg 1-0-1|T methotrexate 7.5|Tab. folic acid|prednisolone|Cap HCQS 200
+P0110,83,82.4,53,N,Heart failure|Type 2 diabetes|Hypertension,Telma 40|Amlong 5|Tab Glimmy 2|Storvas 20 mg|T Glycomet|spironolactone 25|Warf|cordarone 200mg|T Losartan 50 mg|TAB. FRUSENEX 40 MG|sitagliptin 100
+P0111,18,63,110,N,Bipolar disorder|Epilepsy|Anxiety|Insomnia,TAB SODIUM VALPROATE 200 MG BD|daxid 50 mg od|Tryptomer 10 mg|Licab 300|Tab. clonazepam 0.5|Phenytoin 100|Escitalopram 10
+P0112,57,69,89,N,Hypothyroidism|Acid reflux|Gastroenteritis,Ferrous sulfate|calcium + vitamin D3 500mg|Vomikind 4|levothyroxine 50mcg
+P0113,32,76,40,N,Hypothyroidism|Gout,t. zycolchin 0.5 mg bd|Tab. Warfarn5|Zyloic100|Shlcal|Metronidazole 400 mg TDS|T Frusenx 40 mg 1-0-0|nifedipine20|T Omez|LIOVGEN|Aten|Thyronirm
+P0114,49,51,64,N,Gastroenteritis|Acid reflux|Chronic kidney disease|Gout,lasix 40mg|Zocon 150 mg once|Zyloric|Zycolchni 0.5mg|Atenolol 25 mg|rabeprazole 20 mg 1-0-0|Omez 20mg|Pentop 40 mg 1-0-0
+P0115,63,43,67,N,Heart failure|Atrial fibrillation|Hypothyroidism,Levothyroxine 50 mcg|Cap Lanoxin 0.25mg|omeprazole|ferrous sulfate|furoesmide 40 mg|Cordarone 200 mg 1-0-0|Tab. Raimstar 5|T Shelcal|Enalapril5
+P0116,81,62,30,N,Gout|Osteoarthritis|Chronic back pain,Zycolchin 0.5|Tab Tramadol50|Tab. Atenolol 25|Reactin 50 mg|Cap. Ibuprofen|Gabapenttin 300|Cap Zerodol 100|Cap Zyloric|cap pan|Pregabalin 75 mg BD|Paracetamol 650|Furosemide 40
+P0117,37,54,63,N,Gastroenteritis|Acid reflux|Gout|Chronic kidney disease|Rheumatoid arthritis,Ciplxo 500 mg|T Razo 20 mg|folitrax 7.5mg|Lasix 40|colchicine 0.5mg|PANTOCID 40|Zyloric|Cap. Naporsyn 250|fluconazole 150 mg once|HCQS200
+P0118,82,55,53,N,Insomnia|Depression|Anxiety|Lower respiratory infection|COPD,Levoflox 500 mg|Salbutamol inhaler|Clonotril 0.5 mg HS|CAP AZITHROMYCIN 500|Montair 10|Tab. sertraline|Cap Moxikind-CV 625mg
+P0119,70,78,15,N,Hypertension|Gout|Chronic kidney disease,Calcium + vitamin d3 500 mg 1-0-1|T Zyloric 100|Digene|REPACE50
+P0120,37,76.5,110,N,Epilepsy|Bipolar disorder|Osteoarthritis|Chronic back pain|Anxiety,Hifenac|Cap. Paracetamol 650 mg 1-1-1|Gabapin300|Pregabid 75 mg BD
+P0121,38,51.6,106,N,Epilepsy|Bipolar disorder|Depression|Anxiety|Insomnia,alprazlam0.25|Eptoin100|Valparin200|Sertta 50 mg|Trypomer10|LICAB|escitalopram 10 mg
+P0122,74,71,43,N,Dyslipidaemia|Type 2 diabetes|Osteoarthritis,Losra 50mg|Cap Shelcal 500|Gabapni 300mg|Glyciphage 500|Lipitor 20|Cap Tramazac 50|Tab Stamlo|DOLO 650MG|Lantus|Telmisaran 40 mg|Naprosyn 250 mg
+P0123,20,59,,N,Bipolar disorder|Depression|Insomnia|Anxiety,tryptomer 10|Zolfresh 5|LCIAB 300 MG BD|Restyl0.25|Encorate 200
+P0124,82,73,49,N,Dyslipidaemia|Type 2 diabetes|Hypertension,Nicardia 20mg|glimepiride 2|Cretsor 10|Tab. Zocor 20 mg HS|Telma 40|Daonil 5mg
+P0125,65,73,68,N,Hypertension|Type 2 diabetes|Anxiety|Insomnia|Depression,aspirin 75 mg OD|Istavel 100 mg|Tab zolpidem 5|Aquazide 12.5|losartan 50mg|glibenclamide 5mg|Tab Lipitor 20 mg|Restyl 0.25mg|Evas 5 mg OD|clonazepam 0.5mg
+P0126,25,74,86,N,COPD|Chronic kidney disease,T. Ciprofloxacin500|calcium + vitamin d3 500 mg 1-0-1|Levoflox 500 mg 1-0-0|Cap colchocine|salbutamol|lasix40|Montelukast 10|Okacet 10 mg 0-0-1|ATEN 25MG
+P0127,87,,37,N,Heart failure,bisoprolol-SR 5|T Lasix 40|Tab Ramipril 5|Tab. Aldactone25|CORDARONE 200|atorvastatin20
+P0128,75,66.8,51,N,Acid reflux|Gastroenteritis|Atrial fibrillation|Heart failure,furoemide 40mg|CAP METRONIDAZOLE400|Domsta10|amiodarone 200 mg OD|Emeset 4|Omez20|T Zocon 150 mg|Ramistaar 5|Warf 5 mg|Pantop 40|Rabelt 20
+P0129,46,72.1,87,N,Hypothyroidism,Levothyroxine 50|T Calciuum + vitamin d3 500|Livogen|Cap Omez 20mg|Depin 20 mg
+P0130,55,70,97,N,Rheumatoid arthritis|Hypothyroidism,Folatrax 7.5 mg|Folvite 5|T. Livogen|HCQS 200|Shelcal 500 mg BD|pantoprazole 40|omeprazole20|Tab Prednisolone 10|Levothyroxine 50|Folitrax 7.5 mg
+P0131,75,55,60,N,Atrial fibrillation,T ZOLPIDEM 5|Cardcae 5|T. LASIX40|Cordarone|Warf 5 mg|Envas 5|Spironolactone 25mg|RAZO 20 MG|lanoxin0.25|Bisoprolol 5|Metoprolol 25|Atorva 20
+P0132,37,71,96,N,Type 2 diabetes|Hypothyroidism,hydrochlorothiazide 12.5 mg od|Omeprazole 20|Daonil 5 mg|Cap. Disprin 75 mg OD|crestor 10 mg|Storvas 20 mg 0-0-1|Galvus 50 mg|ELTRXOIN 50|amlodipine 5 mg|sitagliptin 100 mg
+P0133,28,72,96,N,Anxiety|Depression|Insomnia|Bipolar disorder|Hypertension,enam 5|losa 50|aitriptyline 10 mg 0-0-1|Zolfresh5|staml 5 mg od
+P0134,33,61.5,87,N,Chronic back pain|Lower respiratory infection,Cap. Tramazac|Tab Pan|Naprosyn|calcium + vvitamin d3 500 mg|ibuprofen 400|Cap Claribid|Lyrica 75 mg BD|Limcee 500|Cetzine10|Salbtamol|Crocin|Levoflox 500
+P0135,28,,97,N,Rheumatoid arthritis|Type 2 diabetes|Hypertension,Cap Rosuvas 10 mg 0-0-1|AQUAZIDE 12.5|Ecosprin 75 mg 1-0-0|Pantocid 40 mg|metforrmin 500mg|AMLONG 5MG|Storvas 20 mg|inj bsalog|Glibenclaamide-SR 5|Tab methotrexate7.5|T Repace 50|HCQS 200 mg
+P0136,54,72,70,N,Bipolar disorder|Epilepsy,rivotril 0.5 mg hs|Eptoin 100mg|Cetirizine 10|Lithium 300mg|Valparin 200 mg BD
+P0137,47,38,80,N,Hypertension,Cardace 5|Depin-ER|T Amlopres|Telsar|Enalapril 5|Aten 25
+P0138,40,72.4,87,Y,Pregnancy,T Dolo 650mg|folic acid 5mg|T Emeset 4mg|Nifedipine 20
+P0139,36,67,76,Y,Pregnancy,FOLVITE 5 MG|Crocin 650|Daonil 5|Tryptomer 10|Cap. Labebet100|Emeset 4|Shelal 500|Deipn 20 mg|Livgoen
+P0140,21,62,110,Y,Pregnancy,Zincovit|livogen|CAP. LABETALOLL 100|Cap. paracetamol 650 mg|Vomikind 4 mg|calcium + vitamin d3 500
+P0141,28,61,109,Y,Pregnancy|Hypertension,T Enalapril 5 mg|Aten25|Crocin 650|T labetalol100|Neurobion Forte|T. Telmisartan 40 mg
+P0142,70,91,63,N,Atrial fibrillation|Hypertension|Type 2 diabetes,Atorva 20mg|Lasox|Warf 5|RAMIPRIL 5|Galvsu 50 mg|Inj Insulin glagine|Bisoprolol 5
+P0143,82,52,56,N,COPD|Gastroenteritis|Acid reflux,Monelukast 10 mg HS|Flagyl|claribid 500 mg|salbutamol|Tab. Prednisolone 10|cap omeprazole
+P0144,89,67,41,N,Gastroenteritis|Bipolar disorder|Osteoarthritis|Chronic back pain,ENCORATE 200|Razo20|Aceclofenac 100|T Rivotril
+P0145,71,67.7,71,N,Dyslipidaemia|Type 2 diabetes|Lower respiratory infection|Gastroenteritis|Acid reflux,Cap. Ramistar 5|Inj Basalog|TAB AZEE 500MG|Amlng 5|Cap. Omnacortil 10mg|Cap. siagliptin 100|Omnacortil 10
+P0146,78,84,41,N,Hypertension|Gout|Chronic kidney disease,Amlong 5mg|Enam|Aquzaide 12.5 mg|colchicine 0.5|TELMA 40MG
+P0147,42,71,96,N,Lower respiratory infection|Rheumatoid arthritis,amoxicillin-clavulanate 625|LEVOFLOXX500|Methotrexate|Ciplox 500|WYSOLONE|Folvite 5|Cetzine 10|Montair 10|tab. naproyn 250|HCQS
+P0148,30,72,90,N,Rheumatoid arthritis|Depression|Anxiety,Cap folic acid 5 mg OD|Tryptomer10|Zolfresh 5mg|cap. alprax 0.25|TAB. NAPROSYN 250|clonazepam0.5
+P0149,81,67,53,N,Insomnia|Anxiety|Depression|Ischaemic heart disease,T Crestor|Amitriptyline 10|tab diprin 75mg|tab zocor 20mg|alprazolam 0.25|T. Sreta50|Tab. Omerpazole 20|clonazepam 0.5 mg 0-0-1|Bisoprolol 5|METOPROLOL 25|PAN40|Ramipril 5 mg OD
+P0150,77,78.8,67,N,Hypertension|Gastroenteritis|Acid reflux,Depin XR 20|Ciprofloxacin 500|Tab. Repace 50|Forcan 150 mg|Cap Ramistar 5mg|Razo 20|domperidone 10mg|hydrochlorothiazide 12.5
+P0151,82,59,45,N,Hypertension,Enam 5|Aquazide 12.5|amlodipine 5|Okacet 10|CAP. CARDACE 5|LOSARTAN|T nifedipine20|tab. telsar 40 mg od|Disprin 75mg|atenolol 25 mg 1-0-0
+P0152,20,68,104,N,Dyslipidaemia|Ischaemic heart disease|Gastroenteritis|Acid reflux|Hypertension,LOSARTAN 50|RAZO|dosmtal 10|Aten 25mg|Simvotin|zocon 150|Tab. clopidogrel|Emeset 4mg|Omez 20 mg 1-0-0
+P0153,51,66,83,N,Type 2 diabetes|Hypertension|Dyslipidaemia|Depression|Bipolar disorder,Envas 5 mg|Inj insulin glarigne|T. Daonil 5|lithiumm 300mg|Clonotril 0.5|T Losartan 50|Cap Storvas 20mg|Cap. Crestor|Cap. Stilnoct 5|Tryptomer 10 mg|JALRA|Istavel
+P0154,80,50.4,41,N,Type 2 diabetes|Dyslipidaemia|Hypertension|Rheumatoid arthritis|Gastroenteritis|Acid reflux,Metroindazole400|Limcee 500|T. Galvas 50mg|Daonil 5 mg OD
+P0155,39,58.4,100,Y,Pregnancy|Hypothyroidism,Livogenn|Crocin 650 mg|ondansetron 4 mg SOS|FOLIC ACID 5
+P0156,26,52,110,N,Hypothyroidism|Osteoarthritis|Chronic back pain,ZERODOL|cap shelcal 500 mg|Tab. Gabapin 300 mg|T Tramazac 50|Ferrous sulfate|Brufen 400|Pregabalin75|Omez 20
+P0157,57,84,67,N,Rheumatoid arthritis|Hypertension|Dyslipidaemia|Type 2 diabetes,Glimy 2mg|ecosprin|Folic cid 5|Losartan 50 mg OD|Amlong 5
+P0158,26,68,93,Y,Pregnancy,Calcium + vitamin d3 500mg|Tab. Paracetamol650|Livogen|labebet100|Emeset 4|Nifedipine20|t folic acid 5
+P0159,25,66,85,N,Chronic kidney disease|Gout|Depression|Insomnia|Anxiety,tab. colcihcine 0.5|Cap. Stilnoct 5|Nexito 10mg|Sertralinne 50 mg OD|Alprax 0.25 mg|Cap Atenolol|niffedipine 20|Calcium + vitamin d3 500|Tryptomer 10
+P0160,56,64.9,69,N,Chronic back pain|Osteoarthritis|COPD|Lower respiratory infection|Epilepsy,Prednisolone10|diclofenac|Cap. Shelcal 500|Tab. ibuprofen 400|Pregabalin|Cetzine 10 mg 0-0-1|T. Augmentin 625mg|Croicn 650 mg|Tramazac 50 mg BD|claribi 500mg
+P0161,80,55.2,15,N,Insomnia|Dyslipidaemia|Gout,Inj Basalog|T ALPRAZOLAM 0.25MG|Losartan|Telsar 40|t. ramistar 5 mg|TAB SERTRALINE 50 MG|Zycolchin|Cap clonaepam|Nifedipine20|Cipralex 10|Rivotril 0.5mg|Glimy 2 mg
+P0162,55,74,43,N,Chronic kidney disease,Shelcal500|spironolactone 25|furosemide40|aceclofenac|T. Aten 25mg|nifedipine 20 mg|allopurinol 100|Zycolchin0.5
+P0163,72,59.4,63,,Hypertension|Epilepsy,Tab. clonazepam0.5|Raipril 5|Zincovit|telma 40|Tab metformin
+P0164,31,57,92,N,Lower respiratory infection|Acid reflux,T DOMPERIDONE 10 MG TDS|azithromycin 500|clraibid 500 mg|flagyl400|Levoflo 500|CIPLOX500|Tab Forcan|CLARITHROMYCIN 500|Revital H
+P0165,78,78.3,52,N,Gastroenteritis|Dyslipidaemia|Hypertension,Daonil|Tab. Ondansetron 4|tab sutagliptin|Inj Basalog|Ciprofloxacin 500 mg|Jlara 50|Niccardia20|Cap. Crestor 10 mg 0-0-1
+P0166,37,78,,Y,Pregnancy|Anxiety|Insomnia|Depression,Paracetamol 650mg|Daxid50|ferrous sulfate|Cap. nifedipine20|Labeet 100 mg|Folvite 5mg|Restyl 0.25mg|CAP. DAIXD 50
+P0167,79,68,50,N,Type 2 diabetes|Hypertension,telmisartan 40 mg|Cap Losar 50|Januvia 100 mg|enalapril5
+P0168,38,55,99,N,Epilepsy|Hypertension,Ramistar 5 mg|telma|Repace 50 mg 1-0-0|lithium 300mg
+P0169,36,65,95,N,Hypothyroidism|Acid reflux,FORCAN 150|Thyronorm 50mcg|Cap ferrous sulfate|calcium + vitamin d3 500 mg 1-0-1|T. Omez|ondansetron 4 mg|Rableet 20 mg 1-0-0|Pan 40 mg|metronidazole 400|Domstal 10mg
+P0170,49,72,93,N,Hypothyroidism|Hypertension|Type 2 diabetes|Dyslipidaemia,Tab. Obime 500|LOSARTAN 50MG|Atorvastatin 20|glimeparide 2mg
+P0171,36,92.8,55,N,Acid reflux|Gastroenteritis|Gout,metronidazole|rabeprrazole 20|Vomikind 4|T. Nicardia20|Omeprazole 20|Paantop 40|fluconazol 150 mg once|t shelcal 500|aten-er 25|Domstal|Furosemide 40mg|Colchicine 0.5mg
+P0172,33,,,N,Hypothyroidism|Epilepsy|Bipolar disorder|Depression,eptoin 100 mg|tab. lithium 300|Tab. Lovogen|shelcal 500 mg|Encorate 200|Omez 20|amitriptyline 10
+P0173,63,55,16,N,Chronic kidney disease,nifedipine 20|lasix 40 mg od|T. Stamlo 5mg|Zyclochin 0.5 mg BD|atenolol25|Zyloric 100mg|Shelcl 500
+P0174,73,51,62,N,Acid reflux|Gastroenteritis|Rheumatoid arthritis,Folitrax 7.5 mg|pantoprazole 40|HCQS 200 mg 1-0-0|Tab metronidazole|T. DOMPERIDONE 10 MG|FOLVITE 5MG|Emuset|Cifran 500 mg BD|Prednisolone|Cap Omez 20
+P0175,92,64.8,41,N,Osteoarthritis|Lower respiratory infection|COPD,aceclofenec100|calcium + vitamin D3 500 mg BD|Montair|Tab Ciifran 500 mg
+P0176,67,73,73,N,Dyslipidaemia|Ischaemic heart disease|COPD|Lower respiratory infection|Gastroenteritis|Acid reflux,Ecosprin|Metolar 25|Okacet 10|domperidone 10 mg|Zocor 20|Omez20|T. Storvas 20mg|PANTOP 40|Tab. Cardece
+P0177,73,66,53,N,Hypothyroidism|Hypertension|Dyslipidaemia|Type 2 diabetes,Istavel 100mg|ecsoprin|Ramipril 5|glimepiride 2|Danoil 5|Lisar 50|Tab Glycomet 500mg|Thyronorm 50 mcg 1-0-0|Livogen|Shlecal 500|T Rosuvastatin|Lipitor 20 mg
+P0178,77,47,76,N,Osteoarthritis|Insomnia,Rivotril 0.5 mg|Tab. Serrtaline 50|Zerodol 100|t alpax 0.25 mg 0-0-1|GABAPENTIN 300|Tab pantoprazole 40|calcium + vitamin D3 500|Ibugesic 400mg|T Nexito 10|Pregabid 75 mg 1-0-1|tab tryptomer 10 mg
+P0179,57,65.1,,N,Bipolar disorder|Epilepsy|Gastroenteritis|Acid reflux,Domstal 10|Licab 300|Sodium valproate|Omeprazole20|Emeset 4|Clonazepam 0.5 mg|phenytoin 100
+P0180,64,85.0,65,N,Gastroenteritis|Acid reflux|Hypertension|Dyslipidaemia|Type 2 diabetes,T metformin 500|Tab nifedipine 20 mg|Envas 5|Metrogyl 400|Cap Pantoprazole|Ramsitar|Tab Telsar|Domstal10|januvia 100|Amlopres 5 mg|Jalro 50mg
+P0181,55,43.1,96,N,Rheumatoid arthritis,Folitrax 7.5|naproxen 250 mg|folvite 5mg|PREDNISOLONE10|HCQS 200 mg 1-0-0
+P0182,29,66,88,Y,Pregnancy|Hypertension,Cardace 5|Enam5|Tab. Shelcal 500mg|Labetalol100|Emeset|Cap. Tulsar|Tab Stamlo 5
+P0183,59,67,66,N,Acid reflux|Hypertension,Glycomet500|Rosuvastatin 10 mg 0-0-1|Inj Basalog|Cap aspirin75|Sitagliptin 100 mg 1-0-0|Aquazide 12.5|Domperidone 10|Cifran 500 mg|metronidazole 400|ramiprli5|Emeset4|glimepiride-er 2
+P0184,88,65,48,N,Ischaemic heart disease|Dyslipidaemia|Atrial fibrillation|Heart failure,Met-XL|Adlactone25|Atorva 20|Tab Clopilet 75mg|Zocor 20|Patnocid 40|amiodarone|omepraazole 20mg
+P0185,75,56,49,N,Hypertension|Gastroenteritis|Acid reflux,Repace 50mg|pantoprazole|T Telmisartan40|Omeprazole 20 mg OD|ciprofloxacin|Aquazide 12.5 mg|Omez 20 mg|Fluconazole 150mg|Flagyl 400|T. Rabeprazoe|nifedipine 20 mg|amlodipine5
+P0186,22,75.5,110,Y,Pregnancy,paracetamol 650|Ferrous sulfate|Emeset 4 mg SOS|T CALCIUM + VITAMIN D3|labetalol 100 mg
+P0187,50,68,98,N,Acid reflux|Gastroenteritis,Pantocid 40 mg|Cap Domperidone|Fluconazol 150mg|Cap Focan 150|FLAGYL400|Ciplox 500mg|calcium + vitamin D3 500|rabeeprazole 20mg|T Ondanstron 4|T Omeprazole20
+P0188,70,72,59,N,Acid reflux|Gastroenteritis|Dyslipidaemia|Atrial fibrillation,Pan 40mg|ciprofloxacin 500|AMIODARONE 200MG|Frusenex 40|Cap. Atorvastatin20|ROSUVASTATIN 10 MG|Cap. Clopidogrel 75 mg|Tab. Omez 20|ramipril5
+P0189,86,83.8,73,N,Ischaemic heart disease|Gastroenteritis|Acid reflux,Plavi 75 mg 1-0-0|Cardace 5 mg|Vomikind 4 mg|Atorva 20|T. Simvastatin 20 mg
+P0190,83,64,35,N,Hypertension|Hypothyroidism,ENAM 5|Telmisartan 40|T. Levothyroxine 50mcg|T. Depin 20|Losartan|Tab amlodipine 5mg|ferrous sulfate|Shelcal 500|rammipril 5 mg od|Aten25
+P0191,20,56.0,110,Y,Pregnancy|Hypertension,folic acid 5 mg|enalapril 5|Losar|Revital H|T. Dolo 650mg|Amlong5|ATENOLOL25|Ferrous sufate|Shelcal 500|hydrochlorothiazide 12.5|ondansetron|TELMISARTAN 40
+P0192,89,76.5,68,N,Bipolar disorder|Anxiety,tab. cipralex 10|T Cipralex 10|Cap Stilnoct 5|Cap phenytoin 100mg|serta 50mg|amitriptyline 10|Glycomet 500|REPACE 50 MG|Licab300|alprazolamm|Rivotril|Cap Encorate 200
+P0193,82,84,29,N,Heart failure|Chronic kidney disease|Gout,Zyloric 100|t. metolar|Ramostar 5|Tab. Aten 25
+P0194,83,38,64,N,Hypothyroidism|Rheumatoid arthritis|Dyslipidaemia,Digene|Zocor 20|Cap. Eltroxin|Livogen|Folvite 5 mg|Bisoprolol|Ecosprin 75 mg|metoprolol 25|Clopidogrel 75mg|Shelcal 500mg
+P0195,55,52.3,72,N,Acid reflux,fluconzole 150mg|T. Omez 20mg|T. pantoprazole 40|metronidazole|ONDANSETRON 4|Domstal10|ciprofloxacin 500 mg|Razo20
+P0196,53,53,91,N,Lower respiratory infection|COPD|Chronic back pain,pantoprazole 40|Brufen 400|montelukast 10|Gabapin 300mg|Asthalin|Shelcal 500mg|predniolone10|Moxikind-CV 625mg|Gabapenttin 300 mg|Contramal50|Cap Nprosyn 250 mg 1-0-1|ciplox 500
+P0197,23,65,85,N,Rheumatoid arthritis|Depression,TRYPTOME|Cap. Omnacortil 10|Nextio 10|Cremaffin syrup|T. Pantoprazole 40|clonotril 0.5 mg|T Naprosyn 250|daxid 50 mg|Stilnoct 5|tab. hcqs200|Alprax 0.25mg|Folitrax7.5
+P0198,28,54.8,92,Y,Pregnancy,Shelcal|Cap bisoproolol5|Nifedipine 20|Augmnetin 625|Folviet|Labebet|Tab. Vomikind|Paracetamol 650|Livogen
+P0199,47,42,103,N,Bipolar disorder|Epilepsy,Clopilet 75|Cap Locab 300|Eptoin|Cap clonazepam0.5|Shelcal|Cap. Valparin200
+P0200,27,55,93,,Hypothyroidism,Eltroxin 50|Zincovit|T Calcium + vitamin d3 500 mg|Omez20
