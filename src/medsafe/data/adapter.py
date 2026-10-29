@@ -5,8 +5,12 @@ and nothing else. Every other module speaks the internal schema in ``medsafe.dat
 
 Supports CSV and JSON, sniffed by file extension. A JSON file is a list of objects; list fields
 may be JSON arrays or ``LIST_SEPARATOR``-joined strings. Every load goes through
-``medsafe.data.validate``: malformed rows are skipped, logged with their index, and counted in
-a ``LoadReport``.
+``medsafe.data.validate`` and is counted in a ``LoadReport``.
+
+A patient is never dropped for a bad clinical value: the field loads as ``None``, is named in
+``Patient.unreadable_fields`` and is logged as a degradation. A patient row is skipped only when
+it has no usable patient id, repeats an earlier id, or has no medications (docs/DECISIONS.md).
+Drug and interaction rows are still skipped whole when malformed.
 """
 
 from __future__ import annotations
@@ -17,7 +21,7 @@ import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, NamedTuple, TypeVar
 
 from medsafe.data import validate
 from medsafe.data.schema import Drug, InteractionPair, MedicationEntry, Patient
@@ -67,6 +71,14 @@ MISSING_TOKENS = frozenset({"", "na", "n/a", "nan", "null", "none"})
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+
+class FieldIssue(NamedTuple):
+    """A field that failed validation inside a row that is still being loaded."""
+
+    field: str
+    raw_value: Any
+    error: RowError
 
 
 @dataclass(frozen=True)
@@ -156,14 +168,16 @@ def load_patients(path: str | Path, report: LoadReport | None = None) -> list[Pa
         report: Filled in with counts and skipped rows if given.
 
     Returns:
-        One ``Patient`` per valid row. Missing clinical values are ``None``. Medication strings
-        are kept exactly as written, stripped of surrounding whitespace only, and indexed from 0.
-        A repeated ``patient_id`` keeps the first row and skips the rest.
+        One ``Patient`` per row with a patient id and at least one medication. Missing clinical
+        values are ``None``; unreadable ones are ``None`` too, named in ``unreadable_fields`` and
+        recorded in the report as degradations. Medication strings are kept exactly as written,
+        stripped of surrounding whitespace only, and indexed from 0. A repeated ``patient_id``
+        keeps the first row and skips the rest.
 
     Raises:
         SchemaError: The file does not match ``COLUMN_MAP['patients']``.
     """
-    return _load_table(path, "patients", _build_patient, "patient_id", report)
+    return _load_table(path, "patients", _build_patient, "patient_id", report, degradable=True)
 
 
 def load_drugs(path: str | Path, report: LoadReport | None = None) -> dict[str, Drug]:
@@ -223,9 +237,16 @@ def load_dataset(input_dir: str | Path) -> Dataset:
     return Dataset(patients, drugs, interactions, reports)
 
 
-def _load_table(path: str | Path, kind: str, build: Callable[[Mapping[str, Any]], T],
-                unique_field: str | None, report: LoadReport | None) -> list[T]:
-    """Read, map and validate one file, skipping and recording every bad row."""
+Builder = Callable[[Mapping[str, Any], list[FieldIssue]], T]
+
+
+def _load_table(path: str | Path, kind: str, build: Builder[T], unique_field: str | None,
+                report: LoadReport | None, *, degradable: bool = False) -> list[T]:
+    """Read, map and validate one file, recording every skipped row and degraded field.
+
+    With ``degradable``, a builder may load a bad field as None and report it as a FieldIssue,
+    and a CSV row of the wrong width is kept as degraded. Otherwise both skip the row.
+    """
     table = read_table(path)
     column_map = COLUMN_MAP[kind]
     notes = validate.require_columns(table.columns, column_map, kind, str(table.path))
@@ -239,10 +260,15 @@ def _load_table(path: str | Path, kind: str, build: Callable[[Mapping[str, Any]]
     seen: set[Any] = set()
     for index, record in enumerate(table.records):
         report.rows_read += 1
+        issues: list[FieldIssue] = []
         try:
-            if table.is_csv:
-                _check_csv_shape(record, len(table.columns))
-            item = build({name: _cell(record, column) for name, column in column_map.items()})
+            shape = _csv_shape_issue(record, len(table.columns)) if table.is_csv else None
+            if shape is not None:
+                if not degradable:
+                    raise shape.error
+                issues.append(shape)
+            item = build({name: _cell(record, column) for name, column in column_map.items()},
+                         issues)
             if unique_field is not None:
                 key = getattr(item, unique_field)
                 if key in seen:
@@ -254,20 +280,29 @@ def _load_table(path: str | Path, kind: str, build: Callable[[Mapping[str, Any]]
             logger.warning("%s row %d skipped (%s): %s",
                            table.path.name, index, skipped.code, skipped.detail)
             continue
+        for issue in issues:
+            degradation = report.record_degradation(index, getattr(item, unique_field),
+                                                    issue.field, issue.raw_value, issue.error)
+            logger.warning("%s row %d %s: %s loaded as None (%s)", table.path.name, index,
+                           degradation.patient_id, degradation.field, degradation.detail)
         items.append(item)
     report.loaded = len(items)
     return items
 
 
-def _check_csv_shape(record: Mapping[Any, Any], n_columns: int) -> None:
-    """Refuse a CSV row with more or fewer fields than the header."""
+def _csv_shape_issue(record: Mapping[Any, Any], n_columns: int) -> FieldIssue | None:
+    """Describe a CSV row with more or fewer fields than the header, or return None."""
     if None in record:
-        extra = len(record[None])
-        raise RowError("malformed_row", None, f"{extra} more field(s) than the header")
-    short = sum(1 for key, value in record.items() if value is None)
+        extra = record[None]
+        return FieldIssue("row", extra, RowError(
+            "malformed_row", None, f"{len(extra)} more field(s) than the header; "
+                                   f"values may be misaligned"))
+    short = sum(1 for value in record.values() if value is None)
     if short:
-        raise RowError("malformed_row", None,
-                       f"{n_columns - short} field(s) where the header has {n_columns}")
+        return FieldIssue("row", "", RowError(
+            "malformed_row", None, f"{n_columns - short} field(s) where the header has "
+                                   f"{n_columns}; the missing fields load as None"))
+    return None
 
 
 def _cell(record: Mapping[str, Any], column: str | None) -> Any:
@@ -294,23 +329,43 @@ def _canonical_generic(name: str) -> str:
     return " ".join(name.lower().split())
 
 
-def _build_patient(cells: Mapping[str, Any]) -> Patient:
-    """Build a Patient from mapped cells, or raise RowError."""
+def _build_patient(cells: Mapping[str, Any], issues: list[FieldIssue]) -> Patient:
+    """Build a Patient from mapped cells. Bad clinical fields load as None and join ``issues``.
+
+    Raises:
+        RowError: No patient id, or no medications. Only these drop the patient.
+    """
+    patient_id = validate.coerce_text(cells["patient_id"], "patient_id", required=True)
     medications = _split_list(cells["medications"])
+    if not medications:
+        raise RowError("missing_value", "medications", "medication list is missing or empty")
+
+    def readable(name: str, coerce: Callable[[Any, str], Any]) -> Any:
+        """Coerce and range-check one field; on failure record the issue and return None."""
+        try:
+            return validate.check_range(coerce(cells[name], name), name)
+        except RowError as error:
+            issues.append(FieldIssue(name, cells[name], error))
+            return None
+
+    age = readable("age", validate.coerce_int)
+    weight_kg = readable("weight_kg", validate.coerce_float)
+    egfr = readable("egfr", validate.coerce_float)
+    pregnant = readable("pregnant", validate.coerce_bool)
     return Patient(
-        patient_id=validate.coerce_text(cells["patient_id"], "patient_id", required=True),
-        age=validate.check_range(validate.coerce_int(cells["age"], "age"), "age"),
-        weight_kg=validate.check_range(
-            validate.coerce_float(cells["weight_kg"], "weight_kg"), "weight_kg"),
-        egfr=validate.check_range(validate.coerce_float(cells["egfr"], "egfr"), "egfr"),
-        pregnant=validate.coerce_bool(cells["pregnant"], "pregnant"),
+        patient_id=patient_id,
+        age=age,
+        weight_kg=weight_kg,
+        egfr=egfr,
+        pregnant=pregnant,
         diagnoses=_split_list(cells["diagnoses"]),
         medications=tuple(MedicationEntry(raw=raw, index=index)
                           for index, raw in enumerate(medications)),
+        unreadable_fields=tuple(issue.field for issue in issues),
     )
 
 
-def _build_drug(cells: Mapping[str, Any]) -> Drug:
+def _build_drug(cells: Mapping[str, Any], issues: list[FieldIssue]) -> Drug:
     """Build a Drug from mapped cells, or raise RowError."""
     generic = validate.coerce_text(cells["generic"], "generic", required=True)
     return Drug(
@@ -323,7 +378,7 @@ def _build_drug(cells: Mapping[str, Any]) -> Drug:
     )
 
 
-def _build_interaction(cells: Mapping[str, Any]) -> InteractionPair:
+def _build_interaction(cells: Mapping[str, Any], issues: list[FieldIssue]) -> InteractionPair:
     """Build an InteractionPair from mapped cells, or raise RowError."""
     drug_a = _canonical_generic(validate.coerce_text(cells["drug_a"], "drug_a", required=True))
     drug_b = _canonical_generic(validate.coerce_text(cells["drug_b"], "drug_b", required=True))

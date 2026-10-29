@@ -6,6 +6,7 @@
     abstained            every medication the resolver declined to resolve
     severity             alerts by severity, before collapse (findings) and after (alerts)
     missed-near-misses   near-misses the pipeline did not catch, with the reason for each
+    degraded             patients kept with a field that could not be read, and the note
     counts               rows per table: which phases have filled the database so far
 
 Build the database first with ``python tools/build_db.py --input <dir>``. Opened read-only.
@@ -75,6 +76,13 @@ QUERIES: dict[str, Query] = {
         ORDER BY patient_id, rule_id
         LIMIT :limit""",
         "no near-miss results recorded: the Phase 7 evaluation harness writes them"),
+    "degraded": Query("""
+        SELECT patient_id, unreadable_fields, data_notes
+        FROM patients
+        WHERE unreadable_fields != '[]'
+        ORDER BY patient_id
+        LIMIT :limit""",
+        "no degraded patients: every value was read as written"),
     "counts": Query("""
         SELECT 'patients' AS table_name, COUNT(*) AS n_rows FROM patients
         UNION ALL SELECT 'medications', COUNT(*) FROM medications
@@ -120,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Canned queries over the medsafe SQLite cache.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="\n".join(line for line in __doc__.splitlines()[3:9]))
+        epilog="\n".join(line for line in __doc__.splitlines()[3:10]))
     parser.add_argument("name", choices=QUERIES)
     parser.add_argument("--db", type=Path, default=DEFAULT_DB, help=f"default {DEFAULT_DB}")
     parser.add_argument("--limit", type=int, default=20, help="row cap for listing queries")

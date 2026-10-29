@@ -8,7 +8,8 @@ from scratch on every run; nothing in it is hand-edited.
 
 Each table, and the phase that fills it:
 
-    patients          Phase 1   clinical context; alerts_suppressed from Phase 6
+    patients          Phase 1   clinical context, unreadable fields and their notes;
+                                alerts_suppressed from Phase 6
     medications       Phase 1   raw strings; resolution columns from Phase 2
     findings          Phase 3-4 every rule hit before collapse, with table and final severity
     alerts            Phase 6   what ships after collapse and the cap: one submission row each
@@ -32,6 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from medsafe.data.adapter import Dataset, load_dataset  # noqa: E402
+from medsafe.pipeline import PatientResult, PipelineResult, Settings, run_pipeline  # noqa: E402
 
 DEFAULT_DB = ROOT / "data" / "medsafe.db"
 TABLES = ("patients", "medications", "findings", "alerts", "collapse_results", "metrics")
@@ -47,6 +49,8 @@ CREATE TABLE patients (
     pregnant          INTEGER CHECK (pregnant IN (0, 1)),
     diagnoses         TEXT NOT NULL,              -- JSON array
     medication_count  INTEGER NOT NULL,
+    unreadable_fields TEXT NOT NULL,              -- JSON array: fields loaded as None, unreadable
+    data_notes        TEXT NOT NULL,              -- JSON array: what that means for the checks
     alerts_suppressed INTEGER                     -- Phase 6
 );
 
@@ -111,17 +115,24 @@ CREATE TABLE metrics (
 """
 
 
-def insert_patients(conn: sqlite3.Connection, dataset: Dataset) -> None:
+def insert_patients(conn: sqlite3.Connection, result: PipelineResult) -> None:
     """Insert one row per patient and one per medication as written. Missing stays NULL."""
+    def patient_row(r: PatientResult) -> tuple:
+        """One patients-table row. NULL stays NULL; lists are stored as JSON arrays."""
+        p = r.patient
+        return (p.patient_id, p.age, p.weight_kg, p.egfr,
+                None if p.pregnant is None else int(p.pregnant),
+                json.dumps(list(p.diagnoses)), len(p.medications),
+                json.dumps(list(p.unreadable_fields)), json.dumps(list(r.notes)))
+
     conn.executemany(
         "INSERT INTO patients (patient_id, age, weight_kg, egfr, pregnant, diagnoses, "
-        "medication_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [(p.patient_id, p.age, p.weight_kg, p.egfr,
-          None if p.pregnant is None else int(p.pregnant),
-          json.dumps(list(p.diagnoses)), len(p.medications)) for p in dataset.patients])
+        "medication_count, unreadable_fields, data_notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [patient_row(r) for r in result.patients])
     conn.executemany(
         "INSERT INTO medications (patient_id, med_index, raw) VALUES (?, ?, ?)",
-        [(p.patient_id, m.index, m.raw) for p in dataset.patients for m in p.medications])
+        [(r.patient.patient_id, m.index, m.raw)
+         for r in result.patients for m in r.patient.medications])
 
 
 def insert_load_metrics(conn: sqlite3.Connection, dataset: Dataset, input_dir: Path) -> None:
@@ -134,6 +145,9 @@ def insert_load_metrics(conn: sqlite3.Connection, dataset: Dataset, input_dir: P
         rows += [
             (f"load.{report.kind}.read", report.rows_read, None),
             (f"load.{report.kind}.loaded", report.loaded, None),
+            (f"load.{report.kind}.loaded_clean", report.loaded_clean, None),
+            (f"load.{report.kind}.loaded_degraded", report.loaded_degraded,
+             json.dumps({"fields": report.degraded_fields})),
             (f"load.{report.kind}.skipped", report.skipped,
              json.dumps({"reasons": report.reasons, "notes": report.notes})),
         ]
@@ -162,12 +176,13 @@ def build_db(input_dir: Path, db_path: Path = DEFAULT_DB) -> dict[str, int]:
         SchemaError: The input does not match ``COLUMN_MAP``.
     """
     dataset = load_dataset(input_dir)
+    result = run_pipeline(dataset, Settings())
     db_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = db_path.with_name(db_path.name + ".tmp")
     temporary.unlink(missing_ok=True)
     with closing(sqlite3.connect(temporary)) as conn:
         conn.executescript(SCHEMA)
-        insert_patients(conn, dataset)
+        insert_patients(conn, result)
         insert_load_metrics(conn, dataset, input_dir)
         conn.commit()
         counts = table_counts(conn)

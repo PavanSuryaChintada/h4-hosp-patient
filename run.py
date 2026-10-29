@@ -6,8 +6,9 @@ Reads the supplied input files directly through ``medsafe.data.adapter``. Never 
 ``data/medsafe.db``: that database is a convenience cache built afterwards by
 ``tools/build_db.py``, and the pipeline gives identical output with it deleted.
 
-Phase 1 stage: loads and validates the input, prints the load report, and writes one row per
-medication as written (patient_id, med_index, raw). The Phase 6 alert writer replaces this.
+Phase 1 stage: loads and validates the input, prints the load report (clean, degraded and
+skipped patients), and writes one row per medication as written, with the patient's
+data-quality notes. The Phase 6 alert writer replaces this output.
 """
 
 from __future__ import annotations
@@ -22,10 +23,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from medsafe.data.adapter import load_dataset  # noqa: E402
-from medsafe.data.schema import Patient  # noqa: E402
 from medsafe.data.validate import SchemaError  # noqa: E402
+from medsafe.pipeline import PipelineResult, Settings, run_pipeline  # noqa: E402
 
-LOAD_STAGE_COLUMNS = ("patient_id", "med_index", "raw")
+LOAD_STAGE_COLUMNS = ("patient_id", "med_index", "raw", "patient_notes")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -43,13 +44,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def write_load_stage(patients: list[Patient], path: Path) -> int:
+def write_load_stage(result: PipelineResult, path: Path) -> int:
     """Write one row per medication as loaded, in input order. Returns the row count.
 
-    Phase 1 placeholder output; the Phase 6 writer in ``medsafe.output`` replaces it.
+    ``patient_notes`` carries every data-quality note on the patient, for example an eGFR that
+    could not be read, so a degraded record is never silently incomplete. Phase 1 placeholder
+    output; the Phase 6 writer in ``medsafe.output`` replaces it.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    rows = [(p.patient_id, m.index, m.raw) for p in patients for m in p.medications]
+    rows = [(r.patient.patient_id, m.index, m.raw, " ".join(r.notes))
+            for r in result.patients for m in r.patient.medications]
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(LOAD_STAGE_COLUMNS)
@@ -70,8 +74,9 @@ def main(argv: list[str] | None = None) -> int:
 
     for report in dataset.reports:
         print(report.summary())
-    rows = write_load_stage(dataset.patients, args.output)
-    print(f"patients processed: {len(dataset.patients)}")
+    result = run_pipeline(dataset, Settings())
+    rows = write_load_stage(result, args.output)
+    print(f"patients processed: {len(result.patients)}")
     print(f"medications written: {rows} -> {args.output}")
     print(f"runtime: {time.perf_counter() - started:.2f}s")
     return 0

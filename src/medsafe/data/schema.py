@@ -19,7 +19,12 @@ class MedicationEntry:
 
 @dataclass(frozen=True)
 class Patient:
-    """One patient: clinical context plus the medication list as written."""
+    """One patient: clinical context plus the medication list as written.
+
+    ``unreadable_fields`` names the fields whose source value failed validation and was loaded
+    as ``None``, so a downstream stage can tell "could not be read" from "not recorded". Neither
+    is ever treated as safe (docs/DECISIONS.md).
+    """
 
     patient_id: str
     age: int | None
@@ -28,6 +33,7 @@ class Patient:
     pregnant: bool | None
     diagnoses: tuple[str, ...]
     medications: tuple[MedicationEntry, ...]
+    unreadable_fields: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

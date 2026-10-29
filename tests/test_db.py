@@ -146,6 +146,30 @@ def test_canned_queries_return_the_right_rows(tmp_path: Path) -> None:
     assert ["patients", "200"] in query("counts")
 
 
+def test_degraded_patients_are_stored_and_queryable(tmp_path: Path) -> None:
+    input_dir = tmp_path / "input"
+    shutil.copytree(FIXTURES_DIR, input_dir)
+    patients_csv = input_dir / "patients.csv"
+    text = patients_csv.read_text(encoding="utf-8").splitlines(keepends=True)
+    fields = text[1].split(",")
+    fields[3] = "n/k?"                     # P0001's egfr column
+    text[1] = ",".join(fields)
+    patients_csv.write_text("".join(text), encoding="utf-8")
+
+    db = tmp_path / "medsafe.db"
+    run("tools/build_db.py", "--input", str(input_dir), "--db", str(db))
+    with closing(sqlite3.connect(db)) as conn:
+        row = conn.execute("SELECT egfr, unreadable_fields, data_notes FROM patients "
+                           "WHERE patient_id = 'P0001'").fetchone()
+        assert row[0] is None and json.loads(row[1]) == ["egfr"]
+        assert "renal checks not verifiable" in json.loads(row[2])[0]
+        degraded = conn.execute("SELECT value FROM metrics "
+                                "WHERE name = 'load.patients.loaded_degraded'").fetchone()[0]
+        assert degraded == 1
+    out = run("tools/query.py", "degraded", "--db", str(db)).stdout
+    assert "P0001" in out and "renal checks not verifiable" in out
+
+
 def test_query_without_a_database_says_how_to_build_it(tmp_path: Path) -> None:
     result = subprocess.run([sys.executable, "tools/query.py", "counts",
                              "--db", str(tmp_path / "absent.db")],

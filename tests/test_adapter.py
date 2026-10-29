@@ -78,7 +78,7 @@ def test_swap_every_patient_fully_populated(dataset: adapter.Dataset) -> None:
 
 
 def test_swap_missing_loads_as_none_never_zero(dataset: adapter.Dataset) -> None:
-    """A blank source cell loads as None, and a filled one never does."""
+    """A blank or unreadable cell loads as None; a readable one never does."""
     table = adapter.read_table(find_input(DATA_DIR, "patients"))
     id_column = COLUMN_MAP["patients"]["patient_id"]
     first_record: dict[str, dict] = {}
@@ -92,8 +92,11 @@ def test_swap_missing_loads_as_none_never_zero(dataset: adapter.Dataset) -> None
             cell = record.get(column) if column else None
             blank = cell is None or (isinstance(cell, str)
                                      and cell.strip().lower() in MISSING_TOKENS)
+            unreadable = name in patient.unreadable_fields
             value = getattr(patient, name)
-            assert (value is None) == blank, f"{patient.patient_id}.{name}: {cell!r} -> {value!r}"
+            assert not (blank and unreadable), f"{patient.patient_id}.{name}: blank is not unreadable"
+            assert (value is None) == (blank or unreadable), \
+                f"{patient.patient_id}.{name}: {cell!r} -> {value!r}"
 
 
 def test_swap_reference_tables_fully_populated(dataset: adapter.Dataset) -> None:
@@ -118,7 +121,8 @@ def test_fixtures_load_200_patients_with_nothing_skipped(dataset: adapter.Datase
     assert len(dataset.drugs) == 68
     assert len(dataset.interactions) == 195
     for report in dataset.reports:
-        assert report.skipped == 0 and not report.notes, report.summary()
+        assert report.skipped == 0 and report.loaded_degraded == 0 and not report.notes, \
+            report.summary()
 
 
 @fixtures_only
@@ -147,7 +151,7 @@ def test_ground_truth_lines_up_with_loaded_medications(dataset: adapter.Dataset)
         assert loaded[(row["patient_id"], int(row["med_index"]))] == row["raw"]
 
 
-# --- Malformed rows: skipped, logged with their index, counted --------------------------------
+# --- Bad clinical values degrade the field; the patient is kept --------------------------------
 
 @pytest.mark.parametrize(("column", "value", "code"), [
     ("egfr", "abc", "bad_type:egfr"),
@@ -156,36 +160,76 @@ def test_ground_truth_lines_up_with_loaded_medications(dataset: adapter.Dataset)
     ("age", "130", "out_of_range:age"),
     ("age", "72.5", "bad_type:age"),
     ("weight_kg", "400", "out_of_range:weight_kg"),
+    ("weight_kg", "seventy", "bad_type:weight_kg"),
     ("pregnant", "maybe", "bad_type:pregnant"),
-    ("patient_id", "", "missing_value:patient_id"),
 ])
-def test_corrupted_row_is_skipped_logged_and_counted(tmp_path: Path, caplog: pytest.LogCaptureFixture,
-                                                     column: str, value: str, code: str) -> None:
+def test_bad_value_degrades_the_field_and_keeps_the_patient(
+        tmp_path: Path, caplog: pytest.LogCaptureFixture, column: str, value: str, code: str) -> None:
+    original = load_patients(FIXTURES_DIR / "patients.csv")[CORRUPT_INDEX]
+    path = write_copy(tmp_path, "patients.csv", set_cell(column, value))
+    report = LoadReport()
+    with caplog.at_level(logging.WARNING, logger="medsafe.data.adapter"):
+        patients = load_patients(path, report)
+
+    assert (report.rows_read, report.loaded, report.skipped) == (200, 200, 0)
+    assert (report.loaded_clean, report.loaded_degraded) == (199, 1)
+    assert report.degraded_fields == {code: 1}
+    degradation = report.degradations[0]
+    assert (degradation.index, degradation.patient_id, degradation.field, degradation.raw_value) \
+        == (CORRUPT_INDEX, "P0042", column, value)
+    assert f"row {CORRUPT_INDEX} P0042: {column} loaded as None" in caplog.text
+
+    patient = patients[CORRUPT_INDEX]
+    assert patient.patient_id == "P0042"
+    assert getattr(patient, column) is None and patient.unreadable_fields == (column,)
+    assert patient.medications == original.medications
+
+
+@pytest.mark.parametrize(("column", "value", "code"), [
+    ("patient_id", "", "missing_value:patient_id"),
+    ("medications", "", "missing_value:medications"),
+    ("medications", " | ", "missing_value:medications"),
+])
+def test_only_missing_id_or_medications_drop_the_patient(
+        tmp_path: Path, caplog: pytest.LogCaptureFixture, column: str, value: str, code: str) -> None:
     path = write_copy(tmp_path, "patients.csv", set_cell(column, value))
     report = LoadReport()
     with caplog.at_level(logging.WARNING, logger="medsafe.data.adapter"):
         patients = load_patients(path, report)
 
     assert (report.rows_read, report.loaded, report.skipped) == (200, 199, 1)
-    assert report.reasons == {code: 1}
+    assert report.reasons == {code: 1} and report.loaded_degraded == 0
     assert report.skipped_rows[0].index == CORRUPT_INDEX
     assert f"row {CORRUPT_INDEX} skipped ({code})" in caplog.text
     assert len(patients) == 199 and "P0042" not in {p.patient_id for p in patients}
 
 
-def test_row_with_an_extra_field_is_skipped(tmp_path: Path) -> None:
+def test_several_bad_values_on_one_patient_count_as_one_degraded_patient(tmp_path: Path) -> None:
+    def mutate(rows: list[list[str]]) -> None:
+        set_cell("egfr", "high")(rows)
+        set_cell("age", "unknown")(rows)
+    report = LoadReport()
+    patient = load_patients(write_copy(tmp_path, "patients.csv", mutate), report)[CORRUPT_INDEX]
+    assert patient.unreadable_fields == ("age", "egfr")
+    assert report.loaded_degraded == 1
+    assert report.degraded_fields == {"bad_type:age": 1, "bad_type:egfr": 1}
+
+
+def test_row_with_an_extra_field_is_kept_as_degraded(tmp_path: Path) -> None:
     path = write_copy(tmp_path, "patients.csv", lambda rows: rows[CORRUPT_INDEX + 1].append("x"))
     report = LoadReport()
-    assert len(load_patients(path, report)) == 199
-    assert report.reasons == {"malformed_row": 1}
+    patients = load_patients(path, report)
+    assert len(patients) == 200 and report.skipped == 0
+    assert report.degraded_fields == {"malformed_row:row": 1}
+    assert patients[CORRUPT_INDEX].unreadable_fields == ("row",)
 
 
-def test_truncated_row_is_skipped(tmp_path: Path) -> None:
+def test_truncated_row_without_medications_is_skipped(tmp_path: Path) -> None:
     def truncate(rows: list[list[str]]) -> None:
         del rows[CORRUPT_INDEX + 1][3:]
     report = LoadReport()
     assert len(load_patients(write_copy(tmp_path, "patients.csv", truncate), report)) == 199
-    assert report.reasons == {"malformed_row": 1}
+    assert report.reasons == {"missing_value:medications": 1}
 
 
 def test_duplicate_patient_id_keeps_the_first_row(tmp_path: Path) -> None:
@@ -198,13 +242,19 @@ def test_duplicate_patient_id_keeps_the_first_row(tmp_path: Path) -> None:
     assert patients[0] == original
 
 
-def test_report_summary_names_counts_and_reasons(tmp_path: Path) -> None:
+def test_report_summary_separates_clean_degraded_and_skipped(tmp_path: Path) -> None:
+    def mutate(rows: list[list[str]]) -> None:
+        set_cell("egfr", "abc")(rows)
+        set_cell("patient_id", "", index=0)(rows)
     report = LoadReport()
-    load_patients(write_copy(tmp_path, "patients.csv", set_cell("egfr", "abc")), report)
+    load_patients(write_copy(tmp_path, "patients.csv", mutate), report)
     summary = report.summary()
-    assert "200 read, 199 loaded, 1 skipped" in summary
-    assert "bad_type:egfr: 1" in summary
-    assert report.to_dict()["skipped_rows"][0]["index"] == CORRUPT_INDEX
+    assert "200 read, 199 loaded (198 clean, 1 degraded), 1 skipped" in summary
+    assert "degraded bad_type:egfr: 1" in summary
+    assert "skipped missing_value:patient_id: 1" in summary
+    as_dict = report.to_dict()
+    assert as_dict["degradations"][0]["patient_id"] == "P0042"
+    assert as_dict["skipped_rows"][0]["index"] == 0
 
 
 def test_self_paired_interaction_is_skipped(tmp_path: Path) -> None:

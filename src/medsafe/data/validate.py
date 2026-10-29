@@ -1,9 +1,11 @@
 """Type coercion, range checks and the structured load report.
 
 The adapter hands each source cell to the coercers here. A cell that cannot be coerced, or falls
-outside its sane range, raises ``RowError``; the adapter skips that row and records it in the
-``LoadReport`` with its index and reason. A file that does not match ``COLUMN_MAP`` at all raises
-``SchemaError`` and stops the load. Nothing is dropped silently.
+outside its sane range, raises ``RowError``. For a patient's clinical field the adapter catches it,
+loads that field as ``None`` and records a ``Degradation``; the patient is kept. Only a missing or
+duplicate patient id, or a missing or empty medication list, skips the row (docs/DECISIONS.md).
+A file that does not match ``COLUMN_MAP`` at all raises ``SchemaError`` and stops the load.
+Nothing is dropped silently.
 
 Missing stays ``None`` through every coercer. ``0`` is a value, never a stand-in for missing.
 """
@@ -73,15 +75,33 @@ class SkippedRow:
     detail: str              # human-readable, includes the offending value
 
 
+@dataclass(frozen=True)
+class Degradation:
+    """One patient field that failed validation and was loaded as None. The patient was kept."""
+
+    index: int               # 0-based position of the record in the file, header excluded
+    patient_id: str
+    field: str               # internal field name, or "row" for a malformed record
+    raw_value: str           # the source value exactly as read
+    reason: str              # bad_type, out_of_range or malformed_row
+    detail: str              # human-readable
+
+    @property
+    def code(self) -> str:
+        """Breakdown key, for example ``bad_type:weight_kg``."""
+        return f"{self.reason}:{self.field}"
+
+
 @dataclass
 class LoadReport:
-    """What one loader did with one file: rows read, loaded, skipped, and why."""
+    """What one loader did with one file: rows read, loaded clean, loaded degraded, skipped."""
 
     kind: str = ""
     source: str = ""
     rows_read: int = 0
     loaded: int = 0
     skipped_rows: list[SkippedRow] = field(default_factory=list)
+    degradations: list[Degradation] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -90,9 +110,24 @@ class LoadReport:
         return len(self.skipped_rows)
 
     @property
+    def loaded_degraded(self) -> int:
+        """Rows loaded with at least one field set to None because it could not be read."""
+        return len({degradation.index for degradation in self.degradations})
+
+    @property
+    def loaded_clean(self) -> int:
+        """Rows loaded with every field read as written."""
+        return self.loaded - self.loaded_degraded
+
+    @property
     def reasons(self) -> dict[str, int]:
         """Skipped-row count per reason key, sorted by key."""
         return dict(sorted(Counter(row.code for row in self.skipped_rows).items()))
+
+    @property
+    def degraded_fields(self) -> dict[str, int]:
+        """Degraded-field count per breakdown key, sorted by key."""
+        return dict(sorted(Counter(d.code for d in self.degradations).items()))
 
     def record_skip(self, index: int, error: RowError) -> SkippedRow:
         """Record that the row at ``index`` was refused for ``error``. Returns the record."""
@@ -100,23 +135,38 @@ class LoadReport:
         self.skipped_rows.append(row)
         return row
 
+    def record_degradation(self, index: int, patient_id: str, field_name: str,
+                           raw_value: Any, error: RowError) -> Degradation:
+        """Record that ``field_name`` of the row at ``index`` loaded as None. Returns the record."""
+        degradation = Degradation(index=index, patient_id=patient_id, field=field_name,
+                                  raw_value="" if raw_value is None else str(raw_value),
+                                  reason=error.reason, detail=error.detail)
+        self.degradations.append(degradation)
+        return degradation
+
     def summary(self) -> str:
-        """Multi-line plain-text summary: counts, then the reason breakdown, then notes."""
-        lines = [f"{self.kind:<12} {self.source}: {self.rows_read} read, "
-                 f"{self.loaded} loaded, {self.skipped} skipped"]
+        """Multi-line plain-text summary: counts, then the breakdowns, then notes."""
+        lines = [f"{self.kind:<12} {self.source}: {self.rows_read} read, {self.loaded} loaded "
+                 f"({self.loaded_clean} clean, {self.loaded_degraded} degraded), "
+                 f"{self.skipped} skipped"]
+        lines += [f"  degraded {code}: {count}" for code, count in self.degraded_fields.items()]
         lines += [f"  skipped {code}: {count}" for code, count in self.reasons.items()]
         lines += [f"  note: {note}" for note in self.notes]
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, Any]:
-        """JSON-ready form of the report, including every skipped row."""
+        """JSON-ready form of the report, including every skipped row and degraded field."""
         return {
             "kind": self.kind,
             "source": self.source,
             "rows_read": self.rows_read,
             "loaded": self.loaded,
+            "loaded_clean": self.loaded_clean,
+            "loaded_degraded": self.loaded_degraded,
             "skipped": self.skipped,
+            "degraded_fields": self.degraded_fields,
             "reasons": self.reasons,
+            "degradations": [vars(d) for d in self.degradations],
             "skipped_rows": [vars(row) for row in self.skipped_rows],
             "notes": list(self.notes),
         }
