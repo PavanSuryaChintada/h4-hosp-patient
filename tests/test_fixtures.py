@@ -8,7 +8,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
-FIXTURE_FILES = ("patients.csv", "drugs.csv", "interactions.csv", "ground_truth.csv")
+FIXTURE_FILES = ("patients.csv", "drugs.csv", "interactions.csv", "ground_truth.csv",
+                 "expected_issues.csv")
 
 
 def test_committed_fixtures_regenerate_byte_for_byte(tmp_path: Path) -> None:

@@ -1,0 +1,877 @@
+patient_id,issue_type,rule_id,drugs,severity,near_miss,near_miss_reason,evidence,raw_drugs
+P0001,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,domstal 10|Vomikind 4
+P0003,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Omez 20 mg|PANTOCID 40MG
+P0003,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Calcium + vitamin d3500|FERROUS SULFATE
+P0003,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Calcium + vitamin d3500|Cap. Levothyroxine 50mcg
+P0003,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,FERROUS SULFATE|Cap. Levothyroxine 50mcg
+P0003,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Cap. Levothyroxine 50mcg|Omez 20 mg
+P0003,interaction,LTX-PPI-01,levothyroxine|pantoprazole,low,N,,table minor,Cap. Levothyroxine 50mcg|PANTOCID 40MG
+P0003,interaction,MTX-PPI-01,methotrexate|omeprazole,low,N,,table minor,Tab Folitrax 7.5|Omez 20 mg
+P0003,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,Tab Folitrax 7.5|PANTOCID 40MG
+P0003,interaction,NSAID-ACEI-01,naproxen|ramipril,high,N,,table major,T Naprosyn 250mg|T Ramistar 5
+P0003,interaction,NSAID-MTX-01,methotrexate|naproxen,high,N,,table major,Tab Folitrax 7.5|T Naprosyn 250mg
+P0003,interaction,NSAID-PRD-01,naproxen|prednisolone,medium,Y,hard-to-read name: 'prednisolnoe 10' is prednisolone,table moderate,T Naprosyn 250mg|prednisolnoe 10
+P0003,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,FERROUS SULFATE|Omez 20 mg
+P0003,interaction,PPI-FER-01,ferrous sulfate|pantoprazole,low,N,,table minor,FERROUS SULFATE|PANTOCID 40MG
+P0004,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Alprazolam 0.25|Clonoril
+P0004,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Cap Neito 10|sertraline
+P0004,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Alprazolam 0.25|zolpidem 5
+P0004,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Clonoril|zolpidem 5
+P0004,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shelcal 500|Levothyroxine 50 mcg
+P0005,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoin 100|sodium valproate 200 mg
+P0006,duplicate,DUP-CLASS-NSAID,diclofenac|ibuprofen,medium,N,,2 drugs of one class,Tab. diclofenac|brufen 400
+P0006,interaction,NSAID-LOOP-01,diclofenac|furosemide,medium,N,,table moderate,Tab. diclofenac|Cap. Lasix
+P0006,interaction,NSAID-LOOP-01,furosemide|ibuprofen,medium,N,,table moderate,Cap. Lasix|brufen 400
+P0006,renal,RENAL-DCF,diclofenac,medium,N,,eGFR 54 < reduce threshold 60,Tab. diclofenac
+P0006,renal,RENAL-IBU,ibuprofen,medium,N,,eGFR 54 < reduce threshold 60,brufen 400
+P0006,renal,RENAL-PRE,pregabalin,medium,N,,eGFR 54 < reduce threshold 60,Pregabid 75
+P0007,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Enam 5mg|Cardace
+P0007,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Tab Losar|Telsor
+P0007,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Enam 5mg|Tab Losar
+P0007,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enam 5mg|Telsor
+P0007,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,Tab Losar|Cardace
+P0007,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Cardace|Telsor
+P0007,interaction,ACEI-LOOP-01,enalapril|furosemide,low,N,,table minor,Enam 5mg|lasix 40
+P0007,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,lasix 40|Cardace
+P0007,interaction,ARB-LOOP-01,furosemide|losartan,low,N,,table minor,lasix 40|Tab Losar
+P0007,interaction,ARB-LOOP-01,furosemide|telmisartan,low,N,,table minor,lasix 40|Telsor
+P0007,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,Hydrochlorothiazide 12.5 mg 1-0-0|Tab Losar
+P0007,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Hydrochlorothiazide 12.5 mg 1-0-0|Telsor
+P0007,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,Cap. Disprin 75|Enam 5mg
+P0007,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,Cap. Disprin 75|Cardace
+P0007,interaction,MTF-LOOP-01,furosemide|metformin,low,N,,table minor,lasix 40|Metformin500
+P0008,duplicate,DUP-CLASS-NSAID,diclofenac|ibuprofen|naproxen,medium,N,,3 drugs of one class,Vovera 50 mg BD|Ibugesic400|Naprosyn 250 mg
+P0008,interaction,NSAID-PRD-01,diclofenac|prednisolone,medium,N,,table moderate,Vovera 50 mg BD|PREDINSOLONE 10
+P0008,interaction,NSAID-PRD-01,ibuprofen|prednisolone,medium,N,,table moderate,Ibugesic400|PREDINSOLONE 10
+P0008,interaction,NSAID-PRD-01,naproxen|prednisolone,medium,N,,table moderate,Naprosyn 250 mg|PREDINSOLONE 10
+P0009,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Ramistar5|Tab. Telmisartan40
+P0009,interaction,ACEI-INS-01,insulin glargine|ramipril,low,N,,table minor,Inj Insuiln glargine|Ramistar5
+P0009,interaction,ACEI-KSP-01,ramipril|spironolactone,high,N,,table major,Ramistar5|spirenolactone25
+P0009,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,frusenex 40 mg 1-0-0|Ramistar5
+P0009,interaction,ACEI-SU-01,glimepiride|ramipril,low,N,,table minor,Amaryl 2 mg 1-0-0|Ramistar5
+P0009,interaction,ARB-KSP-01,spironolactone|telmisartan,high,N,,table major,spirenolactone25|Tab. Telmisartan40
+P0009,interaction,ARB-LOOP-01,furosemide|telmisartan,low,N,,table minor,frusenex 40 mg 1-0-0|Tab. Telmisartan40
+P0011,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,cardace|telimsartan 40 mg
+P0011,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Tab Shelcla 500|Levothyroxine50
+P0011,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Levothyroxine50|Omez20
+P0012,duplicate,DUP-CLASS-NSAID,ibuprofen|naproxen,medium,N,,2 drugs of one class,Brufen 400mg|Tab Naprosyn
+P0012,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Enam 5|Losar50
+P0012,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,Enam 5|T. glibenclamide 5mg
+P0012,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,hydrochlorothiazide 12.5|Losar50
+P0012,interaction,NSAID-ACEI-01,enalapril|ibuprofen,high,N,,table major,Enam 5|Brufen 400mg
+P0012,interaction,NSAID-ACEI-01,enalapril|naproxen,high,N,,table major,Enam 5|Tab Naprosyn
+P0012,interaction,NSAID-ARB-01,ibuprofen|losartan,high,Y,hard-to-read name: 'Losar50' is losartan,table major,Brufen 400mg|Losar50
+P0012,interaction,NSAID-ARB-01,losartan|naproxen,high,N,,table major,Losar50|Tab Naprosyn
+P0012,interaction,NSAID-THZ-01,hydrochlorothiazide|ibuprofen,medium,N,,table moderate,hydrochlorothiazide 12.5|Brufen 400mg
+P0012,interaction,NSAID-THZ-01,hydrochlorothiazide|naproxen,medium,N,,table moderate,hydrochlorothiazide 12.5|Tab Naprosyn
+P0012,interaction,SU-THZ-01,glibenclamide|hydrochlorothiazide,low,N,,table minor,T. glibenclamide 5mg|hydrochlorothiazide 12.5
+P0013,interaction,ACEI-KSP-01,enalapril|spironolactone,high,N,,table major,Envsa 5 mg|Alactone
+P0013,renal,RENAL-MTX,methotrexate,medium,N,,eGFR 52 < reduce threshold 60,Folitrax 7.5 mg weekly
+P0014,duplicate,DUP-CLASS-NSAID,aceclofenac|ibuprofen|naproxen,medium,N,,3 drugs of one class,zerodol 100 mg 1-0-1|Brufen 400|Naprosyn 250 mg 1-0-1
+P0014,interaction,BZD-GABA-01,clonazepam|gabapentin,high,N,,table moderate; CNS depression at age 79,Clonazepam 0.5|Gabapiin 300
+P0014,interaction,NSAID-LIT-01,aceclofenac|lithium,high,N,,table major,zerodol 100 mg 1-0-1|Cap Lithium 300 mg 1-0-1
+P0014,interaction,NSAID-LIT-01,ibuprofen|lithium,high,N,,table major,Brufen 400|Cap Lithium 300 mg 1-0-1
+P0014,interaction,NSAID-LIT-01,lithium|naproxen,high,N,,table major,Cap Lithium 300 mg 1-0-1|Naprosyn 250 mg 1-0-1
+P0014,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoin 100mg|Encoratee200
+P0014,renal,RENAL-ACE,aceclofenac,medium,N,,eGFR 38 < reduce threshold 60,zerodol 100 mg 1-0-1
+P0014,renal,RENAL-GAB,gabapentin,medium,Y,hard-to-read name: 'Gabapiin 300' is gabapentin,eGFR 38 < reduce threshold 60,Gabapiin 300
+P0014,renal,RENAL-IBU,ibuprofen,medium,N,,eGFR 38 < reduce threshold 60,Brufen 400
+P0014,renal,RENAL-LIT,lithium,medium,N,,eGFR 38 < reduce threshold 60,Cap Lithium 300 mg 1-0-1
+P0014,renal,RENAL-NAP,naproxen,medium,N,,eGFR 38 < reduce threshold 60,Naprosyn 250 mg 1-0-1
+P0015,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,Sitagliptin|vildaglipin 50 mg 1-0-1
+P0016,renal,RENAL-ALL,allopurinol,high,N,,eGFR 15 < reduce threshold 30,allopurinol 100
+P0017,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,calcium + vitamin D3|Eltroxin 50 mcg
+P0017,renal,RENAL-MTX,methotrexate,medium,N,,eGFR 57 < reduce threshold 60,Cap. Methotrexatee 7.5mg
+P0018,duplicate,DUP-SAME-ATN,atenolol,medium,N,,atenolol listed 2 times,Atenolol 25|Tenormin 25
+P0019,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,calcium + vitamin D3|T Ferrous sulfatte
+P0019,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,calcium + vitamin D3|Eltroxin 50 mcg
+P0019,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,T Ferrous sulfatte|Eltroxin 50 mcg
+P0019,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Eltroxin 50 mcg|Omez20
+P0019,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,T Ferrous sulfatte|Omez20
+P0020,contraindication,PREG-ENA,enalapril,high,Y,"pregnant, and enalapril is written as 'ENALAPRIL 5 MG 1-0-0'",pregnant; avoid in pregnancy,ENALAPRIL 5 MG 1-0-0
+P0020,contraindication,PREG-LOS,losartan,high,N,,pregnant; avoid in pregnancy,Losar
+P0020,contraindication,PREG-RAM,ramipril,high,Y,hard-to-read name: 'Cardace5' is ramipril,pregnant; avoid in pregnancy,Cardace5
+P0020,contraindication,PREG-TEL,telmisartan,high,N,,pregnant; avoid in pregnancy,telmisartan 40 mg OD
+P0020,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,ENALAPRIL 5 MG 1-0-0|Cardace5
+P0020,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losar|telmisartan 40 mg OD
+P0020,duplicate,DUP-CLASS-BB,atenolol|labetalol,medium,N,,2 drugs of one class,Teormin 25|Labebet-XR
+P0020,duplicate,DUP-SAME-HCT,hydrochlorothiazide,medium,N,,hydrochlorothiazide listed 2 times,aquazide12.5|Tab. Hydrochlorothiazide12.5
+P0020,interaction,ACEI-ARB-01,enalapril|losartan,medium,N,,"table major; renal rule eased at eGFR 110, age 23",ENALAPRIL 5 MG 1-0-0|Losar
+P0020,interaction,ACEI-ARB-01,enalapril|telmisartan,medium,N,,"table major; renal rule eased at eGFR 110, age 23",ENALAPRIL 5 MG 1-0-0|telmisartan 40 mg OD
+P0020,interaction,ACEI-ARB-01,losartan|ramipril,medium,N,,"table major; renal rule eased at eGFR 110, age 23",Losar|Cardace5
+P0020,interaction,ACEI-ARB-01,ramipril|telmisartan,medium,N,,"table major; renal rule eased at eGFR 110, age 23",Cardace5|telmisartan 40 mg OD
+P0020,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,aquazide12.5|Tab. Hydrochlorothiazide12.5|Losar
+P0020,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,aquazide12.5|Tab. Hydrochlorothiazide12.5|telmisartan 40 mg OD
+P0021,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,high,N,,table moderate; age 84,Ciplox|T. prednisolone 10 mg
+P0021,interaction,FQ-PRD-01,levofloxacin|prednisolone,high,Y,hard-to-read name: 'levvofloxacin' is levofloxacin,table moderate; age 84,levvofloxacin|T. prednisolone 10 mg
+P0021,renal,RENAL-ALL,allopurinol,high,N,,eGFR 29 < reduce threshold 30,Zylroic 100
+P0021,renal,RENAL-ATN,atenolol,high,N,,eGFR 29 < reduce threshold 35,atenolol
+P0021,renal,RENAL-CIP,ciprofloxacin,high,N,,eGFR 29 < reduce threshold 30,Ciplox
+P0021,renal,RENAL-LEV,levofloxacin,high,N,,eGFR 29 < reduce threshold 50,levvofloxacin
+P0023,contraindication,PREG-VAL,sodium valproate,high,N,,pregnant; avoid in pregnancy,cap. encorata 200
+P0023,interaction,BZD-GABA-01,clonazepam|pregabalin,medium,N,,table moderate,Clonotril 0.5|Prigabid
+P0023,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,shelcal 500|Livogen
+P0023,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Cap phenytoin 100 mg 1-1-1|cap. encorata 200
+P0026,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,TRYPTOMER 10|clonazepam 0.5
+P0026,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,clonazepam 0.5|Zolfresh 5 mg
+P0026,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Livogen|Eltroxin 50
+P0026,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Eltroxin 50|TAB OMEZ 20
+P0026,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Livogen|TAB OMEZ 20
+P0026,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,TRYPTOMER 10|Serta 50
+P0026,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,TRYPTOMER 10|Zolfresh 5 mg
+P0027,duplicate,DUP-SAME-NIF,nifedipine,medium,N,,nifedipine listed 2 times,Tab Dein 20 mg 1-0-1|T. Nicardia20
+P0028,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,medium,N,,table moderate,Cifran 500mg|prednisoloe 10
+P0028,interaction,FQ-PRD-01,levofloxacin|prednisolone,medium,N,,table moderate,levofloxacin 500 mg|prednisoloe 10
+P0029,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losar 50|Telmisartan 40
+P0029,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,sitagliptin 100|Galvus50
+P0029,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Atorva 20 mg|rosuvastatin 10mg
+P0029,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Daonil5|Glimepiride 2 mg
+P0029,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Envas 5|Losar 50
+P0029,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Envas 5|Telmisartan 40
+P0029,interaction,ACEI-INS-01,enalapril|insulin glargine,low,N,,table minor,Envas 5|Inj Lantus
+P0029,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,Envas 5|Daonil5
+P0029,interaction,ACEI-SU-01,enalapril|glimepiride,low,N,,table minor,Envas 5|Glimepiride 2 mg
+P0029,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,Tab Aquazide 12.5 mg 1-0-0|Losar 50
+P0029,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Tab Aquazide 12.5 mg 1-0-0|Telmisartan 40
+P0029,interaction,SU-THZ-01,glibenclamide|hydrochlorothiazide,low,N,,table minor,Daonil5|Tab Aquazide 12.5 mg 1-0-0
+P0029,interaction,SU-THZ-01,glimepiride|hydrochlorothiazide,low,N,,table minor,Glimepiride 2 mg|Tab Aquazide 12.5 mg 1-0-0
+P0030,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Alprazolam 0.25 mg 0-0-1|clonazepam 0.5mg
+P0030,duplicate,DUP-CLASS-NSAID,aceclofenac|ibuprofen,medium,N,,2 drugs of one class,aceclofenac 100|Tab Brufen 400mg
+P0030,interaction,BZD-OPI-01,alprazolam|tramadol,high,N,,table major,Alprazolam 0.25 mg 0-0-1|Cap tramadol
+P0030,interaction,BZD-OPI-01,clonazepam|tramadol,high,N,,table major,clonazepam 0.5mg|Cap tramadol
+P0030,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Alprazolam 0.25 mg 0-0-1|Tab amitriptyline 10
+P0030,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tab amitriptyline 10|clonazepam 0.5mg
+P0030,interaction,OPI-TCA-01,amitriptyline|tramadol,high,N,,table major,Tab amitriptyline 10|Cap tramadol
+P0032,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,medium,N,,table moderate,Cifran500|Tab. Omnacortil10
+P0033,duplicate,DUP-CLASS-PPI,pantoprazole|rabeprazole,medium,N,,2 drugs of one class,pantoprazole 40|Rablet 20
+P0034,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losartan 50|T Telmisartan
+P0034,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,Januia 100|vildagliptin 50
+P0034,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Lipitor 20|Rosuvas
+P0034,interaction,ARB-LOOP-01,furosemide|losartan,low,N,,table minor,Tab. Lasix40|Losartan 50
+P0034,interaction,ARB-LOOP-01,furosemide|telmisartan,low,N,,table minor,Tab. Lasix40|T Telmisartan
+P0034,interaction,WAR-ASA-01,aspirin|warfarin,high,N,,table major,disprin 75mg|Warf 5 mg
+P0034,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 59 < stop threshold 60,DAONIL 5 MG
+P0035,duplicate,DUP-SAME-IBU,ibuprofen,medium,N,,ibuprofen listed 2 times,ibuprofen 400 mg 1-1-1|Cap. Ibugesic400
+P0036,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,Sitagluptin 100|Galvus 50mg
+P0036,renal,RENAL-SIT,sitagliptin,medium,N,,eGFR 30 < reduce threshold 45,Sitagluptin 100
+P0036,renal,RENAL-VIL,vildagliptin,medium,N,,eGFR 30 < reduce threshold 50,Galvus 50mg
+P0037,duplicate,DUP-CLASS-NSAID,aceclofenac|diclofenac|ibuprofen,medium,N,,3 drugs of one class,acclofenac 100 mg|Cap Diclofenoc|Brufen 400mg
+P0038,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,Stamlo5|Nifedipine
+P0038,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,ramipril 5mg|Telma 40 mg
+P0039,interaction,ACEI-ARB-01,enalapril|telmisartan,medium,N,,"table major; renal rule eased at eGFR 110, age 20",Enalapril 5 mg|TELMISARTAN 40 MG OD
+P0039,interaction,ACEI-SU-01,enalapril|glimepiride,low,N,,table minor,Enalapril 5 mg|glimepiride-DS 2 mg
+P0039,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,T Aquazide 12.5mg|TELMISARTAN 40 MG OD
+P0039,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,Aspirin75|Enalapril 5 mg
+P0039,interaction,CLR-AML-01,amlodipine|clarithromycin,medium,N,,table moderate,amlopres er5|Claribid 500
+P0039,interaction,CLR-DOM-01,clarithromycin|domperidone,high,N,,table major,Claribid 500|Cap. Domstal
+P0039,interaction,SU-CLR-01,clarithromycin|glimepiride,medium,N,,table moderate,Claribid 500|glimepiride-DS 2 mg
+P0039,interaction,SU-THZ-01,glimepiride|hydrochlorothiazide,low,N,,table minor,glimepiride-DS 2 mg|T Aquazide 12.5mg
+P0040,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,N,,2 drugs of one class,Concor 5 mg|Betaloc 25 mg 1-0-1
+P0040,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,Amiodarone 200 mg OD|Cap. Atorvastatin
+P0040,interaction,AMI-BB-01,amiodarone|bisoprolol,medium,N,,table moderate,Amiodarone 200 mg OD|Concor 5 mg
+P0040,interaction,AMI-BB-01,amiodarone|metoprolol,medium,N,,table moderate,Amiodarone 200 mg OD|Betaloc 25 mg 1-0-1
+P0042,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Repace 50 mg|Telmisartan 40 mg 1-0-0
+P0042,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Enam 5|Repace 50 mg
+P0042,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enam 5|Telmisartan 40 mg 1-0-0
+P0043,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Cap Domstal 10 mg 1-1-1|T. fluconazole
+P0043,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Cap Domstal 10 mg 1-1-1|ONDANSETRON 4
+P0043,interaction,OPI-GABA-01,gabapentin|tramadol,medium,N,,table moderate,Cap. Gabapentin 300 mg|T. Contramall 50
+P0043,interaction,OPI-GABA-01,pregabalin|tramadol,medium,N,,table moderate,Pregabid 75 mg BD|T. Contramall 50
+P0044,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,amlodipine 5|Nucardia 20 mg 1-0-1
+P0044,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,asprin75|Tab Ramipril 5
+P0045,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Enam|Cardaace 5
+P0045,interaction,ACEI-LOOP-01,enalapril|furosemide,low,N,,table minor,Enam|Furoesmide
+P0045,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,Furoesmide|Cardaace 5
+P0046,duplicate,DUP-CLASS-NSAID,diclofenac|ibuprofen,medium,N,,2 drugs of one class,Reactin|Brufen400
+P0046,interaction,BZD-GABA-01,clonazepam|gabapentin,high,N,,table moderate; CNS depression at age 66,T. Clonotril 0.5 mg|Gabapin 300mg
+P0046,interaction,BZD-GABA-01,clonazepam|pregabalin,high,N,,table moderate; CNS depression at age 66,T. Clonotril 0.5 mg|LRICA 75MG
+P0047,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Escitalopram 10|sertraline 50mg
+P0047,interaction,ODN-ESC-01,escitalopram|ondansetron,medium,N,,table moderate,Escitalopram 10|Tab Vomikind 4 mg SOS
+P0048,duplicate,DUP-CLASS-PPI,pantoprazole|rabeprazole,medium,N,,2 drugs of one class,Pantoprazole 40mg|Cap Rabblet 20 mg 1-0-0
+P0048,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,cap eptoin 100 mg|Cap Vlparin 200
+P0049,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,TAB FERROUS SULFATE|levothyroxine50
+P0049,interaction,LTX-PPI-01,levothyroxine|rabeprazole,low,N,,table minor,levothyroxine50|Rablet20
+P0049,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Cap. Domstal 10|Cap Emset
+P0049,interaction,PPI-FER-01,ferrous sulfate|rabeprazole,low,N,,table minor,TAB FERROUS SULFATE|Rablet20
+P0050,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Tab. Alprax 0.25|clonazepam 0.5
+P0050,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,Y,hard-to-read name: 'Sert 50' is sertraline,2 drugs of one class,Cipralex|Sert 50
+P0050,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Tab. Alprax 0.25|Tryptomer
+P0050,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tryptomer|clonazepam 0.5
+P0050,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Tab. Alprax 0.25|Tab. Zolpidem 5 mg HS
+P0050,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,clonazepam 0.5|Tab. Zolpidem 5 mg HS
+P0050,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,Tryptomer|Cipralex
+P0050,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,Tryptomer|Sert 50
+P0050,interaction,WAR-SSRI-01,escitalopram|warfarin,medium,N,,table moderate,Cipralex|Tab Uniwarfin 5mg
+P0050,interaction,WAR-SSRI-01,sertraline|warfarin,medium,N,,table moderate,Sert 50|Tab Uniwarfin 5mg
+P0050,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,Tryptomer|Tab. Zolpidem 5 mg HS
+P0051,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Alprazolam 0.25mg|Rivotril
+P0051,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Cipralex|Serta 50
+P0051,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Alprazolam 0.25mg|Tyrptomer 10
+P0051,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tyrptomer 10|Rivotril
+P0051,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Alprazolam 0.25mg|Zolpidem5
+P0051,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Rivotril|Zolpidem5
+P0051,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,Tyrptomer 10|Cipralex
+P0051,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,Tyrptomer 10|Serta 50
+P0051,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,Tyrptomer 10|Zolpidem5
+P0052,duplicate,DUP-CLASS-NSAID,aceclofenac|ibuprofen|naproxen,medium,N,,3 drugs of one class,aceclofeenac|T IBUGESIC 400 MG TDS|Naproxen 250
+P0052,interaction,BZD-OPI-01,clonazepam|tramadol,high,N,,table major,clonazepam 0.5 mg 0-0-1|tramadol 50 mg
+P0052,interaction,NSAID-LIT-01,aceclofenac|lithium,high,N,,table major,aceclofeenac|Licab 300 mg BD
+P0052,interaction,NSAID-LIT-01,ibuprofen|lithium,high,N,,table major,T IBUGESIC 400 MG TDS|Licab 300 mg BD
+P0052,interaction,NSAID-LIT-01,lithium|naproxen,high,N,,table major,Licab 300 mg BD|Naproxen 250
+P0052,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Phenytoin|Sodium valproate 200
+P0053,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Tab. Enam5|Ramistar
+P0053,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,Sitagliptin|Galvus 50
+P0053,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Atorvastatin|Rosuvas 10
+P0053,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Daoniil 5 mg|Glimy 2
+P0053,interaction,ACEI-INS-01,enalapril|insulin glargine,low,N,,table minor,Tab. Enam5|inj insulin glargine
+P0053,interaction,ACEI-INS-01,insulin glargine|ramipril,low,N,,table minor,inj insulin glargine|Ramistar
+P0053,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,Tab. Enam5|Daoniil 5 mg
+P0053,interaction,ACEI-SU-01,enalapril|glimepiride,low,N,,table minor,Tab. Enam5|Glimy 2
+P0053,interaction,ACEI-SU-01,glibenclamide|ramipril,low,N,,table minor,Daoniil 5 mg|Ramistar
+P0053,interaction,ACEI-SU-01,glimepiride|ramipril,low,N,,table minor,Glimy 2|Ramistar
+P0053,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,apsirin 75|Tab. Enam5
+P0053,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,apsirin 75|Ramistar
+P0053,interaction,SU-THZ-01,glibenclamide|hydrochlorothiazide,low,N,,table minor,Daoniil 5 mg|T. Aquazide 12.5 mg
+P0053,interaction,SU-THZ-01,glimepiride|hydrochlorothiazide,low,N,,table minor,Glimy 2|T. Aquazide 12.5 mg
+P0054,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,t. envas5|ramistar 5 mg od
+P0054,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,t. envas5|LOSARTAN 50 MG
+P0054,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,LOSARTAN 50 MG|ramistar 5 mg od
+P0054,interaction,FQ-PRD-01,levofloxacin|prednisolone,high,N,,table moderate; age 91,levofloxacin500|prednisolone 10
+P0054,renal,RENAL-LEV,levofloxacin,high,N,,eGFR 25 < reduce threshold 50,levofloxacin500
+P0055,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,alprax 0.25 mg|Alprazolam 0.25|clonazepam 0.5
+P0055,duplicate,DUP-SAME-ALP,alprazolam,medium,N,,alprazolam listed 2 times,alprax 0.25 mg|Alprazolam 0.25
+P0055,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,alprax 0.25 mg|Alprazolam 0.25|Tryptomer
+P0055,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tryptomer|clonazepam 0.5
+P0055,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,alprax 0.25 mg|Alprazolam 0.25|Zolfresh 5 mg 0-0-1
+P0055,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,clonazepam 0.5|Zolfresh 5 mg 0-0-1
+P0055,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,Tryptomer|Daxdi 50mg
+P0055,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,Tryptomer|Zolfresh 5 mg 0-0-1
+P0057,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,high,N,,table moderate; age 88,Cifran 500|Cap. Prednisolone
+P0057,interaction,FQ-PRD-01,levofloxacin|prednisolone,high,N,,table moderate; age 88,levooflox500|Cap. Prednisolone
+P0058,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Alpazolam 0.25|Cap. clonazepam 0.5
+P0058,interaction,NSAID-SSRI-01,naproxen|sertraline,medium,N,,table moderate,Naprosyn 250|sertraline 50mg
+P0060,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,SHELCAL 500 MG BD|Livogen
+P0061,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Tab Omez 20|Tab. Pantop
+P0061,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin|simvastatin,medium,N,,3 drugs of one class,Storvas 20 mg|ROSUVASTATIN|Cap. Simvotin 20
+P0061,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,calcium + vitamin D3 500|ferrous sulfate
+P0061,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,calcium + vitamin D3 500|Eltroxin50
+P0061,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,ferrous sulfate|Eltroxin50
+P0061,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Eltroxin50|Tab Omez 20
+P0061,interaction,LTX-PPI-01,levothyroxine|pantoprazole,low,N,,table minor,Eltroxin50|Tab. Pantop
+P0061,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,ferrous sulfate|Tab Omez 20
+P0061,interaction,PPI-FER-01,ferrous sulfate|pantoprazole,low,N,,table minor,ferrous sulfate|Tab. Pantop
+P0062,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Omez 20 mg|pantocid 40
+P0062,renal,RENAL-GAB,gabapentin,medium,N,,eGFR 34 < reduce threshold 60,Gabapin300
+P0063,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,Y,hard-to-read name: 'bisoprlool' is bisoprolol,2 drugs of one class,bisoprlool|Metolar 25mg
+P0063,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,Omez|Pan 40mg|Rabeprazole 20 mg OD
+P0063,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,Cordarone 200mg|Storvas 20 mg HS
+P0063,interaction,AMI-BB-01,amiodarone|bisoprolol,high,N,,table moderate; age 81,Cordarone 200mg|bisoprlool
+P0063,interaction,AMI-BB-01,amiodarone|metoprolol,high,N,,table moderate; age 81,Cordarone 200mg|Metolar 25mg
+P0064,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Omez 20|Pantopraozle 40 mg OD
+P0064,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin|simvastatin,medium,N,,3 drugs of one class,Atorvastatin 20|rosuvastaten 10 mg|zocor 20mg
+P0064,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,Furosemide 40 mg|ramipril 5 mg
+P0064,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,T clopidogrel 75|Omez 20
+P0065,duplicate,DUP-CLASS-PPI,omeprazole|rabeprazole,medium,N,,2 drugs of one class,OMEPRAZOLE20|Rablet
+P0066,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Calcium + vitamin d3 500|Ferrous sulfate
+P0067,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Escitalopram 10 mg|Sertraline 50
+P0067,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin|simvastatin,medium,N,,3 drugs of one class,Lipitor20|rosuvastatin 10|Tab. Zoor 20
+P0067,interaction,ACEI-LIT-01,lithium|ramipril,high,N,,table major,Lithium 300mg|RAMIIPRIL 5 MG 1-0-0
+P0067,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Alprax 0.25 mg HS|T. Tryptomer 10
+P0067,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,T. Tryptomer 10|Escitalopram 10 mg
+P0067,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,T. Tryptomer 10|Sertraline 50
+P0068,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Daonil-CR 5|GLIY 2 MG OD
+P0068,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Ramipril 5|TAB. TELMISIRTAN 40 MG OD
+P0068,interaction,ACEI-SU-01,glibenclamide|ramipril,low,N,,table minor,Daonil-CR 5|Ramipril 5
+P0068,interaction,ACEI-SU-01,glimepiride|ramipril,low,N,,table minor,GLIY 2 MG OD|Ramipril 5
+P0068,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,Ecosprin 75|Ramipril 5
+P0069,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Omez 20 mg|T Pantocid 40mg
+P0069,interaction,MTX-PPI-01,methotrexate|omeprazole,low,N,,table minor,Folitrax|Omez 20 mg
+P0069,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,Folitrax|T Pantocid 40mg
+P0069,interaction,NSAID-MTX-01,methotrexate|naproxen,high,N,,table major,Folitrax|Tab. Naprosyn250
+P0069,interaction,ODN-DOM-01,domperidone|ondansetron,high,N,,table moderate; age 84,Domperidone10|Ondansetron 4
+P0071,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,calcium + vitamin d3|Cap Livoegn
+P0071,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,calcium + vitamin d3|eltroxin 50
+P0071,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Cap Livoegn|eltroxin 50
+P0071,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,eltroxin 50|Omez 20 mg 1-0-0
+P0071,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Cap Livoegn|Omez 20 mg 1-0-0
+P0072,interaction,AMI-BB-01,amiodarone|metoprolol,high,N,,table moderate; age 92,amiodarone 200mg|Metoprolol 25 mg BD
+P0072,interaction,OPI-GABA-01,gabapentin|tramadol,high,N,,table moderate; CNS depression at age 92,gabapentin 300|Tramazac 50
+P0072,interaction,OPI-GABA-01,pregabalin|tramadol,high,N,,table moderate; CNS depression at age 92,Pregabidd 75|Tramazac 50
+P0072,renal,RENAL-GAB,gabapentin,high,N,,eGFR 26 < reduce threshold 60,gabapentin 300
+P0072,renal,RENAL-PRE,pregabalin,high,N,,eGFR 26 < reduce threshold 60,Pregabidd 75
+P0074,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,enlapril 5 mg 1-0-0|ramipril 5 mg OD
+P0074,interaction,ACEI-KSP-01,enalapril|spironolactone,high,N,,table major,enlapril 5 mg 1-0-0|Spironolactone 25
+P0074,interaction,ACEI-KSP-01,ramipril|spironolactone,high,N,,table major,ramipril 5 mg OD|Spironolactone 25
+P0074,interaction,ACEI-LOOP-01,enalapril|furosemide,low,N,,table minor,enlapril 5 mg 1-0-0|Tab Frusenex
+P0074,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,Tab Frusenex|ramipril 5 mg OD
+P0075,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,N,,2 drugs of one class,Concor 5|Metoprolol 25mg
+P0075,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Cap. Omez|Pantoprazole 40
+P0075,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin|simvastatin,medium,N,,3 drugs of one class,tab atorvastatin|Rosuvastatin 10|T. Zocor 20
+P0075,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,Ecosprin 75 mg|Ramipril5
+P0075,interaction,ASA-CLO-01,aspirin|clopidogrel,medium,N,,table moderate,Ecosprin 75 mg|Plavix
+P0075,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,Plavix|Cap. Omez
+P0076,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,Istavel 100|Jalra 50 mg|Vildagliptin 50
+P0076,duplicate,DUP-SAME-VIL,vildagliptin,medium,N,,vildagliptin listed 2 times,Jalra 50 mg|Vildagliptin 50
+P0076,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Aqazide 12.5 mg|Cap. Telma40
+P0077,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Cap. Losar 50|tab. telsar 40 mg od
+P0077,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Glibenclamide5|glimepiride 2
+P0077,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Enas 5|Cap. Losar 50
+P0077,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enas 5|tab. telsar 40 mg od
+P0077,interaction,ACEI-INS-01,enalapril|insulin glargine,low,N,,table minor,Enas 5|inj lantus
+P0077,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,Enas 5|Glibenclamide5
+P0077,interaction,ACEI-SU-01,enalapril|glimepiride,low,N,,table minor,Enas 5|glimepiride 2
+P0077,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,DISPRIN 75MG|Enas 5
+P0077,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 51 < stop threshold 60,Glibenclamide5
+P0078,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,Amlodipine|Depin XR 20
+P0078,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Nexito|Sertraline50
+P0080,interaction,CLR-DOM-01,clarithromycin|domperidone,high,N,,table major,clarithromycin|domperidon 10 mg 1-1-1
+P0080,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,domperidon 10 mg 1-1-1|zoco 150 mg once
+P0080,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,domperidon 10 mg 1-1-1|emeset 4 mg sos
+P0081,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,ENVAS 5 MG|Cardace5
+P0081,interaction,ACEI-ARB-01,enalapril|telmisartan,high,Y,hard-to-read name: 'Telsra 40' is telmisartan,table major,ENVAS 5 MG|Telsra 40
+P0081,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Cardace5|Telsra 40
+P0081,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,ASPIRIN 75 MG|ENVAS 5 MG
+P0081,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,ASPIRIN 75 MG|Cardace5
+P0081,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoin 100|Encorate 200
+P0081,renal,RENAL-MTF,metformin,medium,N,,eGFR 38 < reduce threshold 45,T metformin
+P0081,renal,RENAL-VIL,vildagliptin,medium,N,,eGFR 38 < reduce threshold 50,VILDAGLIPTIN
+P0082,duplicate,DUP-CLASS-BB,atenolol|bisoprolol|metoprolol,medium,N,,3 drugs of one class,atenolol 25|Concor|Betaloc 25
+P0082,interaction,ACEI-KSP-01,enalapril|spironolactone,high,N,,table major,Enavs 5 mg|Aldactone 25
+P0082,interaction,AMI-BB-01,amiodarone|atenolol,high,N,,table moderate; age 77,Cordarone 200|atenolol 25
+P0082,interaction,AMI-BB-01,amiodarone|bisoprolol,high,N,,table moderate; age 77,Cordarone 200|Concor
+P0082,interaction,AMI-BB-01,amiodarone|metoprolol,high,N,,table moderate; age 77,Cordarone 200|Betaloc 25
+P0083,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,T Shelcal 500mg|Tab. Ferrous sulfate
+P0083,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,T Shelcal 500mg|Thyrnoorm 50
+P0083,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Tab. Ferrous sulfate|Thyrnoorm 50
+P0083,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Thyrnoorm 50|Tab Omeprazole 20 mg 1-0-0
+P0083,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Tab. Ferrous sulfate|Tab Omeprazole 20 mg 1-0-0
+P0084,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,alprazolam 0.25|Tab Rivotril 0.5 mg HS
+P0084,interaction,BZD-TCA-01,alprazolam|amitriptyline,high,N,,table moderate; CNS depression at age 91,alprazolam 0.25|tryptomer
+P0084,interaction,BZD-TCA-01,amitriptyline|clonazepam,high,N,,table moderate; CNS depression at age 91,tryptomer|Tab Rivotril 0.5 mg HS
+P0084,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,alprazolam 0.25|stilnoct 5 mg
+P0084,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Tab Rivotril 0.5 mg HS|stilnoct 5 mg
+P0084,interaction,TCA-SSRI-01,amitriptyline|sertraline,high,N,,table moderate; age 91,tryptomer|sertraline 50
+P0084,interaction,ZD-TCA-01,amitriptyline|zolpidem,high,N,,table moderate; CNS depression at age 91,tryptomer|stilnoct 5 mg
+P0085,duplicate,DUP-CLASS-STATIN,rosuvastatin|simvastatin,medium,N,,2 drugs of one class,Crestor|Simvotin20
+P0085,duplicate,DUP-SAME-RAM,ramipril,medium,N,,ramipril listed 2 times,Cardace 5mg|ramipril 5mg
+P0085,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,LASIX 40|Cardace 5mg|ramipril 5mg
+P0086,interaction,FQ-PRD-01,levofloxacin|prednisolone,medium,N,,table moderate,Levofloxacin 500|Prednisolone 10 mg OD
+P0087,duplicate,DUP-CLASS-NSAID,aceclofenac|diclofenac|naproxen,medium,N,,3 drugs of one class,Cap. Aceclofenac 100|diclofenac 50 mg BD|NAPROSYN 250
+P0087,interaction,NSAID-ASA-01,aceclofenac|aspirin,medium,N,,table moderate,Cap. Aceclofenac 100|Cap Ecosprin 75
+P0087,interaction,NSAID-ASA-01,aspirin|diclofenac,medium,N,,table moderate,Cap Ecosprin 75|diclofenac 50 mg BD
+P0087,interaction,NSAID-ASA-01,aspirin|naproxen,medium,N,,table moderate,Cap Ecosprin 75|NAPROSYN 250
+P0088,duplicate,DUP-CLASS-NSAID,aceclofenac|diclofenac|ibuprofen,medium,N,,3 drugs of one class,Cap Hifenac 100 mg BD|Diclofenac 50|Ibugesic 400
+P0088,interaction,NSAID-LIT-01,aceclofenac|lithium,medium,N,,"table major; renal rule eased at eGFR 103, age 44",Cap Hifenac 100 mg BD|Lciab
+P0088,interaction,NSAID-LIT-01,diclofenac|lithium,medium,N,,"table major; renal rule eased at eGFR 103, age 44",Diclofenac 50|Lciab
+P0088,interaction,NSAID-LIT-01,ibuprofen|lithium,medium,N,,"table major; renal rule eased at eGFR 103, age 44",Ibugesic 400|Lciab
+P0088,interaction,NSAID-SSRI-01,aceclofenac|escitalopram,medium,N,,table moderate,Cap Hifenac 100 mg BD|CIPRELEX 10
+P0088,interaction,NSAID-SSRI-01,diclofenac|escitalopram,medium,N,,table moderate,Diclofenac 50|CIPRELEX 10
+P0088,interaction,NSAID-SSRI-01,escitalopram|ibuprofen,medium,N,,table moderate,CIPRELEX 10|Ibugesic 400
+P0088,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Cap. Eptoin 100 mg|sodium valproate 200
+P0089,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Enam 5 mg|RAIMSTAR 5 MG OD
+P0089,duplicate,DUP-CLASS-BB,atenolol|bisoprolol|metoprolol,medium,N,,3 drugs of one class,Aten XR 25 mg OD|concor 5|T metoprolol 25
+P0089,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,cap omeprazole 20mg|Pantop 40
+P0089,duplicate,DUP-CLASS-STATIN,rosuvastatin|simvastatin,medium,N,,2 drugs of one class,crestor 10|Simvastatin 20 mg
+P0089,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,clopidogrel 75|cap omeprazole 20mg
+P0090,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,alprazolam0.25|Tab Clonotril0.5
+P0090,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,alprazolam0.25|t tryptomeer 10
+P0090,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,t tryptomeer 10|Tab Clonotril0.5
+P0090,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Domstal 10 mg|Cap. Fluconazole
+P0090,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,t tryptomeer 10|Sertraline
+P0091,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Alprax|Rvotril 0.5 mg
+P0091,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Nexito 10|Cap. Serta50
+P0091,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Alprax|amitriptyline
+P0091,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,amitriptyline|Rvotril 0.5 mg
+P0091,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Alprax|Zolfresh5
+P0091,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Rvotril 0.5 mg|Zolfresh5
+P0091,interaction,ESC-DOM-01,domperidone|escitalopram,medium,N,,table moderate,Domstal 10 mg|Nexito 10
+P0091,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Domstal 10 mg|Emeset 4
+P0091,interaction,ODN-ESC-01,escitalopram|ondansetron,medium,N,,table moderate,Nexito 10|Emeset 4
+P0091,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,amitriptyline|Nexito 10
+P0091,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,amitriptyline|Cap. Serta50
+P0091,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,amitriptyline|Zolfresh5
+P0092,duplicate,DUP-CLASS-NSAID,aceclofenac|diclofenac|ibuprofen,medium,N,,3 drugs of one class,HIFENAC 100|Dynapir 50|Tab. Ibugesic 400
+P0092,interaction,NSAID-LOOP-01,aceclofenac|furosemide,high,N,,table moderate; eGFR 26 < 45,HIFENAC 100|Lasix 40
+P0092,interaction,NSAID-LOOP-01,diclofenac|furosemide,high,N,,table moderate; eGFR 26 < 45,Dynapir 50|Lasix 40
+P0092,interaction,NSAID-LOOP-01,furosemide|ibuprofen,high,N,,table moderate; eGFR 26 < 45,Lasix 40|Tab. Ibugesic 400
+P0092,renal,RENAL-ACE,aceclofenac,high,N,,eGFR 26 < stop threshold 30,HIFENAC 100
+P0092,renal,RENAL-ATN,atenolol,high,N,,eGFR 26 < reduce threshold 35,aten25
+P0092,renal,RENAL-COL,colchicine,high,N,,eGFR 26 < reduce threshold 30,Colchicine 0.5 mg
+P0092,renal,RENAL-DCF,diclofenac,high,N,,eGFR 26 < stop threshold 30,Dynapir 50
+P0092,renal,RENAL-IBU,ibuprofen,high,N,,eGFR 26 < stop threshold 30,Tab. Ibugesic 400
+P0092,renal,RENAL-PRE,pregabalin,high,N,,eGFR 26 < reduce threshold 60,Pregabalin CR 75 mg
+P0094,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,N,,2 drugs of one class,BISPOROLOL 5|T Betaloc 25
+P0094,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,omeprazole20|Pantocidd 40mg
+P0094,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Tab. rmipril 5mg|Telsar 40mg
+P0094,interaction,AML-SIM-01,amlodipine|simvastatin,low,N,,table minor,Stamlo 5|Cap. Zocor 20
+P0094,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,AQUAZIDE|Telsar 40mg
+P0094,interaction,BB-CCB-01,amlodipine|bisoprolol,low,N,,table minor,Stamlo 5|BISPOROLOL 5
+P0094,interaction,BB-CCB-01,amlodipine|metoprolol,low,N,,table minor,Stamlo 5|T Betaloc 25
+P0094,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,Clopidogrel75|omeprazole20
+P0095,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin|simvastatin,medium,N,,3 drugs of one class,storvas 20mg|Cresotr 10 mg 0-0-1|Zocor
+P0095,interaction,ASA-CLO-01,aspirin|clopidogrel,medium,N,,table moderate,Ecosprin 75|Clopidogrul 75
+P0096,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Tab. Shelcal 500|livogen
+P0097,interaction,ACEI-ARB-01,enalapril|losartan,medium,N,,"table major; renal rule eased at eGFR 110, age 18",t. enalapril|losartan 50mg
+P0097,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,t. enalapril|Daonil 5 mg OD
+P0097,interaction,NSAID-ACEI-01,enalapril|ibuprofen,medium,N,,"table major; renal rule eased at eGFR 110, age 18",t. enalapril|Ibuprofen 400 mg
+P0097,interaction,NSAID-ARB-01,ibuprofen|losartan,medium,N,,"table major; renal rule eased at eGFR 110, age 18",Ibuprofen 400 mg|losartan 50mg
+P0098,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,Amlopres 5|Nicardiaa 20
+P0098,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,Amlopres 5|Tenormin 25
+P0098,interaction,OPI-GABA-01,gabapentin|tramadol,medium,N,,table moderate,T Gabapentin 300|Tab Tramazac
+P0098,interaction,SU-BB-01,atenolol|glimepiride,low,N,,table minor,Tenormin 25|Glimy 2 mg
+P0099,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tryptomer 10 mg 0-0-1|clonazepam 0.5
+P0100,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,T Stamlo 5|Nicardia 20 mg
+P0100,interaction,NSAID-ACEI-01,diclofenac|enalapril,high,N,,table major,dicloofenac|Tab. Enam 5 mg
+P0100,renal,RENAL-DCF,diclofenac,medium,Y,hard-to-read name: 'dicloofenac' is diclofenac,eGFR 50 < reduce threshold 60,dicloofenac
+P0100,renal,RENAL-GAB,gabapentin,medium,Y,eGFR 50 is just under the 60 threshold,eGFR 50 < reduce threshold 60,Gabapentin 300 mg TDS
+P0100,renal,RENAL-PRE,pregabalin,medium,Y,hard-to-read name: 'Cap. pregabalin75' is pregabalin,eGFR 50 < reduce threshold 60,Cap. pregabalin75
+P0101,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,t envas 5|Cardace 5
+P0101,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,t envas 5|Telsar 40 mg
+P0101,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Cardace 5|Telsar 40 mg
+P0101,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Cap Aquazidee 12.5 mg OD|Telsar 40 mg
+P0101,renal,RENAL-ALL,allopurinol,high,N,,eGFR 27 < reduce threshold 30,T. Allopurinol 100 mg 1-0-0
+P0101,renal,RENAL-COL,colchicine,high,N,,eGFR 27 < reduce threshold 30,Colchicino
+P0102,duplicate,DUP-SAME-RAM,ramipril,medium,N,,ramipril listed 2 times,Cardace5|T Ramistar 5
+P0102,interaction,ACEI-ARB-01,ramipril|telmisartan,high,Y,every drug written as a brand: 'T. Telma 40' + 'Cardace5' + 'T Ramistar 5',table major,Cardace5|T Ramistar 5|T. Telma 40
+P0103,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Calciium + vitamin d3 500 mg|Ferroas sulfate
+P0103,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Calciium + vitamin d3 500 mg|Thyronorm 50 mcg
+P0103,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Ferroas sulfate|Thyronorm 50 mcg
+P0103,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Thyronorm 50 mcg|omperazole
+P0103,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Ferroas sulfate|omperazole
+P0104,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelcall 500|T. Ferrous sulfate
+P0104,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shelcall 500|Thyronorm
+P0104,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,T. Ferrous sulfate|Thyronorm
+P0104,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Thyronorm|Omez
+P0104,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,T. Ferrous sulfate|Omez
+P0105,renal,RENAL-ATN,atenolol,medium,Y,eGFR 31 is just under the 35 threshold,eGFR 31 < reduce threshold 35,T. Tenormin 25
+P0106,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Glibenclamide5|Amaryl 2
+P0106,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,Amlon 5 mg|Aten
+P0106,interaction,SU-BB-01,atenolol|glibenclamide,low,N,,table minor,Aten|Glibenclamide5
+P0106,interaction,SU-BB-01,atenolol|glimepiride,low,N,,table minor,Aten|Amaryl 2
+P0106,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 44 < stop threshold 60,Glibenclamide5
+P0106,renal,RENAL-MTF,metformin,medium,N,,eGFR 44 < reduce threshold 45,Metformin
+P0106,renal,RENAL-SIT,sitagliptin,medium,N,,eGFR 44 < reduce threshold 45,Istavel 100mg
+P0107,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,alprazolam 0.25|Rivotril 0.5 mg HS
+P0107,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,alprazolam 0.25|T. ZOLPIDEM 5 MG
+P0107,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Rivotril 0.5 mg HS|T. ZOLPIDEM 5 MG
+P0108,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoi 100 mg|sodium valproate
+P0108,interaction,WAR-PHE-01,phenytoin|warfarin,high,N,,table major,Eptoi 100 mg|Tab. Warf 5mg
+P0109,interaction,NSAID-MTX-01,methotrexate|naproxen,medium,N,,"table major; renal rule eased at eGFR 110, age 25",T methotrexate 7.5|naproxen 250 mg 1-0-1
+P0109,interaction,NSAID-PRD-01,naproxen|prednisolone,medium,N,,table moderate,naproxen 250 mg 1-0-1|prednisolone
+P0110,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,T Losartan 50 mg|Telma 40
+P0110,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,cordarone 200mg|Storvas 20 mg
+P0110,interaction,ARB-KSP-01,losartan|spironolactone,high,N,,table major,T Losartan 50 mg|spironolactone 25
+P0110,interaction,ARB-KSP-01,spironolactone|telmisartan,high,N,,table major,spironolactone 25|Telma 40
+P0110,interaction,ARB-LOOP-01,furosemide|losartan,low,N,,table minor,TAB. FRUSENEX 40 MG|T Losartan 50 mg
+P0110,interaction,ARB-LOOP-01,furosemide|telmisartan,low,N,,table minor,TAB. FRUSENEX 40 MG|Telma 40
+P0110,interaction,MTF-LOOP-01,furosemide|metformin,low,N,,table minor,TAB. FRUSENEX 40 MG|T Glycomet
+P0110,interaction,WAR-AMI-01,amiodarone|warfarin,high,N,,table major,cordarone 200mg|Warf
+P0111,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Escitalopram 10|daxid 50 mg od
+P0111,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tryptomer 10 mg|Tab. clonazepam 0.5
+P0111,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Phenytoin 100|TAB SODIUM VALPROATE 200 MG BD
+P0111,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,Tryptomer 10 mg|Escitalopram 10
+P0111,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,Tryptomer 10 mg|daxid 50 mg od
+P0112,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,calcium + vitamin D3 500mg|Ferrous sulfate
+P0112,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,calcium + vitamin D3 500mg|levothyroxine 50mcg
+P0112,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Ferrous sulfate|levothyroxine 50mcg
+P0113,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shlcal|LIOVGEN
+P0113,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shlcal|Thyronirm
+P0113,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,LIOVGEN|Thyronirm
+P0113,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Thyronirm|T Omez
+P0113,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,LIOVGEN|T Omez
+P0113,interaction,WAR-MTZ-01,metronidazole|warfarin,high,N,,table major,Metronidazole 400 mg TDS|Tab. Warfarn5
+P0114,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,Omez 20mg|Pentop 40 mg 1-0-0|rabeprazole 20 mg 1-0-0
+P0115,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,Y,hard-to-read name: 'Enalapril5' is enalapril,2 drugs of one class,Enalapril5|Tab. Raimstar 5
+P0115,interaction,ACEI-LOOP-01,enalapril|furosemide,low,N,,table minor,Enalapril5|furoesmide 40 mg
+P0115,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,furoesmide 40 mg|Tab. Raimstar 5
+P0115,interaction,AMI-DIG-01,amiodarone|digoxin,high,N,,table major,Cordarone 200 mg 1-0-0|Cap Lanoxin 0.25mg
+P0115,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,T Shelcal|ferrous sulfate
+P0115,interaction,DIG-LOOP-01,digoxin|furosemide,medium,N,,table moderate,Cap Lanoxin 0.25mg|furoesmide 40 mg
+P0115,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,T Shelcal|Levothyroxine 50 mcg
+P0115,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,ferrous sulfate|Levothyroxine 50 mcg
+P0115,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Levothyroxine 50 mcg|omeprazole
+P0115,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,ferrous sulfate|omeprazole
+P0116,duplicate,DUP-CLASS-NSAID,aceclofenac|diclofenac|ibuprofen,medium,N,,3 drugs of one class,Cap Zerodol 100|Reactin 50 mg|Cap. Ibuprofen
+P0116,interaction,NSAID-LOOP-01,aceclofenac|furosemide,high,N,,table moderate; eGFR 30 < 45,Cap Zerodol 100|Furosemide 40
+P0116,interaction,NSAID-LOOP-01,diclofenac|furosemide,high,N,,table moderate; eGFR 30 < 45,Reactin 50 mg|Furosemide 40
+P0116,interaction,NSAID-LOOP-01,furosemide|ibuprofen,high,N,,table moderate; eGFR 30 < 45,Furosemide 40|Cap. Ibuprofen
+P0116,interaction,OPI-GABA-01,gabapentin|tramadol,high,N,,table moderate; CNS depression at age 81,Gabapenttin 300|Tab Tramadol50
+P0116,interaction,OPI-GABA-01,pregabalin|tramadol,high,N,,table moderate; CNS depression at age 81,Pregabalin 75 mg BD|Tab Tramadol50
+P0116,renal,RENAL-ACE,aceclofenac,medium,N,,eGFR 30 < reduce threshold 60,Cap Zerodol 100
+P0116,renal,RENAL-ATN,atenolol,medium,N,,eGFR 30 < reduce threshold 35,Tab. Atenolol 25
+P0116,renal,RENAL-DCF,diclofenac,medium,N,,eGFR 30 < reduce threshold 60,Reactin 50 mg
+P0116,renal,RENAL-GAB,gabapentin,medium,N,,eGFR 30 < reduce threshold 60,Gabapenttin 300
+P0116,renal,RENAL-IBU,ibuprofen,medium,N,,eGFR 30 < reduce threshold 60,Cap. Ibuprofen
+P0116,renal,RENAL-PRE,pregabalin,medium,N,,eGFR 30 < reduce threshold 60,Pregabalin 75 mg BD
+P0117,duplicate,DUP-CLASS-PPI,pantoprazole|rabeprazole,medium,N,,2 drugs of one class,PANTOCID 40|T Razo 20 mg
+P0117,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,folitrax 7.5mg|PANTOCID 40
+P0117,interaction,MTX-PPI-01,methotrexate|rabeprazole,low,N,,table minor,folitrax 7.5mg|T Razo 20 mg
+P0117,interaction,NSAID-LOOP-01,furosemide|naproxen,medium,N,,table moderate,Lasix 40|Cap. Naporsyn 250
+P0117,interaction,NSAID-MTX-01,methotrexate|naproxen,high,N,,table major,folitrax 7.5mg|Cap. Naporsyn 250
+P0119,renal,RENAL-ALL,allopurinol,high,N,,eGFR 15 < reduce threshold 30,T Zyloric 100
+P0121,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,escitalopram 10 mg|Sertta 50 mg
+P0121,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,alprazlam0.25|Trypomer10
+P0121,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoin100|Valparin200
+P0121,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,Trypomer10|escitalopram 10 mg
+P0121,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,Trypomer10|Sertta 50 mg
+P0122,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losra 50mg|Telmisaran 40 mg
+P0122,interaction,NSAID-ARB-01,losartan|naproxen,high,N,,table major,Losra 50mg|Naprosyn 250 mg
+P0122,interaction,NSAID-ARB-01,naproxen|telmisartan,high,N,,table major,Naprosyn 250 mg|Telmisaran 40 mg
+P0122,interaction,OPI-GABA-01,gabapentin|tramadol,high,N,,table moderate; CNS depression at age 74,Gabapni 300mg|Cap Tramazac 50
+P0122,renal,RENAL-GAB,gabapentin,medium,N,,eGFR 43 < reduce threshold 60,Gabapni 300mg
+P0122,renal,RENAL-MTF,metformin,medium,Y,eGFR 43 is just under the 45 threshold,eGFR 43 < reduce threshold 45,Glyciphage 500
+P0122,renal,RENAL-NAP,naproxen,medium,N,,eGFR 43 < reduce threshold 60,Naprosyn 250 mg
+P0123,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Restyl0.25|tryptomer 10
+P0123,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Restyl0.25|Zolfresh 5
+P0123,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,tryptomer 10|Zolfresh 5
+P0124,duplicate,DUP-CLASS-STATIN,rosuvastatin|simvastatin,medium,N,,2 drugs of one class,Cretsor 10|Tab. Zocor 20 mg HS
+P0124,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Daonil 5mg|glimepiride 2
+P0124,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 49 < stop threshold 60,Daonil 5mg
+P0125,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Restyl 0.25mg|clonazepam 0.5mg
+P0125,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Evas 5 mg OD|losartan 50mg
+P0125,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,Evas 5 mg OD|glibenclamide 5mg
+P0125,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,Aquazide 12.5|losartan 50mg
+P0125,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,aspirin 75 mg OD|Evas 5 mg OD
+P0125,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Restyl 0.25mg|Tab zolpidem 5
+P0125,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,clonazepam 0.5mg|Tab zolpidem 5
+P0125,interaction,SU-THZ-01,glibenclamide|hydrochlorothiazide,low,N,,table minor,glibenclamide 5mg|Aquazide 12.5
+P0126,interaction,BB-SAL-01,atenolol|salbutamol,medium,N,,table moderate,ATEN 25MG|salbutamol
+P0127,interaction,ACEI-KSP-01,ramipril|spironolactone,high,N,,table major,Tab Ramipril 5|Tab. Aldactone25
+P0127,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,T Lasix 40|Tab Ramipril 5
+P0127,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,CORDARONE 200|atorvastatin20
+P0127,interaction,AMI-BB-01,amiodarone|bisoprolol,high,N,,table moderate; age 87,CORDARONE 200|bisoprolol-SR 5
+P0128,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,Omez20|Pantop 40|Rabelt 20
+P0128,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,furoemide 40mg|Ramistaar 5
+P0128,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Domsta10|T Zocon 150 mg
+P0128,interaction,ODN-DOM-01,domperidone|ondansetron,high,N,,table moderate; age 75,Domsta10|Emeset 4
+P0128,interaction,WAR-AMI-01,amiodarone|warfarin,high,N,,table major,amiodarone 200 mg OD|Warf 5 mg
+P0128,interaction,WAR-FLU-01,fluconazole|warfarin,high,N,,table major,T Zocon 150 mg|Warf 5 mg
+P0128,interaction,WAR-MTZ-01,metronidazole|warfarin,high,N,,table major,CAP METRONIDAZOLE400|Warf 5 mg
+P0129,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,T Calciuum + vitamin d3 500|Livogen
+P0129,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,T Calciuum + vitamin d3 500|Levothyroxine 50
+P0129,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Livogen|Levothyroxine 50
+P0129,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Levothyroxine 50|Cap Omez 20mg
+P0129,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Livogen|Cap Omez 20mg
+P0130,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,Y,hard-to-read name: 'omeprazole20' is omeprazole,2 drugs of one class,omeprazole20|pantoprazole 40
+P0130,duplicate,DUP-SAME-MTX,methotrexate,medium,N,,methotrexate listed 2 times,Folatrax 7.5 mg|Folitrax 7.5 mg
+P0130,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelcal 500 mg BD|T. Livogen
+P0130,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shelcal 500 mg BD|Levothyroxine 50
+P0130,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,T. Livogen|Levothyroxine 50
+P0130,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Levothyroxine 50|omeprazole20
+P0130,interaction,LTX-PPI-01,levothyroxine|pantoprazole,low,N,,table minor,Levothyroxine 50|pantoprazole 40
+P0130,interaction,MTX-PPI-01,methotrexate|omeprazole,low,N,,table minor,Folatrax 7.5 mg|Folitrax 7.5 mg|omeprazole20
+P0130,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,Folatrax 7.5 mg|Folitrax 7.5 mg|pantoprazole 40
+P0130,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,T. Livogen|omeprazole20
+P0130,interaction,PPI-FER-01,ferrous sulfate|pantoprazole,low,N,,table minor,T. Livogen|pantoprazole 40
+P0131,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Envas 5|Cardcae 5
+P0131,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,N,,2 drugs of one class,Bisoprolol 5|Metoprolol 25
+P0131,interaction,ACEI-KSP-01,enalapril|spironolactone,high,N,,table major,Envas 5|Spironolactone 25mg
+P0131,interaction,ACEI-KSP-01,ramipril|spironolactone,high,N,,table major,Cardcae 5|Spironolactone 25mg
+P0131,interaction,ACEI-LOOP-01,enalapril|furosemide,low,N,,table minor,Envas 5|T. LASIX40
+P0131,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,T. LASIX40|Cardcae 5
+P0131,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,Cordarone|Atorva 20
+P0131,interaction,AMI-BB-01,amiodarone|bisoprolol,high,N,,table moderate; age 75,Cordarone|Bisoprolol 5
+P0131,interaction,AMI-BB-01,amiodarone|metoprolol,high,N,,table moderate; age 75,Cordarone|Metoprolol 25
+P0131,interaction,AMI-DIG-01,amiodarone|digoxin,high,N,,table major,Cordarone|lanoxin0.25
+P0131,interaction,DIG-LOOP-01,digoxin|furosemide,medium,N,,table moderate,lanoxin0.25|T. LASIX40
+P0131,interaction,WAR-AMI-01,amiodarone|warfarin,high,N,,table major,Cordarone|Warf 5 mg
+P0132,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,sitagliptin 100 mg|Galvus 50 mg
+P0132,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Storvas 20 mg 0-0-1|crestor 10 mg
+P0132,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,ELTRXOIN 50|Omeprazole 20
+P0132,interaction,SU-THZ-01,glibenclamide|hydrochlorothiazide,low,N,,table minor,Daonil 5 mg|hydrochlorothiazide 12.5 mg od
+P0133,interaction,ACEI-ARB-01,enalapril|losartan,medium,N,,"table major; renal rule eased at eGFR 96, age 28",enam 5|losa 50
+P0133,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,aitriptyline 10 mg 0-0-1|Zolfresh5
+P0134,duplicate,DUP-CLASS-NSAID,ibuprofen|naproxen,medium,N,,2 drugs of one class,ibuprofen 400|Naprosyn
+P0134,interaction,OPI-GABA-01,pregabalin|tramadol,medium,N,,table moderate,Lyrica 75 mg BD|Cap. Tramazac
+P0135,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Storvas 20 mg|Cap Rosuvas 10 mg 0-0-1
+P0135,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,AQUAZIDE 12.5|T Repace 50
+P0135,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,Tab methotrexate7.5|Pantocid 40 mg
+P0135,interaction,SU-THZ-01,glibenclamide|hydrochlorothiazide,low,N,,table minor,Glibenclaamide-SR 5|AQUAZIDE 12.5
+P0136,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoin 100mg|Valparin 200 mg BD
+P0137,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Enalapril 5|Cardace 5
+P0137,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,T Amlopres|Depin-ER
+P0137,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enalapril 5|Telsar
+P0137,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Cardace 5|Telsar
+P0137,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,T Amlopres|Aten 25
+P0139,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelal 500|Livgoen
+P0139,interaction,SU-BB-01,glibenclamide|labetalol,low,N,,table minor,Daonil 5|Cap. Labebet100
+P0140,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,calcium + vitamin d3 500|livogen
+P0141,contraindication,PREG-ENA,enalapril,high,Y,"pregnant, and enalapril is written as 'T Enalapril 5 mg'",pregnant; avoid in pregnancy,T Enalapril 5 mg
+P0141,contraindication,PREG-TEL,telmisartan,high,Y,"pregnant, and telmisartan is written as 'T. Telmisartan 40 mg'",pregnant; avoid in pregnancy,T. Telmisartan 40 mg
+P0141,duplicate,DUP-CLASS-BB,atenolol|labetalol,medium,N,,2 drugs of one class,Aten25|T labetalol100
+P0141,interaction,ACEI-ARB-01,enalapril|telmisartan,medium,N,,"table major; renal rule eased at eGFR 109, age 28",T Enalapril 5 mg|T. Telmisartan 40 mg
+P0142,interaction,ACEI-INS-01,insulin glargine|ramipril,low,N,,table minor,Inj Insulin glagine|RAMIPRIL 5
+P0142,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,Lasox|RAMIPRIL 5
+P0144,renal,RENAL-ACE,aceclofenac,medium,N,,eGFR 41 < reduce threshold 60,Aceclofenac 100
+P0145,duplicate,DUP-SAME-PRD,prednisolone,medium,N,,prednisolone listed 2 times,Cap. Omnacortil 10mg|Omnacortil 10
+P0145,interaction,ACEI-INS-01,insulin glargine|ramipril,low,N,,table minor,Inj Basalog|Cap. Ramistar 5
+P0146,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enam|TELMA 40MG
+P0146,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Aquzaide 12.5 mg|TELMA 40MG
+P0147,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,medium,N,,table moderate,Ciplox 500|WYSOLONE
+P0147,interaction,FQ-PRD-01,levofloxacin|prednisolone,medium,N,,table moderate,LEVOFLOXX500|WYSOLONE
+P0147,interaction,NSAID-MTX-01,methotrexate|naproxen,medium,N,,"table major; renal rule eased at eGFR 96, age 42",Methotrexate|tab. naproyn 250
+P0147,interaction,NSAID-PRD-01,naproxen|prednisolone,medium,N,,table moderate,tab. naproyn 250|WYSOLONE
+P0148,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,cap. alprax 0.25|clonazepam0.5
+P0148,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,cap. alprax 0.25|Tryptomer10
+P0148,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tryptomer10|clonazepam0.5
+P0148,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,cap. alprax 0.25|Zolfresh 5mg
+P0148,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,clonazepam0.5|Zolfresh 5mg
+P0148,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,Y,hard-to-read name: 'Tryptomer10' is amitriptyline,table moderate,Tryptomer10|Zolfresh 5mg
+P0149,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,N,,2 drugs of one class,Bisoprolol 5|METOPROLOL 25
+P0149,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,alprazolam 0.25|clonazepam 0.5 mg 0-0-1
+P0149,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Tab. Omerpazole 20|PAN40
+P0149,duplicate,DUP-CLASS-STATIN,rosuvastatin|simvastatin,medium,N,,2 drugs of one class,T Crestor|tab zocor 20mg
+P0149,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,tab diprin 75mg|Ramipril 5 mg OD
+P0149,interaction,BZD-TCA-01,alprazolam|amitriptyline,high,N,,table moderate; CNS depression at age 81,alprazolam 0.25|Amitriptyline 10
+P0149,interaction,BZD-TCA-01,amitriptyline|clonazepam,high,N,,table moderate; CNS depression at age 81,Amitriptyline 10|clonazepam 0.5 mg 0-0-1
+P0149,interaction,SSRI-ASA-01,aspirin|sertraline,high,N,,table moderate; bleeding risk at age 81,tab diprin 75mg|T. Sreta50
+P0149,interaction,TCA-SSRI-01,amitriptyline|sertraline,high,N,,table moderate; age 81,Amitriptyline 10|T. Sreta50
+P0150,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,Tab. Repace 50|Cap Ramistar 5mg
+P0150,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,hydrochlorothiazide 12.5|Tab. Repace 50
+P0150,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,domperidone 10mg|Forcan 150 mg
+P0151,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,Y,every drug written as a brand: 'Enam 5' + 'CAP. CARDACE 5',2 drugs of one class,Enam 5|CAP. CARDACE 5
+P0151,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,LOSARTAN|tab. telsar 40 mg od
+P0151,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,amlodipine 5|T nifedipine20
+P0151,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Enam 5|LOSARTAN
+P0151,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enam 5|tab. telsar 40 mg od
+P0151,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,LOSARTAN|CAP. CARDACE 5
+P0151,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,CAP. CARDACE 5|tab. telsar 40 mg od
+P0151,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,Aquazide 12.5|LOSARTAN
+P0151,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Aquazide 12.5|tab. telsar 40 mg od
+P0151,interaction,ASA-ACEI-01,aspirin|enalapril,low,N,,table minor,Disprin 75mg|Enam 5
+P0151,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,Disprin 75mg|CAP. CARDACE 5
+P0151,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,amlodipine 5|atenolol 25 mg 1-0-0
+P0152,duplicate,DUP-CLASS-PPI,omeprazole|rabeprazole,medium,N,,2 drugs of one class,Omez 20 mg 1-0-0|RAZO
+P0152,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,Tab. clopidogrel|Omez 20 mg 1-0-0
+P0152,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,dosmtal 10|zocon 150
+P0152,interaction,FLU-SIM-01,fluconazole|simvastatin,high,N,,table major,zocon 150|Simvotin
+P0152,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,dosmtal 10|Emeset 4mg
+P0153,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,Istavel|JALRA
+P0153,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Cap Storvas 20mg|Cap. Crestor
+P0153,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,Envas 5 mg|T Losartan 50
+P0153,interaction,ACEI-INS-01,enalapril|insulin glargine,low,N,,table minor,Envas 5 mg|Inj insulin glarigne
+P0153,interaction,ACEI-LIT-01,enalapril|lithium,high,N,,table major,Envas 5 mg|lithiumm 300mg
+P0153,interaction,ACEI-SU-01,enalapril|glibenclamide,low,N,,table minor,Envas 5 mg|T. Daonil 5
+P0153,interaction,ARB-LIT-01,lithium|losartan,high,N,,table major,lithiumm 300mg|T Losartan 50
+P0153,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,Tryptomer 10 mg|Clonotril 0.5
+P0153,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Clonotril 0.5|Cap. Stilnoct 5
+P0153,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,Tryptomer 10 mg|Cap. Stilnoct 5
+P0154,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 41 < stop threshold 60,Daonil 5 mg OD
+P0154,renal,RENAL-VIL,vildagliptin,medium,Y,hard-to-read name: 'T. Galvas 50mg' is vildagliptin,eGFR 41 < reduce threshold 50,T. Galvas 50mg
+P0156,duplicate,DUP-CLASS-NSAID,aceclofenac|ibuprofen,medium,N,,2 drugs of one class,ZERODOL|Brufen 400
+P0156,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,cap shelcal 500 mg|Ferrous sulfate
+P0156,interaction,OPI-GABA-01,gabapentin|tramadol,medium,N,,table moderate,Tab. Gabapin 300 mg|T Tramazac 50
+P0156,interaction,OPI-GABA-01,pregabalin|tramadol,medium,N,,table moderate,Pregabalin75|T Tramazac 50
+P0156,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Ferrous sulfate|Omez 20
+P0158,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Calcium + vitamin d3 500mg|Livogen
+P0159,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Nexito 10mg|Sertralinne 50 mg OD
+P0159,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,N,,table moderate,Alprax 0.25 mg|Tryptomer 10
+P0159,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Alprax 0.25 mg|Cap. Stilnoct 5
+P0159,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,Tryptomer 10|Nexito 10mg
+P0159,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,Tryptomer 10|Sertralinne 50 mg OD
+P0159,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,Tryptomer 10|Cap. Stilnoct 5
+P0160,duplicate,DUP-CLASS-NSAID,diclofenac|ibuprofen,medium,N,,2 drugs of one class,diclofenac|Tab. ibuprofen 400
+P0160,interaction,NSAID-PRD-01,diclofenac|prednisolone,medium,N,,table moderate,diclofenac|Prednisolone10
+P0160,interaction,NSAID-PRD-01,ibuprofen|prednisolone,medium,N,,table moderate,Tab. ibuprofen 400|Prednisolone10
+P0160,interaction,OPI-GABA-01,pregabalin|tramadol,medium,N,,table moderate,Pregabalin|Tramazac 50 mg BD
+P0161,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losartan|Telsar 40
+P0161,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,T ALPRAZOLAM 0.25MG|Cap clonaepam|Rivotril 0.5mg
+P0161,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Cipralex 10|TAB SERTRALINE 50 MG
+P0161,duplicate,DUP-SAME-CLZ,clonazepam,medium,Y,same drug written two ways: 'Cap clonaepam' and 'Rivotril 0.5mg',clonazepam listed 2 times,Cap clonaepam|Rivotril 0.5mg
+P0161,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,Losartan|t. ramistar 5 mg
+P0161,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,t. ramistar 5 mg|Telsar 40
+P0161,interaction,ACEI-INS-01,insulin glargine|ramipril,low,N,,table minor,Inj Basalog|t. ramistar 5 mg
+P0161,interaction,ACEI-SU-01,glimepiride|ramipril,low,N,,table minor,Glimy 2 mg|t. ramistar 5 mg
+P0161,renal,RENAL-COL,colchicine,high,N,,eGFR 15 < reduce threshold 30,Zycolchin
+P0161,renal,RENAL-GLM,glimepiride,high,N,,eGFR 15 < reduce threshold 30,Glimy 2 mg
+P0162,interaction,NSAID-KSP-01,aceclofenac|spironolactone,high,N,,table moderate; eGFR 43 < 45,aceclofenac|spironolactone 25
+P0162,interaction,NSAID-LOOP-01,aceclofenac|furosemide,high,N,,table moderate; eGFR 43 < 45,aceclofenac|furosemide40
+P0162,renal,RENAL-ACE,aceclofenac,medium,N,,eGFR 43 < reduce threshold 60,aceclofenac
+P0163,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Raipril 5|telma 40
+P0164,duplicate,DUP-SAME-CLR,clarithromycin,medium,N,,clarithromycin listed 2 times,clraibid 500 mg|CLARITHROMYCIN 500
+P0164,interaction,CLR-DOM-01,clarithromycin|domperidone,high,N,,table major,clraibid 500 mg|CLARITHROMYCIN 500|T DOMPERIDONE 10 MG TDS
+P0164,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,T DOMPERIDONE 10 MG TDS|Tab Forcan
+P0165,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,tab sutagliptin|Jlara 50
+P0165,interaction,SU-FQ-01,ciprofloxacin|glibenclamide,medium,N,,table moderate,Ciprofloxacin 500 mg|Daonil
+P0165,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 52 < stop threshold 60,Daonil
+P0166,duplicate,DUP-SAME-SER,sertraline,medium,N,,sertraline listed 2 times,Daxid50|CAP. DAIXD 50
+P0167,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Cap Losar 50|telmisartan 40 mg
+P0167,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,enalapril5|Cap Losar 50
+P0167,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,enalapril5|telmisartan 40 mg
+P0168,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Repace 50 mg 1-0-0|telma
+P0168,interaction,ACEI-ARB-01,losartan|ramipril,medium,N,,"table major; renal rule eased at eGFR 99, age 38",Repace 50 mg 1-0-0|Ramistar 5 mg
+P0168,interaction,ACEI-ARB-01,ramipril|telmisartan,medium,N,,"table major; renal rule eased at eGFR 99, age 38",Ramistar 5 mg|telma
+P0168,interaction,ACEI-LIT-01,lithium|ramipril,medium,N,,"table major; renal rule eased at eGFR 99, age 38",lithium 300mg|Ramistar 5 mg
+P0168,interaction,ARB-LIT-01,lithium|losartan,medium,N,,"table major; renal rule eased at eGFR 99, age 38",lithium 300mg|Repace 50 mg 1-0-0
+P0168,interaction,ARB-LIT-01,lithium|telmisartan,medium,N,,"table major; renal rule eased at eGFR 99, age 38",lithium 300mg|telma
+P0169,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,T. Omez|Pan 40 mg|Rableet 20 mg 1-0-0
+P0169,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,calcium + vitamin d3 500 mg 1-0-1|Cap ferrous sulfate
+P0169,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Domstal 10mg|FORCAN 150
+P0169,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,calcium + vitamin d3 500 mg 1-0-1|Thyronorm 50mcg
+P0169,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Cap ferrous sulfate|Thyronorm 50mcg
+P0169,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Thyronorm 50mcg|T. Omez
+P0169,interaction,LTX-PPI-01,levothyroxine|pantoprazole,low,N,,table minor,Thyronorm 50mcg|Pan 40 mg
+P0169,interaction,LTX-PPI-01,levothyroxine|rabeprazole,low,N,,table minor,Thyronorm 50mcg|Rableet 20 mg 1-0-0
+P0169,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Domstal 10mg|ondansetron 4 mg
+P0169,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Cap ferrous sulfate|T. Omez
+P0169,interaction,PPI-FER-01,ferrous sulfate|pantoprazole,low,N,,table minor,Cap ferrous sulfate|Pan 40 mg
+P0169,interaction,PPI-FER-01,ferrous sulfate|rabeprazole,low,N,,table minor,Cap ferrous sulfate|Rableet 20 mg 1-0-0
+P0171,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,Omeprazole 20|Paantop 40|rabeprrazole 20
+P0171,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Domstal|fluconazol 150 mg once
+P0171,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Domstal|Vomikind 4
+P0172,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,shelcal 500 mg|Tab. Lovogen
+P0172,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,eptoin 100 mg|Encorate 200
+P0172,interaction,PPI-FER-01,ferrous sulfate|omeprazole,low,N,,table minor,Tab. Lovogen|Omez 20
+P0173,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,T. Stamlo 5mg|nifedipine 20
+P0173,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,T. Stamlo 5mg|atenolol25
+P0173,renal,RENAL-ALL,allopurinol,high,N,,eGFR 16 < reduce threshold 30,Zyloric 100mg
+P0173,renal,RENAL-ATN,atenolol,high,N,,eGFR 16 < reduce threshold 35,atenolol25
+P0173,renal,RENAL-COL,colchicine,high,N,,eGFR 16 < reduce threshold 30,Zyclochin 0.5 mg BD
+P0174,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Cap Omez 20|pantoprazole 40
+P0174,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,medium,N,,table moderate,Cifran 500 mg BD|Prednisolone
+P0174,interaction,MTX-PPI-01,methotrexate|omeprazole,low,N,,table minor,Folitrax 7.5 mg|Cap Omez 20
+P0174,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,Folitrax 7.5 mg|pantoprazole 40
+P0174,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,T. DOMPERIDONE 10 MG|Emuset
+P0175,renal,RENAL-ACE,aceclofenac,medium,N,,eGFR 41 < reduce threshold 60,aceclofenec100
+P0176,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Omez20|PANTOP 40
+P0176,duplicate,DUP-CLASS-STATIN,atorvastatin|simvastatin,medium,N,,2 drugs of one class,T. Storvas 20mg|Zocor 20
+P0176,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,Ecosprin|Tab. Cardece
+P0177,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,N,,2 drugs of one class,Lipitor 20 mg|T Rosuvastatin
+P0177,duplicate,DUP-CLASS-SU,glibenclamide|glimepiride,medium,N,,2 drugs of one class,Danoil 5|glimepiride 2
+P0177,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,Lisar 50|Ramipril 5
+P0177,interaction,ACEI-SU-01,glibenclamide|ramipril,low,N,,table minor,Danoil 5|Ramipril 5
+P0177,interaction,ACEI-SU-01,glimepiride|ramipril,low,N,,table minor,glimepiride 2|Ramipril 5
+P0177,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,ecsoprin|Ramipril 5
+P0177,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shlecal 500|Livogen
+P0177,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shlecal 500|Thyronorm 50 mcg 1-0-0
+P0177,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Livogen|Thyronorm 50 mcg 1-0-0
+P0177,renal,RENAL-GLB,glibenclamide,high,N,,eGFR 53 < stop threshold 60,Danoil 5
+P0178,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,t alpax 0.25 mg 0-0-1|Rivotril 0.5 mg
+P0178,duplicate,DUP-CLASS-NSAID,aceclofenac|ibuprofen,medium,N,,2 drugs of one class,Zerodol 100|Ibugesic 400mg
+P0178,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,T Nexito 10|Tab. Serrtaline 50
+P0178,interaction,BZD-GABA-01,alprazolam|gabapentin,high,N,,table moderate; CNS depression at age 77,t alpax 0.25 mg 0-0-1|GABAPENTIN 300
+P0178,interaction,BZD-GABA-01,alprazolam|pregabalin,high,N,,table moderate; CNS depression at age 77,t alpax 0.25 mg 0-0-1|Pregabid 75 mg 1-0-1
+P0178,interaction,BZD-GABA-01,clonazepam|gabapentin,high,N,,table moderate; CNS depression at age 77,Rivotril 0.5 mg|GABAPENTIN 300
+P0178,interaction,BZD-GABA-01,clonazepam|pregabalin,high,N,,table moderate; CNS depression at age 77,Rivotril 0.5 mg|Pregabid 75 mg 1-0-1
+P0178,interaction,BZD-TCA-01,alprazolam|amitriptyline,high,N,,table moderate; CNS depression at age 77,t alpax 0.25 mg 0-0-1|tab tryptomer 10 mg
+P0178,interaction,BZD-TCA-01,amitriptyline|clonazepam,high,N,,table moderate; CNS depression at age 77,tab tryptomer 10 mg|Rivotril 0.5 mg
+P0178,interaction,NSAID-SSRI-01,aceclofenac|escitalopram,high,N,,table moderate; bleeding risk at age 77,Zerodol 100|T Nexito 10
+P0178,interaction,NSAID-SSRI-01,aceclofenac|sertraline,high,N,,table moderate; bleeding risk at age 77,Zerodol 100|Tab. Serrtaline 50
+P0178,interaction,NSAID-SSRI-01,escitalopram|ibuprofen,high,N,,table moderate; bleeding risk at age 77,T Nexito 10|Ibugesic 400mg
+P0178,interaction,NSAID-SSRI-01,ibuprofen|sertraline,high,N,,table moderate; bleeding risk at age 77,Ibugesic 400mg|Tab. Serrtaline 50
+P0178,interaction,TCA-SSRI-01,amitriptyline|escitalopram,high,N,,table moderate; age 77,tab tryptomer 10 mg|T Nexito 10
+P0178,interaction,TCA-SSRI-01,amitriptyline|sertraline,high,N,,table moderate; age 77,tab tryptomer 10 mg|Tab. Serrtaline 50
+P0179,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Domstal 10|Emeset 4
+P0179,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,phenytoin 100|Sodium valproate
+P0180,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Envas 5|Ramsitar
+P0180,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,Amlopres 5 mg|Tab nifedipine 20 mg
+P0180,duplicate,DUP-CLASS-DPP4,sitagliptin|vildagliptin,medium,N,,2 drugs of one class,januvia 100|Jalro 50mg
+P0180,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Envas 5|Tab Telsar
+P0180,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Ramsitar|Tab Telsar
+P0181,interaction,NSAID-MTX-01,methotrexate|naproxen,medium,N,,"table major; renal rule eased at eGFR 96, age 55",Folitrax 7.5|naproxen 250 mg
+P0181,interaction,NSAID-PRD-01,naproxen|prednisolone,high,N,,table moderate; bleeding risk at 43.1 kg,naproxen 250 mg|PREDNISOLONE10
+P0182,contraindication,PREG-ENA,enalapril,high,Y,hard-to-read name: 'Enam5' is enalapril,pregnant; avoid in pregnancy,Enam5
+P0182,contraindication,PREG-RAM,ramipril,high,Y,"pregnant, and ramipril is written as 'Cardace 5'",pregnant; avoid in pregnancy,Cardace 5
+P0182,contraindication,PREG-TEL,telmisartan,high,Y,hard-to-read name: 'Cap. Tulsar' is telmisartan,pregnant; avoid in pregnancy,Cap. Tulsar
+P0182,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,Enam5|Cardace 5
+P0182,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,Enam5|Cap. Tulsar
+P0182,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,Cardace 5|Cap. Tulsar
+P0182,interaction,BB-CCB-01,amlodipine|labetalol,low,N,,table minor,Tab Stamlo 5|Labetalol100
+P0183,interaction,ACEI-INS-01,insulin glargine|ramipril,low,N,,table minor,Inj Basalog|ramiprli5
+P0183,interaction,ACEI-SU-01,glimepiride|ramipril,low,N,,table minor,glimepiride-er 2|ramiprli5
+P0183,interaction,ASA-ACEI-01,aspirin|ramipril,low,N,,table minor,Cap aspirin75|ramiprli5
+P0183,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Domperidone 10|Emeset4
+P0183,interaction,SU-FQ-01,ciprofloxacin|glimepiride,medium,N,,table moderate,Cifran 500 mg|glimepiride-er 2
+P0183,interaction,SU-THZ-01,glimepiride|hydrochlorothiazide,low,N,,table minor,glimepiride-er 2|Aquazide 12.5
+P0184,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,omepraazole 20mg|Patnocid 40
+P0184,duplicate,DUP-CLASS-STATIN,atorvastatin|simvastatin,medium,N,,2 drugs of one class,Atorva 20|Zocor 20
+P0184,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,amiodarone|Atorva 20
+P0184,interaction,AMI-BB-01,amiodarone|metoprolol,high,N,,table moderate; age 88,amiodarone|Met-XL
+P0184,interaction,AMI-SIM-01,amiodarone|simvastatin,high,N,,table major,amiodarone|Zocor 20
+P0184,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,Tab Clopilet 75mg|omepraazole 20mg
+P0185,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Repace 50mg|T Telmisartan40
+P0185,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,amlodipine5|nifedipine 20 mg
+P0185,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,Omeprazole 20 mg OD|Omez 20 mg|pantoprazole|T. Rabeprazoe
+P0185,duplicate,DUP-SAME-OME,omeprazole,medium,N,,omeprazole listed 2 times,Omeprazole 20 mg OD|Omez 20 mg
+P0185,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,Aquazide 12.5 mg|Repace 50mg
+P0185,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,Aquazide 12.5 mg|T Telmisartan40
+P0186,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,T CALCIUM + VITAMIN D3|Ferrous sulfate
+P0187,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,T Omeprazole20|Pantocid 40 mg|rabeeprazole 20mg
+P0187,duplicate,DUP-SAME-FLU,fluconazole,medium,N,,fluconazole listed 2 times,Fluconazol 150mg|Cap Focan 150
+P0187,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Cap Domperidone|Fluconazol 150mg|Cap Focan 150
+P0187,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Cap Domperidone|T Ondanstron 4
+P0188,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole,medium,N,,2 drugs of one class,Tab. Omez 20|Pan 40mg
+P0188,duplicate,DUP-CLASS-STATIN,atorvastatin|rosuvastatin,medium,Y,hard-to-read name: 'Cap. Atorvastatin20' is atorvastatin,2 drugs of one class,Cap. Atorvastatin20|ROSUVASTATIN 10 MG
+P0188,interaction,ACEI-LOOP-01,furosemide|ramipril,low,N,,table minor,Frusenex 40|ramipril5
+P0188,interaction,AMI-ATV-01,amiodarone|atorvastatin,medium,N,,table moderate,AMIODARONE 200MG|Cap. Atorvastatin20
+P0188,interaction,CLO-OME-01,clopidogrel|omeprazole,medium,N,,table moderate,Cap. Clopidogrel 75 mg|Tab. Omez 20
+P0189,duplicate,DUP-CLASS-STATIN,atorvastatin|simvastatin,medium,N,,2 drugs of one class,Atorva 20|T. Simvastatin 20 mg
+P0190,duplicate,DUP-CLASS-ACEI,enalapril|ramipril,medium,N,,2 drugs of one class,ENAM 5|rammipril 5 mg od
+P0190,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losartan|Telmisartan 40
+P0190,duplicate,DUP-CLASS-CCB,amlodipine|nifedipine,medium,N,,2 drugs of one class,Tab amlodipine 5mg|T. Depin 20
+P0190,interaction,ACEI-ARB-01,enalapril|losartan,high,N,,table major,ENAM 5|Losartan
+P0190,interaction,ACEI-ARB-01,enalapril|telmisartan,high,N,,table major,ENAM 5|Telmisartan 40
+P0190,interaction,ACEI-ARB-01,losartan|ramipril,high,N,,table major,Losartan|rammipril 5 mg od
+P0190,interaction,ACEI-ARB-01,ramipril|telmisartan,high,N,,table major,rammipril 5 mg od|Telmisartan 40
+P0190,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,Tab amlodipine 5mg|Aten25
+P0190,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelcal 500|ferrous sulfate
+P0190,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shelcal 500|T. Levothyroxine 50mcg
+P0190,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,ferrous sulfate|T. Levothyroxine 50mcg
+P0191,contraindication,PREG-ENA,enalapril,high,N,,pregnant; avoid in pregnancy,enalapril 5
+P0191,contraindication,PREG-LOS,losartan,high,N,,pregnant; avoid in pregnancy,Losar
+P0191,contraindication,PREG-TEL,telmisartan,high,Y,"pregnant, and telmisartan is written as 'TELMISARTAN 40'",pregnant; avoid in pregnancy,TELMISARTAN 40
+P0191,duplicate,DUP-CLASS-ARB,losartan|telmisartan,medium,N,,2 drugs of one class,Losar|TELMISARTAN 40
+P0191,interaction,ACEI-ARB-01,enalapril|losartan,medium,N,,"table major; renal rule eased at eGFR 110, age 20",enalapril 5|Losar
+P0191,interaction,ACEI-ARB-01,enalapril|telmisartan,medium,N,,"table major; renal rule eased at eGFR 110, age 20",enalapril 5|TELMISARTAN 40
+P0191,interaction,ARB-THZ-01,hydrochlorothiazide|losartan,low,N,,table minor,hydrochlorothiazide 12.5|Losar
+P0191,interaction,ARB-THZ-01,hydrochlorothiazide|telmisartan,low,N,,table minor,hydrochlorothiazide 12.5|TELMISARTAN 40
+P0191,interaction,BB-CCB-01,amlodipine|atenolol,low,N,,table minor,Amlong5|ATENOLOL25
+P0191,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelcal 500|Ferrous sufate
+P0192,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,alprazolamm|Rivotril
+P0192,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,tab. cipralex 10|T Cipralex 10|serta 50mg
+P0192,duplicate,DUP-SAME-ESC,escitalopram,medium,Y,same drug written two ways: 'tab. cipralex 10' and 'T Cipralex 10',escitalopram listed 2 times,tab. cipralex 10|T Cipralex 10
+P0192,interaction,ARB-LIT-01,lithium|losartan,high,N,,table major,Licab300|REPACE 50 MG
+P0192,interaction,BZD-TCA-01,alprazolam|amitriptyline,high,N,,table moderate; CNS depression at age 89,alprazolamm|amitriptyline 10
+P0192,interaction,BZD-TCA-01,amitriptyline|clonazepam,high,N,,table moderate; CNS depression at age 89,amitriptyline 10|Rivotril
+P0192,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,alprazolamm|Cap Stilnoct 5
+P0192,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,Rivotril|Cap Stilnoct 5
+P0192,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Cap phenytoin 100mg|Cap Encorate 200
+P0192,interaction,TCA-SSRI-01,amitriptyline|escitalopram,high,N,,table moderate; age 89,amitriptyline 10|tab. cipralex 10|T Cipralex 10
+P0192,interaction,TCA-SSRI-01,amitriptyline|sertraline,high,N,,table moderate; age 89,amitriptyline 10|serta 50mg
+P0192,interaction,ZD-TCA-01,amitriptyline|zolpidem,high,N,,table moderate; CNS depression at age 89,amitriptyline 10|Cap Stilnoct 5
+P0193,duplicate,DUP-CLASS-BB,atenolol|metoprolol,medium,N,,2 drugs of one class,Tab. Aten 25|t. metolar
+P0193,renal,RENAL-ALL,allopurinol,high,N,,eGFR 29 < reduce threshold 30,Zyloric 100
+P0193,renal,RENAL-ATN,atenolol,high,N,,eGFR 29 < reduce threshold 35,Tab. Aten 25
+P0194,duplicate,DUP-CLASS-BB,bisoprolol|metoprolol,medium,N,,2 drugs of one class,Bisoprolol|metoprolol 25
+P0194,interaction,ASA-CLO-01,aspirin|clopidogrel,high,N,,table moderate; bleeding risk at age 83,Ecosprin 75 mg|Clopidogrel 75mg
+P0194,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelcal 500mg|Livogen
+P0194,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,Shelcal 500mg|Cap. Eltroxin
+P0194,interaction,LTX-FER-01,ferrous sulfate|levothyroxine,low,N,,table minor,Livogen|Cap. Eltroxin
+P0195,duplicate,DUP-CLASS-PPI,omeprazole|pantoprazole|rabeprazole,medium,N,,3 drugs of one class,T. Omez 20mg|T. pantoprazole 40|Razo20
+P0195,interaction,FLU-DOM-01,domperidone|fluconazole,high,N,,table major,Domstal10|fluconzole 150mg
+P0195,interaction,ODN-DOM-01,domperidone|ondansetron,medium,N,,table moderate,Domstal10|ONDANSETRON 4
+P0196,duplicate,DUP-CLASS-NSAID,ibuprofen|naproxen,medium,N,,2 drugs of one class,Brufen 400|Cap Nprosyn 250 mg 1-0-1
+P0196,duplicate,DUP-SAME-GAB,gabapentin,medium,N,,gabapentin listed 2 times,Gabapin 300mg|Gabapenttin 300 mg
+P0196,interaction,FQ-PRD-01,ciprofloxacin|prednisolone,medium,N,,table moderate,ciplox 500|predniolone10
+P0196,interaction,NSAID-PRD-01,ibuprofen|prednisolone,medium,N,,table moderate,Brufen 400|predniolone10
+P0196,interaction,NSAID-PRD-01,naproxen|prednisolone,medium,N,,table moderate,Cap Nprosyn 250 mg 1-0-1|predniolone10
+P0196,interaction,OPI-GABA-01,gabapentin|tramadol,medium,N,,table moderate,Gabapin 300mg|Gabapenttin 300 mg|Contramal50
+P0197,duplicate,DUP-CLASS-BZD,alprazolam|clonazepam,medium,N,,2 drugs of one class,Alprax 0.25mg|clonotril 0.5 mg
+P0197,duplicate,DUP-CLASS-SSRI,escitalopram|sertraline,medium,N,,2 drugs of one class,Nextio 10|daxid 50 mg
+P0197,interaction,BZD-TCA-01,alprazolam|amitriptyline,medium,Y,hard-to-read name: 'TRYPTOME' is amitriptyline,table moderate,Alprax 0.25mg|TRYPTOME
+P0197,interaction,BZD-TCA-01,amitriptyline|clonazepam,medium,N,,table moderate,TRYPTOME|clonotril 0.5 mg
+P0197,interaction,BZD-ZD-01,alprazolam|zolpidem,high,N,,table major,Alprax 0.25mg|Stilnoct 5
+P0197,interaction,BZD-ZD-01,clonazepam|zolpidem,high,N,,table major,clonotril 0.5 mg|Stilnoct 5
+P0197,interaction,MTX-PPI-01,methotrexate|pantoprazole,low,N,,table minor,Folitrax7.5|T. Pantoprazole 40
+P0197,interaction,NSAID-MTX-01,methotrexate|naproxen,high,N,,table major,Folitrax7.5|T Naprosyn 250
+P0197,interaction,NSAID-PRD-01,naproxen|prednisolone,medium,N,,table moderate,T Naprosyn 250|Cap. Omnacortil 10
+P0197,interaction,NSAID-SSRI-01,escitalopram|naproxen,medium,N,,table moderate,Nextio 10|T Naprosyn 250
+P0197,interaction,NSAID-SSRI-01,naproxen|sertraline,medium,N,,table moderate,T Naprosyn 250|daxid 50 mg
+P0197,interaction,TCA-SSRI-01,amitriptyline|escitalopram,medium,N,,table moderate,TRYPTOME|Nextio 10
+P0197,interaction,TCA-SSRI-01,amitriptyline|sertraline,medium,N,,table moderate,TRYPTOME|daxid 50 mg
+P0197,interaction,ZD-TCA-01,amitriptyline|zolpidem,medium,N,,table moderate,TRYPTOME|Stilnoct 5
+P0198,duplicate,DUP-CLASS-BB,bisoprolol|labetalol,medium,N,,2 drugs of one class,Cap bisoproolol5|Labebet
+P0198,interaction,CAL-FER-01,calcium + vitamin D3|ferrous sulfate,low,N,,table minor,Shelcal|Livogen
+P0199,interaction,PHE-VAL-01,phenytoin|sodium valproate,medium,N,,table moderate,Eptoin|Cap. Valparin200
+P0200,interaction,LTX-CAL-01,calcium + vitamin D3|levothyroxine,low,N,,table minor,T Calcium + vitamin d3 500 mg|Eltroxin 50
+P0200,interaction,LTX-PPI-01,levothyroxine|omeprazole,low,N,,table minor,Eltroxin 50|Omez20

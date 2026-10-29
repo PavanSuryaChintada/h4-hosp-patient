@@ -228,6 +228,40 @@ RULES: tuple[RefRule, ...] = (
 )
 
 
+# Context modifier per rule, from Round 1. Rules not listed have none.
+#   renal: worse at low eGFR · bleed: worse at age 75+ or weight under 50 kg
+#   cns: worse at age 65+ · elderly: worse at age 75+
+RULE_MODIFIER: dict[str, str] = {
+    "WAR-NSAID-01": "bleed", "WAR-ASA-01": "bleed", "WAR-CLO-01": "bleed", "WAR-FQ-01": "bleed",
+    "WAR-SSRI-01": "bleed", "WAR-PRD-01": "bleed", "WAR-AMC-01": "bleed",
+    "NSAID-ACEI-01": "renal", "NSAID-ARB-01": "renal", "NSAID-KSP-01": "renal",
+    "NSAID-LOOP-01": "renal", "NSAID-THZ-01": "renal", "NSAID-ASA-01": "bleed",
+    "NSAID-CLO-01": "bleed", "NSAID-PRD-01": "bleed", "NSAID-MTX-01": "renal",
+    "NSAID-LIT-01": "renal", "NSAID-SSRI-01": "bleed",
+    "ACEI-KSP-01": "renal", "ARB-KSP-01": "renal", "ACEI-ARB-01": "renal", "ACEI-LIT-01": "renal",
+    "ARB-LIT-01": "renal", "THZ-LIT-01": "renal",
+    "CLR-AML-01": "elderly", "CLR-COL-01": "renal", "AMI-BB-01": "elderly", "DIG-LOOP-01": "renal",
+    "BZD-OPI-01": "cns", "BZD-ZD-01": "cns", "ZD-OPI-01": "cns", "BZD-GABA-01": "cns",
+    "BZD-TCA-01": "cns", "ZD-TCA-01": "cns", "OPI-GABA-01": "cns", "TCA-SSRI-01": "elderly",
+    "SSRI-ASA-01": "bleed", "SSRI-CLO-01": "bleed", "ASA-CLO-01": "bleed", "ASA-PRD-01": "bleed",
+    "FQ-PRD-01": "elderly", "ESC-DOM-01": "elderly", "ODN-ESC-01": "elderly",
+    "ODN-DOM-01": "elderly",
+}
+
+# Renal dose rule per drug code, from Round 1: (reduce below this eGFR, stop below this eGFR).
+RENAL_THRESHOLDS: dict[str, tuple[int, int | None]] = {
+    "DCF": (60, 30), "IBU": (60, 30), "ACE": (60, 30), "NAP": (60, 30),
+    "MTF": (45, 30), "GLM": (30, None), "GLB": (60, 60), "SIT": (45, None), "VIL": (50, None),
+    "CIP": (30, None), "LEV": (50, None), "DIG": (50, None), "ATN": (35, None),
+    "PRE": (60, None), "GAB": (60, None), "ALL": (30, None), "COL": (30, None),
+    "MTX": (60, 30), "LIT": (60, None),
+}
+
+# Same-class pairs flagged as duplicate therapy, from Round 1.
+DUPLICATE_CLASSES: tuple[str, ...] = ("NSAID", "PPI", "BZD", "SSRI", "ACEI", "ARB", "SU",
+                                      "STATIN", "BB", "DPP4", "CCB")
+
+
 def _matches(ref: str, drug: RefDrug) -> bool:
     """True if a rule side (drug code or ``@CLASS``) matches ``drug``."""
     return drug.cls == ref[1:] if ref.startswith("@") else drug.code == ref

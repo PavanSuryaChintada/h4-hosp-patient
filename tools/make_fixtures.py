@@ -2,19 +2,22 @@
 
     python tools/make_fixtures.py [--out tests/fixtures]
 
-Deterministic from ``SEED``: the same command always writes the same bytes. Writes four files:
+Deterministic from ``SEED``: the same command always writes the same bytes. Writes five files:
 
-    patients.csv       200 patients: age, weight, eGFR, pregnancy, diagnoses, medication list
-    drugs.csv          68 generics: class, brand names, renal flag, pregnancy level
-    interactions.csv   195 generic pairs: table severity and mechanism
-    ground_truth.csv   the true generic behind every medication string, and how it was mangled
+    patients.csv         200 patients: age, weight, eGFR, pregnancy, diagnoses, medication list
+    drugs.csv            68 generics: class, brand names, renal flag, pregnancy level
+    interactions.csv     195 generic pairs: table severity and mechanism
+    ground_truth.csv     the true generic behind every medication string, and how it was mangled
+    expected_issues.csv  every true issue per patient, its severity, and 30 seeded near-misses
 
 Medication strings are written the way a real slip looks: brand and generic mixed, form prefixes
 (``T.``, ``Tab``, ``Cap``, ``Inj``), strengths with and without units, release qualifiers,
 frequency suffixes, misspellings, squashed spacing, and the odd product that is not in the
 reference table at all. Some clinical values are left blank, because real records have gaps.
 
-The adapter never reads ``ground_truth.csv``. Phase 2 uses it to measure resolution accuracy.
+The pipeline never reads ``ground_truth.csv`` or ``expected_issues.csv``. The evaluation harness
+scores against them: resolution accuracy against the first, recall against the second
+(labelling logic in ``tools/fixture_labels.py``).
 """
 
 from __future__ import annotations
@@ -22,9 +25,12 @@ from __future__ import annotations
 import argparse
 import csv
 import random
+from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 
+from fixture_labels import (SERIOUS, Context, Entry, LabelledIssue, choose_near_misses,
+                            label_patient)
 from fixture_reference import CLASS_LABEL, DRUG_BY_CODE, DRUGS, RefDrug, expand_rules
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +102,8 @@ PATIENT_COLUMNS = ("patient_id", "age", "weight_kg", "egfr", "pregnant", "diagno
 DRUG_COLUMNS = ("generic", "drug_class", "brands", "renal_adjust", "pregnancy_category")
 INTERACTION_COLUMNS = ("drug_a", "drug_b", "severity", "mechanism")
 TRUTH_COLUMNS = ("patient_id", "med_index", "raw", "true_generic", "mangling")
+ISSUE_COLUMNS = ("patient_id", "issue_type", "rule_id", "drugs", "severity", "near_miss",
+                 "near_miss_reason", "evidence", "raw_drugs")
 
 
 def misspell(word: str, rng: random.Random) -> str:
@@ -185,8 +193,10 @@ def choose_profiles(age: int, pregnant: bool, rng: random.Random) -> list[str]:
     return profiles
 
 
-def make_patient(number: int, rng: random.Random) -> tuple[dict[str, str], list[dict[str, str]]]:
-    """Generate one patient row and the ground-truth rows for its medication list."""
+def make_patient(number: int, rng: random.Random
+                 ) -> tuple[dict[str, str], list[dict[str, str]], Context]:
+    """Generate one patient: the CSV row, the ground-truth rows for its medication list, and
+    its true clinical values as written before any were blanked."""
     patient_id = f"P{number:04d}"
     pregnant = rng.random() < PREGNANT_RATE
     if pregnant:
@@ -238,6 +248,8 @@ def make_patient(number: int, rng: random.Random) -> tuple[dict[str, str], list[
         "diagnoses": LIST_SEPARATOR.join(diagnoses),
         "medications": LIST_SEPARATOR.join(raw for raw, _, _ in entries),
     }
+    context = Context(age=age, weight_kg=float(row["weight_kg"]), egfr=int(row["egfr"]),
+                      pregnant=pregnant)
     for field, rate in BLANK_RATE.items():
         if rng.random() < rate and not (field == "pregnant" and pregnant):
             row[field] = ""
@@ -245,7 +257,7 @@ def make_patient(number: int, rng: random.Random) -> tuple[dict[str, str], list[
     truth = [{"patient_id": patient_id, "med_index": str(index), "raw": raw,
               "true_generic": generic or "", "mangling": "+".join(tags)}
              for index, (raw, generic, tags) in enumerate(entries)]
-    return row, truth
+    return row, truth, context
 
 
 def drug_rows() -> list[dict[str, str]]:
@@ -262,6 +274,16 @@ def interaction_rows() -> list[dict[str, str]]:
              "mechanism": rule.mechanism} for a, b, rule in expand_rules()]
 
 
+def issue_rows(issues: Sequence[LabelledIssue]) -> list[dict[str, str]]:
+    """The labelled issues as CSV rows, sorted by patient."""
+    return [{"patient_id": i.patient_id, "issue_type": i.issue_type, "rule_id": i.rule_id,
+             "drugs": LIST_SEPARATOR.join(i.drugs), "severity": i.severity,
+             "near_miss": "Y" if i.near_miss else "N", "near_miss_reason": i.near_miss_reason,
+             "evidence": i.evidence, "raw_drugs": LIST_SEPARATOR.join(i.raw_drugs)}
+            for i in sorted(issues, key=lambda i: (i.patient_id, i.issue_type, i.rule_id,
+                                                   i.drugs))]
+
+
 def write_csv(path: Path, columns: Sequence[str], rows: list[dict[str, str]]) -> None:
     """Write rows with LF line endings so output bytes are identical on every OS."""
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -271,22 +293,40 @@ def write_csv(path: Path, columns: Sequence[str], rows: list[dict[str, str]]) ->
 
 
 def generate(out_dir: Path) -> dict[str, int]:
-    """Write all four fixture files into ``out_dir``. Returns headline counts."""
+    """Write all five fixture files into ``out_dir``. Returns headline counts."""
     rng = random.Random(SEED)
     patients, truth = [], []
+    contexts: dict[str, Context] = {}
+    entries: dict[str, list[Entry]] = {}
     for number in range(1, N_PATIENTS + 1):
-        row, rows = make_patient(number, rng)
+        row, rows, context = make_patient(number, rng)
         patients.append(row)
         truth += rows
+        contexts[row["patient_id"]] = context
+        entries[row["patient_id"]] = [
+            Entry(int(t["med_index"]), t["raw"], t["true_generic"] or None,
+                  tuple(t["mangling"].split("+"))) for t in rows]
+
+    # Labels use their own RNG so they never shift the patients above.
+    issues = [issue for pid, ctx in contexts.items()
+              for issue in label_patient(pid, ctx, entries[pid])]
+    issues = choose_near_misses(issues, contexts, entries, random.Random(SEED + 1))
 
     out_dir.mkdir(parents=True, exist_ok=True)
     write_csv(out_dir / "patients.csv", PATIENT_COLUMNS, patients)
     write_csv(out_dir / "drugs.csv", DRUG_COLUMNS, drug_rows())
     write_csv(out_dir / "interactions.csv", INTERACTION_COLUMNS, interaction_rows())
     write_csv(out_dir / "ground_truth.csv", TRUTH_COLUMNS, truth)
+    write_csv(out_dir / "expected_issues.csv", ISSUE_COLUMNS, issue_rows(issues))
 
     egfrs = [int(p["egfr"]) for p in patients if p["egfr"]]
+    severities = Counter(i.severity for i in issues)
     return {
+        "issues": len(issues),
+        "serious_issues": sum(i.severity in SERIOUS for i in issues),
+        **{f"issues_{sev}": severities[sev] for sev in ("high", "medium", "low")},
+        **{f"issues_{kind}": n for kind, n in sorted(Counter(i.issue_type for i in issues).items())},
+        "near_misses": sum(i.near_miss for i in issues),
         "patients": len(patients),
         "medication_entries": len(truth),
         "misspelled": sum("misspelled" in t["mangling"] for t in truth),
