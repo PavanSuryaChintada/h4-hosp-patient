@@ -1,5 +1,15 @@
-node_modules
-dist
+# Python pipeline
+/data/
+.venv/
+__pycache__/
+.pytest_cache/
+*.db
+*.db-journal
+eval/reports/*.json
+
+# UI (Vite app in ui/)
+ui/node_modules/
+ui/dist/
 *.log
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 .vercel

@@ -60,7 +60,10 @@ Every suggested action comes from the rule tables, not from a model.
 
 ## Running it
 
+The Round 1 UI lives in `ui/`. The repo root holds the Round 2 Python pipeline (`run.py`, `src/medsafe/`), which is under construction.
+
 ```bash
+cd ui
 npm install
 npm run dev      # http://localhost:5173
 npm run build    # type-check and production build
@@ -72,9 +75,10 @@ There is no backend, no API and no network access at runtime.
 
 **GitHub Pages (live now).** `.github/workflows/pages.yml` builds on every push to `main` with `BASE_PATH=/h4-hosp-patient/` and copies `index.html` to `404.html`, so deep links work on Pages.
 
-**Vercel.** Import the repo, keep the detected settings, deploy. `vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/app/patient/2291` survive a refresh. Vercel serves from the root, so no base path is needed.
+**Vercel.** Import the repo, set the project's Root Directory to `ui`, deploy. `ui/vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/app/patient/2291` survive a refresh. Vercel serves from the root, so no base path is needed.
 
 ```bash
+cd ui
 npx vercel          # preview
 npx vercel --prod   # production
 ```
@@ -82,7 +86,7 @@ npx vercel --prod   # production
 ## Project layout
 
 ```
-src/
+ui/src/
   data/
     drugs.ts        generics, Indian brand names, interaction / renal / pregnancy rules
     patients.ts     simulated cohort, medicine lists as written
@@ -91,7 +95,8 @@ src/
   components/       shell, status primitives, alert graph, SVG charts, guided walkthrough
   screens/          landing, sign-in, queue, patient detail, resolution, method, evaluation
   auth.tsx          hardcoded demo accounts and the protected-route guard
-spec docs/          technical requirements and design specifications
+docs/round1-specs/  Round 1 technical requirements and design specifications
+docs/phases/        Round 2 build plan, one document per phase
 ```
 
 ## What is real and what is not
