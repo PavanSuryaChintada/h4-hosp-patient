@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useParams 
 import { AuthProvider, RequireAuth } from './auth';
 import { DataProvider } from './data/load';
 import { Shell } from './components/Shell';
+import { Home } from './screens/Home';
 import { Login } from './screens/Login';
 import { Queue } from './screens/Queue';
 import { PatientDetail } from './screens/PatientDetail';
@@ -48,6 +49,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter basename={import.meta.env.BASE_URL} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ScrollTop />
         <Routes>
+          <Route path="/" element={<DataProvider><Home /></DataProvider>} />
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<Queue />} />

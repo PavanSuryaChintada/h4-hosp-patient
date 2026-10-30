@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { DEMO_USERS, useAuth, type DemoUser } from '../auth';
 
 export function Login() {
@@ -73,7 +73,7 @@ export function Login() {
           </section>
         </div>
 
-        <p className="login-foot">Prototype on the synthetic H4 dataset. No real patient data.</p>
+        <p className="login-foot">Prototype on the synthetic H4 dataset. No real patient data. <Link to="/">About Medsafe</Link></p>
       </main>
 
       <aside className="login-side" aria-label="What you will see">

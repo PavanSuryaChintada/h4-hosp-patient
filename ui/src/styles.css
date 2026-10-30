@@ -432,6 +432,85 @@ table.t { width: 100%; border-collapse: collapse; background: var(--paper); tabl
 .abha-step { font-weight: 600; }
 .abha-filled { margin-bottom: 16px; padding: 12px 16px; font-size: 12px; line-height: 16px; background: var(--ok-bg); border-left: 3px solid var(--ok); }
 
+/* ---- home (public) -------------------------------------------------------------- */
+
+.home { background: var(--canvas); }
+.home-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.home-nav { position: sticky; top: 0; z-index: 10; background: var(--paper); border-bottom: var(--border); }
+.home-nav-inner { display: flex; align-items: center; gap: 24px; height: 56px; }
+.home-links { display: flex; gap: 24px; margin-right: auto; }
+.home-links a { color: var(--ink-2); }
+.home-links a:hover { color: var(--ink); text-decoration: none; }
+.home section[id] { scroll-margin-top: 72px; }
+.lp-kicker { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--action); }
+
+.home-hero { padding: 48px 0; }
+.home-hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: center; }
+.home-h1 { margin-top: 12px; font-size: 40px; line-height: 48px; font-weight: 600; letter-spacing: -0.015em; }
+.home-h2 { max-width: 24em; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em; }
+.home-lead { margin-top: 16px; font-size: 16px; line-height: 26px; color: var(--ink-2); }
+.home-measure { max-width: 66ch; }
+.home-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.home sup { font-size: 11px; line-height: 0; }
+
+.home-case { display: grid; gap: 12px; padding: 24px; background: var(--paper); border: 1px solid var(--hairline-firm); }
+.home-case-k { font-size: 12px; line-height: 16px; color: var(--ink-3); }
+.home-case-row { display: grid; grid-template-columns: 160px 72px minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 12px; background: var(--canvas); border-left: 3px solid var(--critical); }
+.home-case-us { border-left-color: var(--action); background: var(--action-weak); }
+.home-case-who { font-weight: 600; }
+.home-case-big { font-size: 32px; line-height: 40px; font-weight: 500; text-align: right; }
+.home-case-what { font-size: 13px; line-height: 20px; color: var(--ink-2); }
+.home-case-missed { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 12px; line-height: 16px; color: var(--ink-2); }
+.home-case-open { justify-self: start; font-size: 13px; }
+
+.home-proof { padding: 32px 0; background: var(--paper); border-top: var(--border); border-bottom: var(--border); }
+.home-scores { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.home-score { display: flex; flex-direction: column; gap: 8px; padding-left: 16px; border-left: 1px solid var(--hairline); }
+.home-score-k { font-size: 12px; line-height: 16px; color: var(--ink-2); }
+.home-score-v { font-size: 36px; line-height: 44px; font-weight: 500; }
+.home-score-s { font-size: 12px; line-height: 16px; color: var(--ink-3); }
+.home-caveat { margin-top: 24px; font-size: 12px; line-height: 18px; color: var(--ink-2); }
+
+.home-section { padding: 48px 0; border-bottom: var(--border); }
+.home-alt { background: var(--paper); }
+.home-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+.home-section > .home-three { margin-top: 0; }
+.home-card { display: grid; align-content: start; gap: 8px; padding: 16px; background: var(--paper); border: var(--border); }
+.home-alt .home-card { background: var(--canvas); }
+.home-card p { font-size: 14px; line-height: 22px; color: var(--ink-2); }
+.home-card .home-card-quote { padding: 8px 12px; font-size: 12px; line-height: 18px; color: var(--ink); background: var(--sunken); }
+.home-more { display: inline-block; margin-top: 24px; }
+.home-compare { margin-top: 24px; background: var(--canvas); border: var(--border); }
+.home-compare-row { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 12px 16px; border-left: 3px solid transparent; color: var(--ink-2); }
+.home-compare-row + .home-compare-row { border-top: var(--border); }
+.home-compare-row.on { color: var(--ink); border-left-color: var(--action); }
+.home-compare-k { width: 176px; font-weight: 600; color: var(--ink); }
+.home-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 32px 0 0; padding: 0; list-style: none; }
+.home-steps li { display: grid; align-content: start; gap: 8px; padding: 16px; background: var(--paper); border: var(--border); border-top: 3px solid var(--action); }
+.home-steps p { font-size: 13px; line-height: 20px; color: var(--ink-2); }
+.home-step-n { font-size: 12px; color: var(--action); }
+.home-flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin: 32px 0 0; padding: 0; list-style: none; }
+.home-flow li { display: grid; align-content: start; gap: 8px; padding: 16px; background: var(--canvas); border: var(--border); }
+.home-flow span { font-size: 13px; line-height: 20px; color: var(--ink-2); }
+.home-note { margin-top: 24px; font-size: 13px; line-height: 20px; color: var(--ink-2); }
+.home-foot { padding: 24px 0 48px; }
+.home-ref { max-width: 88ch; margin-top: 8px; font-size: 12px; line-height: 18px; color: var(--ink-2); }
+.home-foot-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: var(--border); }
+
+@media (max-width: 1080px) {
+  .home-hero-grid, .home-three { grid-template-columns: minmax(0, 1fr); }
+  .home-scores, .home-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-flow { grid-template-columns: minmax(0, 1fr); }
+  .home-links { display: none; }
+}
+@media (max-width: 600px) {
+  .home-h1 { font-size: 34px; line-height: 42px; }
+  .home-scores, .home-steps { grid-template-columns: minmax(0, 1fr); }
+  .home-case-row { grid-template-columns: minmax(0, 1fr); }
+  .home-case-big { text-align: left; }
+  .home-nav .chip { display: none; }
+}
+
 /* ---- login -------------------------------------------------------------------- */
 
 .lp-brand { display: inline-flex; align-items: center; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--ink); }
