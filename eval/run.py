@@ -113,12 +113,18 @@ def data_version(folder: Path) -> str:
     return digest.hexdigest()[:12]
 
 
+CODE_PATHS = ("run.py", "src", "eval", "tools", "requirements.txt", "requirements-dev.txt")
+
+
 def git_revision() -> str:
-    """Short git sha of the checkout, with ``-dirty`` if there are uncommitted changes."""
+    """Short git sha, with ``-dirty`` if tracked code that produces numbers has uncommitted
+    changes. Generated reports and untracked files do not count: the question is whether the
+    code behind a number is the committed code."""
     try:
         sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, check=True,
                              capture_output=True, text=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, check=True,
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--",
+                                *CODE_PATHS], cwd=ROOT, check=True,
                                capture_output=True, text=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return "unknown"
