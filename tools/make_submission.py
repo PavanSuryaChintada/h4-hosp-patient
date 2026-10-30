@@ -127,7 +127,8 @@ def main(argv: list[str] | None = None) -> int:
 
     with tempfile.TemporaryDirectory() as tmp:
         clone = Path(tmp) / "clone"
-        git(["clone", "--quiet", "--no-hardlinks", str(REPO_ROOT), str(clone)], REPO_ROOT)
+        # Line endings as stored in git, not as this machine would check them out: the zip is the same on any OS.
+        git(["clone", "--quiet", "--no-hardlinks", "-c", "core.autocrlf=false", str(REPO_ROOT), str(clone)], REPO_ROOT)
         head = git(["rev-parse", "--short", "HEAD"], clone).strip()
         files = [f for f in git(["ls-files", "-z"], clone).split("\0") if f]
         large = too_large(clone, files)

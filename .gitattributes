@@ -5,3 +5,6 @@ tests/fixtures/** text eol=lf
 *.cmd text eol=crlf
 # Shell scripts must keep LF to run on macOS and Linux.
 *.sh text eol=lf
+
+# The submission files are compared byte for byte with a fresh run.py; never convert their line endings.
+submission/*.csv -text
