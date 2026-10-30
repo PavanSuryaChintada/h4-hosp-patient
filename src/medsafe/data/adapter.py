@@ -378,7 +378,9 @@ def _load_table(path: str | Path, kind: str, build: Builder[T], key: Callable[[T
                 raise RowError("duplicate", None, f"{_describe(item_key)} already loaded from "
                                                   f"an earlier row")
             seen.add(item_key)
-        except RowError as error:
+        except Exception as error:      # noqa: BLE001 - one bad row never stops the run
+            if not isinstance(error, RowError):
+                error = RowError("malformed_row", None, f"unexpected {type(error).__name__}: {error}")
             skipped = report.record_skip(index, error)
             logger.warning("%s row %d skipped (%s): %s",
                            table.path.name, index, skipped.code, skipped.detail)

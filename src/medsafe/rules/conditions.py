@@ -8,7 +8,8 @@
 Text is split into clauses on ';', ',', brackets and ' - '. A clause with a negation cue
 negates every condition named in it, and only in it. Words match the vocabulary in
 condition_terms.py exactly or within a small edit distance (1 edit for 5-7 letters, 2 for longer;
-shorter words and abbreviations must match exactly). Deterministic; nothing is inferred from the
+shorter words and abbreviations must match exactly). An ejection fraction is read as a number:
+"EF 35%" is heart failure, "LVEF 60%" is not. Deterministic; nothing is inferred from the
 medication list, and a blank diagnosis yields nothing.
 """
 
@@ -22,10 +23,14 @@ from rapidfuzz.distance import OSA
 
 from medsafe.rules.condition_terms import (ALLERGY_ABBREVIATIONS, ALLERGY_PHRASES,
                                            DIAGNOSIS_ABBREVIATIONS, DIAGNOSIS_PHRASES,
-                                           NEGATION_CUES)
+                                           EF_HEART_FAILURE_BELOW, NEGATION_CUES, WORD_FORMS)
 
 CLAUSE_SPLIT = re.compile(r"[;,()\[\]]|\s+-+\s+|\s+/\s+")
 NEGATION = re.compile("|".join(NEGATION_CUES), re.IGNORECASE)
+EJECTION_FRACTION = re.compile(r"\b(?:lv)?ef\b[^0-9;]{0,12}?(\d{1,2}(?:\.\d+)?)")
+# Heart failure named by anything other than the EF itself: a preserved EF does not unname it.
+HEART_FAILURE_TERMS = {"heart_failure": tuple(p for p in DIAGNOSIS_PHRASES["heart_failure"] if p != "lvef")}
+HEART_FAILURE_ABBREVIATIONS = {a: c for a, c in DIAGNOSIS_ABBREVIATIONS.items() if c == "heart_failure"}
 
 
 @dataclass(frozen=True)
@@ -62,11 +67,38 @@ def _word_matches(written: str, term: str) -> bool:
         OSA.distance(written, term) <= budget
 
 
+def _word_is(written: str, term: str) -> bool:
+    """True if a written word is the vocabulary word or one of its other forms ("bleeding")."""
+    return _word_matches(written, term) or any(_word_matches(written, f) for f in WORD_FORMS.get(term, ()))
+
+
 def _phrase_in(clause_words: list[str], phrase: str) -> bool:
     """True if the phrase's words appear consecutively in the clause."""
     terms = phrase.split()
-    return any(all(_word_matches(clause_words[i + k], t) for k, t in enumerate(terms))
+    return any(all(_word_is(clause_words[i + k], t) for k, t in enumerate(terms))
                for i in range(len(clause_words) - len(terms) + 1))
+
+
+def ejection_fraction(clause: str) -> float | None:
+    """The ejection fraction a clause states, in percent ("LVEF 30%", "EF of 0.35"), or None."""
+    found = EJECTION_FRACTION.search(clause.lower())
+    if found is None:
+        return None
+    value = float(found.group(1))
+    return value * 100 if value < 1 else value
+
+
+def _heart_function(clause: str, clause_words: list[str], named: set[str]) -> set[str]:
+    """Adjust a clause's conditions for a stated ejection fraction: below EF_HEART_FAILURE_BELOW it
+    names heart failure; at or above it, heart failure stays only if another term names it."""
+    ef = ejection_fraction(clause)
+    if ef is None:
+        return named
+    if ef < EF_HEART_FAILURE_BELOW:
+        return named | {"heart_failure"}
+    if _named(clause_words, HEART_FAILURE_TERMS, HEART_FAILURE_ABBREVIATIONS):
+        return named
+    return named - {"heart_failure"}
 
 
 def _named(clause_words: list[str], phrases: Mapping[str, Iterable[str]],
@@ -79,12 +111,15 @@ def _named(clause_words: list[str], phrases: Mapping[str, Iterable[str]],
 
 
 def _match(texts: Iterable[str], phrases: Mapping[str, Iterable[str]],
-           abbreviations: Mapping[str, str]) -> ConditionMatch:
+           abbreviations: Mapping[str, str], read_ef: bool = False) -> ConditionMatch:
     """Conditions named in some free texts, split into present and negated."""
     present, negated, evidence = set(), set(), {}
     for text in texts:
         for clause in clauses(text):
-            named = _named(words(clause), phrases, abbreviations)
+            clause_words = words(clause)
+            named = _named(clause_words, phrases, abbreviations)
+            if read_ef:
+                named = _heart_function(clause, clause_words, named)
             if not named:
                 continue
             if NEGATION.search(clause):
@@ -102,7 +137,7 @@ def detect_conditions(diagnoses: Iterable[str], allergies: str | None) -> Condit
     Diagnosis text yields only diagnosis conditions, allergy text only allergy conditions.
     A condition stated present in one clause and absent in another counts as present.
     """
-    from_diagnoses = _match(diagnoses, DIAGNOSIS_PHRASES, DIAGNOSIS_ABBREVIATIONS)
+    from_diagnoses = _match(diagnoses, DIAGNOSIS_PHRASES, DIAGNOSIS_ABBREVIATIONS, read_ef=True)
     from_allergies = _match([allergies] if allergies else [], ALLERGY_PHRASES, ALLERGY_ABBREVIATIONS)
     return ConditionMatch(from_diagnoses.present | from_allergies.present,
                           from_diagnoses.negated | from_allergies.negated,

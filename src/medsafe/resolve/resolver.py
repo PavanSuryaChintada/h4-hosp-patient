@@ -45,7 +45,7 @@ class Resolution:
     method: str                                # one of METHODS
     confidence: float                          # 0-1
     candidates: tuple[tuple[str, float], ...] = ()   # top 3 drugs considered, with scores
-    abstain_reason: str | None = None          # no_name | no_confident_match | ambiguous
+    abstain_reason: str | None = None          # no_name | no_confident_match | ambiguous | error
 
     @property
     def resolved_generic(self) -> str | None:

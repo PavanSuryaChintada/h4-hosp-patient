@@ -118,7 +118,10 @@ def data_version(folder: Path) -> str:
     return digest.hexdigest()[:12]
 
 
-CODE_PATHS = ("run.py", "src", "eval", "tools", "requirements.txt", "requirements-dev.txt")
+# The clinician-only layer is excluded: tests/test_compliance.py proves Track A's files are
+# byte-identical without it, so it cannot change a number.
+CODE_PATHS = ("run.py", "src", "eval", "tools", "requirements.txt", "requirements-dev.txt",
+              ":(exclude)src/medsafe/workflow.py", ":(exclude)src/medsafe/explain/prioritise.py")
 
 
 def git_revision() -> str:

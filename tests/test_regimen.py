@@ -26,6 +26,10 @@ from medsafe.rules.regimen import build_regimen, is_stopped
     ("VOVERAN 50 PRN - old, not taking now", True),
     ("STOP syr Potklor 15 ml 10ml HS", True),
     ("Tramazac 100 SR SOS for pain - omit", True),
+    ("Tab Ecosprin 75 - discontinue", True),           # D-027: other forms of the training words
+    ("T. Warf 5 OD - withheld", True),
+    ("Dolo 650 SOS - not taken since 1 week", True),
+    ("tab Aldactone 25 - ceased", True),
     ("T. Tremazac 50 SOS (old Rx)", False),           # an old prescription still being taken
     ("Ibugesic 400 mg if pain -- continue", False),
     ("Dolo 650 SOS", False),

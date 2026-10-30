@@ -23,9 +23,11 @@ from medsafe.resolve.resolver import Resolution
 
 # A line the prescriber or nurse marked as no longer taken: stopped, discontinued, withdrawn,
 # held, omitted, or "pt not taking since 2 months". "(old Rx)" alone is not one of these: an
-# old prescription that is still on the list is still being taken.
-STOPPED = re.compile(r"\b(stop|stopped|discontinued|discont|d/c|held|hold|omit|omitted|withdrawn)\b"
-                     r"|\bnot\s+taking\b|\bno\s+longer\b", re.IGNORECASE)
+# old prescription that is still on the list is still being taken. D-027 adds the other forms of
+# the training words: stopping, discontinue, withheld, ceased, "not taken".
+STOPPED = re.compile(r"\b(stop|stopped|stopping|discontinued|discontinue|discont|d/c|held|withheld|"
+                     r"hold|omit|omitted|withdrawn|ceased)\b"
+                     r"|\bnot\s+tak(?:ing|en)\b|\bno\s+longer\b", re.IGNORECASE)
 
 
 def is_stopped(raw: str) -> bool:

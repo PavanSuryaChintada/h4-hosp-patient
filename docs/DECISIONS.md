@@ -260,3 +260,53 @@ Everything only the clinician sees (prioritise and collapse in `explain/prioriti
 - **Defer is given to prescriber and pharmacist** (the roles that can accept). The portal brief gave it to no role explicitly; change `workflow.PERMISSIONS` if that is wrong.
 - **The test submission is validated, not submitted.** `python run.py --split test --out submission` writes 5,758 alerts and 20,867 resolution rows; `python -m eval.validate_submission submission` runs the organisers' own validators on them and checks every test line has a row.
 - **The portal is built by the second workstream.** The engine side is handed over in `docs/engine-handoff.md`, and README sections are drafted in `docs/readme-draft.md` for merging, so the two edits do not collide.
+
+## D-027 Unseen vocabulary: measured on test, broadened from train only
+
+**What was read.** `tools/unseen_exposure.py` reads the *unlabelled* test diagnoses, allergy text and medication lines to measure how much of the test set the vocabulary has never seen. It measures and never tunes. The order was fixed so the measurement could not shape the rules:
+
+1. Exposure counted with the old vocabulary, numbers only (`--counts-only`); no test fragment printed.
+2. Vocabulary broadened from training morphology only, and staged in git, before any test fragment was printed.
+3. Exposure counted again, then the test fragments listed for review.
+
+No term was added after step 3, and none will be: adding a term because it appears in test would let test text shape the rules, which D-024 and the pack's rule against labelling test patients forbid. D-025's "test text was not read" was true when written; this decision is the one exception, and it is for measurement only.
+
+**Broadening (step 2).** Each training form also accepts its abbreviation or expansion, its other spellings and its numeric form. Every addition is marked `# D-027` in `rules/condition_terms.py`:
+
+- LV dysfunction → LVF, LV failure, left ventricular failure/dysfunction, LV systolic dysfunction, LVSD, reduced/low EF.
+- DCMP → ICMP.
+- LVEF 30% → any EF below 50% read as a number. An EF of 50% or more names nothing unless another term does ("HFpEF EF 55%"). This also fixes a latent false alert: "LVEF 60%" used to match "lvef".
+- liver ↔ hepatic; disease ↔ dz/dis/disorder; CLD → ALD.
+- bleed ↔ bleeding/haemorrhage; melena → haematemesis; UGI bleed → UGIB.
+- PACG → AACG, CACG; "angle-closure".
+- hyperuricemia → raised/high/elevated uric acid; tophaceous → tophi.
+- PD → IPD; g6pd → G6PDD and the full name; dementia → neurocognitive disorder, Lewy body; asthma → asthmatic.
+- "SZ", which is a training form the vocabulary had missed.
+- Stop markers: stopping, discontinue, withheld, ceased, "not taken".
+
+**Measured exposure (3,500 test patients):**
+
+| | before | after |
+|---|---:|---:|
+| Test diagnosis fragments never seen in train | 807 | 807 |
+| ...naming no condition | 703 | 703 |
+| ...of those, on a patient taking a drug with a diagnosis contraindication row (the exposure) | 631 | 631 |
+
+- **Diagnoses.** All 631 at-risk fragments are within 2 edits of a training fragment that names no condition ("high cholesterool", "raisd bp", "oa knes"). None is a typo of a condition fragment, none is novel, and the 31 of 5 characters or fewer are typos of cough, fever, panic, sugar, NIDDM, anaemia, Graves' and tinea. Of the 104 unseen fragments that do name a condition, 96 name the same conditions as their nearest training fragment. The other 8 are plain names with no training fragment within 2 edits (misspellings of "dementia", "myasthenia gravis", "seizures", and "MG"); no rule changed for them. Broadening caught no extra test fragment: the measured exposure was already zero.
+- **Allergies.** Every test allergy text also appears in train: zero exposure.
+- **Stopped.** 155 active test lines contain "old". All 155 are the training form "(old Rx)", which training truth shows is still taken (27 such lines are in training labels). No active test line has a misspelt stop marker; train has none either.
+
+Training is unchanged: official score 1.0000; R7 matcher 83/83 present found, 0 of 3,418 absent fired. `tools/vocab_review.py` writes `docs/vocabulary-review.md`:
+- 126 terms
+- 36 proven present by training labels, 0 proven absent, 90 unvalidated (no labelled patient could confirm them)
+- none fires on more than 5% of training or test patients; the highest is "asthma" at 4.1% of test
+
+## D-028 One malformed patient never stops the run
+
+`run_pipeline` contains failures per patient and per line, logs them, and lists them in `PipelineResult.failures`:
+
+- **A line the resolver cannot process** is abstained (`abstain_reason="error"`, verify manually), so it still has a resolution row.
+- **A patient whose rules cannot run** gets no alerts and keeps every resolution row. Emitting nothing is the conservative failure: a crash would lose all 3,500 patients, and a guessed alert would be a false one.
+- **A patient row that raises something no check anticipated** is skipped at load as `malformed_row` and recorded, never raised.
+
+`run.py` prints the count of contained failures and load-skipped rows. `eval/validate_submission.py` now counts patients and written lines from the raw file with its own split, not through the adapter, so a patient the adapter dropped would show as missing; it also rejects duplicate rows. `tests/test_robustness.py` covers a rules failure, a resolver failure, and a patients file with junk values, a 5,000-character line, zero-width characters, a duplicate id, an empty medication list, a missing id and extra cells.

@@ -83,6 +83,31 @@ def test_no_allergy_means_nothing(allergies: str) -> None:
     assert present(allergies=allergies) == set()
 
 
+@pytest.mark.parametrize(("text", "condition"), [
+    # D-027: training forms broadened by morphology, never by test text.
+    ("LVF", "heart_failure"), ("left ventricular failure", "heart_failure"),
+    ("LV systolic dysfunction", "heart_failure"), ("reduced EF", "heart_failure"),
+    ("EF 35%", "heart_failure"), ("ICMP (EF of 0.30)", "heart_failure"),
+    ("HFpEF EF 55%", "heart_failure"),                 # named by HFpEF, whatever the EF
+    ("GI bleeding 2022", "peptic_ulcer"), ("haematemesis", "peptic_ulcer"),
+    ("chronic hepatic disease", "chronic_liver_disease"), ("liver dz", "chronic_liver_disease"),
+    ("ALD", "chronic_liver_disease"), ("angle-closure glaucoma", "angle_closure_glaucoma"),
+    ("raised uric acid", "gout"), ("tophi R hand", "gout"), ("SZ", "epilepsy"),
+    ("glucose-6-phosphate dehydrogenase deficiency", "g6pd_deficiency"),
+    ("major neurocognitive disorder", "dementia"), ("asthmatic", "asthma"),
+])
+def test_broadened_forms_are_found(text: str, condition: str) -> None:
+    assert present(text) == {condition}
+
+
+@pytest.mark.parametrize("text", [
+    "LVEF 60%", "EF 55 %", "LV diastolic dysfunction", "grade 1 diastolic dysfunction",
+    "uric acid normal", "mouth ulcer", "subconjunctival haemorrhage",
+])
+def test_broadened_forms_do_not_overreach(text: str) -> None:
+    assert present(text) == set()
+
+
 def test_diagnosis_text_never_yields_an_allergy_and_vice_versa() -> None:
     assert present("aspirin allergy") == set()
     assert present(allergies="asthma") == set()

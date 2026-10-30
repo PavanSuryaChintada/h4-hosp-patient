@@ -77,6 +77,12 @@ def main(argv: list[str] | None = None) -> int:
     print(f"lines to verify manually: {methods['abstained']}")
     print(f"findings: {sum(findings.values())} (" + ", ".join(f"{s} {n}" for s, n in sorted(findings.items())) + ")")
     print(f"alerts submitted: {alerts} (minor findings are shown, not submitted)")
+    skipped = sum(len(report.skipped_rows) for report in dataset.reports if report.kind == "patients")
+    print(f"failures contained: {len(result.failures)} ("
+          + ", ".join(f"{stage} {n}" for stage, n in sorted(Counter(f.stage for f in result.failures).items()))
+          + f"); patient rows skipped at load: {skipped}")
+    for failure in result.failures:
+        print(f"  {failure.patient_id} {failure.stage}: {failure.error}", file=sys.stderr)
     print(f"wrote {args.output / RESOLUTION_FILE} and {args.output / PREDICTIONS_FILE}")
     print(f"runtime: {time.perf_counter() - started:.2f}s")
     return 0

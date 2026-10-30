@@ -10,9 +10,10 @@ MAX_FALSE_RESOLUTION_RATE (2%). Ties go to fewer false resolutions, then to the 
 setting. Prints the choice and the same setting's numbers on the holdout split, and writes the
 table to docs/sweep.md.
 
-The chosen values are then recorded in src/medsafe/resolve/thresholds.py. Until the rule engine
-lands, a false resolution costs only its own line; once alerts exist it can also cost a false
-alert, so re-run this sweep after Phase 3 (docs/DECISIONS.md D-016).
+The chosen values are then recorded in src/medsafe/resolve/thresholds.py. Each setting's alerts
+come from the full rule engine, so a false resolution is charged everything it costs: its own
+line, and any false alert it raises (a noise unit, a precision hit) or true issue it hides. An
+abstention costs only its line (docs/DECISIONS.md D-016, re-run after Phase 3).
 """
 
 from __future__ import annotations
@@ -64,7 +65,9 @@ def measure(dataset: Dataset, split: str, settings: Settings,
         for r in result.patients for entry, res in zip(r.patient.medications, r.resolutions))
     metrics = resolution_metrics(load_truth(data_dir(), ids).tokens, ours)
     return {**metrics, "primary_score": report["primary_score"],
-            "official_resolution_accuracy": report["components"]["resolution_accuracy"]}
+            "official_resolution_accuracy": report["components"]["resolution_accuracy"],
+            "false_alerts": report["counts"]["false_alerts"],
+            "serious_recall": report["components"]["serious_recall"]}
 
 
 def sweep(dataset: Dataset) -> list[dict[str, Any]]:
@@ -81,7 +84,8 @@ def sweep(dataset: Dataset) -> list[dict[str, Any]]:
                              "accuracy": m["official_resolution_accuracy"],
                              "false_resolution_rate": m["false_resolution_rate"],
                              "abstention_rate": m["abstention_rate"],
-                             "misspelled_accuracy": m["misspelled_accuracy"]})
+                             "misspelled_accuracy": m["misspelled_accuracy"],
+                             "false_alerts": m["false_alerts"], "serious_recall": m["serious_recall"]})
     return rows
 
 
@@ -121,17 +125,22 @@ def render_markdown(rows: list[dict[str, Any]], chosen: dict[str, Any],
                    ("resolution accuracy (official)", "accuracy"),
                    ("false-resolution rate", "false_resolution_rate"),
                    ("abstention rate", "abstention_rate"),
-                   ("accuracy on misspelled lines", "misspelled_accuracy"))]),
-        "With no alerts yet the primary score is 0.15 x resolution accuracy, so today this "
-        "sweep maximises resolution accuracy. Until the rule engine lands a false resolution "
-        "costs only its own line; once alerts exist it can also raise a false alert, so this "
-        "sweep is re-run after Phase 3.",
+                   ("accuracy on misspelled lines", "misspelled_accuracy"),
+                   ("false alerts", "false_alerts"),
+                   ("serious recall", "serious_recall"))]),
+        "Every setting is scored on the full pipeline's alerts. A false resolution is charged "
+        "its own line plus any false alert it raises and any true issue it hides; an abstention "
+        "is charged its line only. Dev is in-sample for the synonym list and the condition "
+        "vocabulary (both built from all training text), so near-perfect dev scores say the "
+        "thresholds do not break what the vocabulary covers, not how test will score.",
     ]
     for prefix in MIN_PREFIX_LENGTHS:
         parts += [f"## Official primary score, prefix length {prefix}",
                   grid(prefix, "primary_score", 4),
                   f"## False-resolution rate, prefix length {prefix}",
-                  grid(prefix, "false_resolution_rate", 4)]
+                  grid(prefix, "false_resolution_rate", 4),
+                  f"## False alerts, prefix length {prefix}",
+                  grid(prefix, "false_alerts", 0)]
     return "\n\n".join(parts) + "\n"
 
 
