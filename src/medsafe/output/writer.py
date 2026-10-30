@@ -1,7 +1,8 @@
 """Writes the two submission files in the format the official scorer reads.
 
     H4_predictions.csv   one row per alert (patient_id, issue_type, severity, drugs_involved,
-                         suggested_action, confidence)
+                         suggested_action, confidence), plus the confidence-and-limitations
+                         text the pack requires on every alert
     H4_resolution.csv    one row per written medication entry (patient_id, written_token,
                          resolved_generic), plus columns the scorer ignores and a reader needs:
                          how the line was resolved, how sure, whether to verify it by hand, and
@@ -23,6 +24,7 @@ from medsafe.pipeline import PipelineResult
 
 PREDICTION_COLUMNS = ("patient_id", "issue_type", "severity", "drugs_involved",
                       "suggested_action", "confidence")
+PREDICTION_EXTRA_COLUMNS = ("confidence_and_limitations",)
 RESOLUTION_COLUMNS = ("patient_id", "written_token", "resolved_generic")
 RESOLUTION_EXTRA_COLUMNS = ("method", "confidence", "verify_manually", "patient_notes")
 PREDICTIONS_FILE = "H4_predictions.csv"
@@ -82,8 +84,9 @@ def write_resolution(result: PipelineResult, path: Path) -> int:
 def write_predictions(alerts: Iterable[Mapping[str, Any]], path: Path) -> int:
     """Write one row per alert, in the order given. Returns the row count.
 
-    Each alert maps every name in PREDICTION_COLUMNS to a value. With no alerts the file holds
-    the header only, which the scorer accepts: a patient with no alert has no row.
+    Each alert maps every name in PREDICTION_COLUMNS to a value, and may carry the extra
+    columns (empty if it does not). With no alerts the file holds the header only, which the
+    scorer accepts: a patient with no alert has no row.
     """
-    return _write(path, PREDICTION_COLUMNS,
-                  ([alert[column] for column in PREDICTION_COLUMNS] for alert in alerts))
+    columns = PREDICTION_COLUMNS + PREDICTION_EXTRA_COLUMNS
+    return _write(path, columns, ([alert.get(column, "") for column in columns] for alert in alerts))

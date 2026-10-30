@@ -49,7 +49,7 @@ def test_resolution_file_says_how_each_line_was_resolved(written: Path) -> None:
 
 def test_predictions_file_holds_the_table_severity_and_action_and_no_minor(written: Path) -> None:
     alerts = rows(written / "H4_predictions.csv")
-    assert list(alerts[0]) == list(PREDICTION_COLUMNS)
+    assert list(alerts[0]) == [*PREDICTION_COLUMNS, "confidence_and_limitations"]
     assert {(a["patient_id"], a["issue_type"], a["drugs_involved"], a["severity"]) for a in alerts} == {
         ("H4P-MINI0001", "duplicate_therapy", "paracetamol", "major"),
         ("H4P-MINI0001", "renal_dose", "metformin", "major"),

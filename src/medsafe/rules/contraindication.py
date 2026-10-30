@@ -42,7 +42,8 @@ def check_contraindications(regimen: Regimen, conditions: Set[str], pregnant: bo
             severity = PREGNANCY_LETTER_SEVERITY[letter]
             candidates.append((SEVERITY_RANK[severity], 0, severity,
                                f"Pregnancy category {letter}: avoid {generic} in pregnancy; "
-                               f"switch to a pregnancy-safe alternative", f"pregnancy_category_{letter}"))
+                               f"choose an alternative suitable in pregnancy",
+                               f"pregnancy_category_{letter}"))
         if candidates:
             _, _, severity, action, why = max(candidates, key=lambda c: (c[0], c[1], c[4]))
             findings.append(Finding(

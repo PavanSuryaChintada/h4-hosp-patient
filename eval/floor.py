@@ -55,8 +55,10 @@ def render_markdown(references: dict[str, dict[str, Any]]) -> str:
                  f"{references['pack baseline']['primary_score']:.4f}",
                  f"{references['pack baseline, no minor']['primary_score']:.4f}",
                  delta("pack baseline", "pack baseline, no minor")]]),
-        "Dropping minor alerts raises the score for both a perfect and a weak detector, so "
-        "EMIT_MINOR is False (src/medsafe/output/policy.py).",
+        "Minor alerts drive alert fatigue, fatigue drives dismissal, and dismissal buries the "
+        "serious alert, so the predictions file leaves them out (EMIT_MINOR = False, "
+        "src/medsafe/output/policy.py); the clinician view still shows them, ranked last. The "
+        "measurement above corroborates it for both a perfect and a weak detector.",
     ]) + "\n"
 
 

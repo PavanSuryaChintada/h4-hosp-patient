@@ -181,7 +181,11 @@ Each change came from a dev failure and is general, not a patch for one string:
 
 ## D-018 Minor alerts are detected, shown, never submitted
 
-`EMIT_MINOR = False` (`src/medsafe/output/policy.py`). An alert on a true minor issue earns nothing in serious, near-miss or graded recall and costs 0.25 noise units. Measured both ways on all 1,500 training patients by `python -m eval.floor`:
+`EMIT_MINOR = False` (`src/medsafe/output/policy.py`).
+
+**Why, clinically.** Minor alerts drive alert fatigue. Fatigue drives dismissal: prescribers who see a stream of low-value popups learn to click past them. And dismissal buries the serious alert that sits among them. A minor issue is real, so the clinician view still shows it, ranked last; it never interrupts. The scorer penalises minor alerts (0.25 noise units each, nothing earned in any recall term) because this is what happens in hospitals.
+
+**Corroboration, measured** on all 1,500 training patients by `python -m eval.floor`:
 
 | Detector | With minor alerts | Without | Change |
 |---|---|---|---|
@@ -239,3 +243,20 @@ The first run scored 0.9852. Every gap was a rule bug, found by patient id and f
 **Limits, stated plainly.** The stopped markers and the condition vocabulary were fixed by reading all 1,500 training patients, so the training score is in-sample: the 300-patient holdout is not a clean estimate for the rules. The test set has 807 diagnosis fragments that never appear in train; the vocabulary tolerates typos and abbreviations, but a phrasing it has never seen can still be missed (a missed contraindication) or wrongly matched (a false alert). Test text was not read to prepare for this (D-024).
 
 **When a submission is made, it is this build, not the pack baseline.** This supersedes D-022. Nothing has been submitted.
+
+## D-026 Two tracks, one engine
+
+The rubric pays mostly for a clinical workflow; the hidden-split score is 20% of judging. So the same engine serves two tracks (docs/WORKFLOW.md):
+
+- **Track B, point of care, is the workflow:** identify, capture, resolve, context, check, prioritise, act, escalate, record.
+- **Track A is batch evaluation mode:** the predictions and resolution files.
+
+Everything only the clinician sees (prioritise and collapse in `explain/prioritise.py`; act, escalate and audit policy in `workflow.py`; the portal in `ui/`) is outside Track A. `tests/test_compliance.py` runs Track A from a copy of the code with that layer and `ui/` deleted, and requires byte-identical files.
+
+- **Confidence and limitations on every alert, in both tracks.** `explain/limitations.py` writes it, and the predictions file carries it as an extra column the scorer ignores (the official score is unchanged at 1.0000). It names the rule that fired, what could not be checked for this patient (an unresolved line, eGFR, diagnoses, allergy history, pregnancy status), that the list may be incomplete, and that a clinician decides. A patient with no alert gets "No issue was found in the N medicines listed", never "safe".
+- **Suggested action, verbatim.** Every alert's action is the table's `recommended_action`, except pregnancy-category contraindications (22 in train, 52 in test), for which the tables give no action. Those use one fixed template, and their limitations line says so.
+- **Collapse objective, corrected.** Phase 5 asked for the drug set clearing the most serious pairs, ties to fewer drugs. Taken literally, that prefers "review warfarin and contrast" (5 of 5) to "review warfarin" (4 of 5), which groups nothing. Every chosen drug must now be in at least two serious pairs no other chosen drug is in. Phase 5's own acceptance case, one drug clearing 4 of 5 with the fifth listed separately, now holds.
+- **Prescriber attribution is not in the data.** `prescriber_count` says how many doctors wrote the list, not who wrote which line. The portal shows the count and marks three-prescriber patients; it never claims an alert "crosses prescribers".
+- **Defer is given to prescriber and pharmacist** (the roles that can accept). The portal brief gave it to no role explicitly; change `workflow.PERMISSIONS` if that is wrong.
+- **The test submission is validated, not submitted.** `python run.py --split test --out submission` writes 5,758 alerts and 20,867 resolution rows; `python -m eval.validate_submission submission` runs the organisers' own validators on them and checks every test line has a row.
+- **The portal is built by the second workstream.** The engine side is handed over in `docs/engine-handoff.md`, and README sections are drafted in `docs/readme-draft.md` for merging, so the two edits do not collide.

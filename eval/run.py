@@ -211,6 +211,18 @@ def render_markdown(report: dict[str, Any], report_path: str) -> str:
         + (f". Not yet built: {', '.join(s for s in STAGES if s not in built)}."
            if set(STAGES) - set(built) else ". The pack baseline (the floor) scores 0.4071 on "
            "all training patients (docs/baseline-floor.md)."),
+        "## The two figures the pack asks for by name",
+        _table(["", *[f"{n} ({splits[n]['patients']} patients)" for n in names]],
+               [["**Near-miss recall**",
+                 *[f"**{sum(x['caught'] for x in splits[n]['near_misses'])} / "
+                   f"{len(splits[n]['near_misses'])}** "
+                   f"({splits[n]['official']['components']['near_miss_serious_recall']:.4f})"
+                   for n in names]],
+                ["**Resolution accuracy on misspelled entries**",
+                 *[f"**{splits[n]['official']['resolution_accuracy_misspelled']:.2%}**"
+                   for n in names]]]),
+        "Both read from the organisers' `evaluate.py` output: its `NEAR-MISS recall` line and its "
+        "`...on misspelled entries` line.",
         "## Official score",
         _table(["", *[f"{n} ({splits[n]['patients']} patients)" for n in names]],
                [["**primary score**", *[f"**{splits[n]['official']['primary_score']:.4f}**"
@@ -263,10 +275,11 @@ def render_markdown(report: dict[str, Any], report_path: str) -> str:
         parts += [
             "## Floor, ceiling and calibration (holdout)",
             "Reference submissions on the same patients, scored by the same official scorer "
-            "(eval/baselines.py). The pack baseline is the floor. An alert on a true *minor* "
-            "issue earns nothing in any recall term and costs 0.25 noise units, so even a "
-            "perfect detector that reports minor issues scores below 1.0; without them the "
-            "ceiling is 1.0. Full-train figures: docs/baseline-floor.md.",
+            "(eval/baselines.py). The pack baseline is the floor. Minor alerts drive alert "
+            "fatigue, fatigue drives dismissal, and dismissal buries the serious alert, so they "
+            "are shown to the clinician but never submitted; the scorer agrees, charging 0.25 "
+            "noise units for each, which is why even a perfect detector that reports them scores "
+            "below 1.0. Full-train figures: docs/baseline-floor.md.",
             _table(["Reference", "Primary score", "Serious recall", "Precision",
                     "Noise per patient"],
                    [[name, f"{b['primary_score']:.4f}",

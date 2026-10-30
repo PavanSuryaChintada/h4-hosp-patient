@@ -33,4 +33,4 @@ Measured against conditions back-derived from the labels (`python tools/derive_c
 
 ## What is submitted
 
-`output/policy.py`: every finding becomes a row of `H4_predictions.csv` except minor ones (`EMIT_MINOR = False`, D-018), which the UI still shows. Each row carries the table's severity and action, and a confidence: the resolution confidence of the least certain line behind it.
+`output/policy.py`: every finding becomes a row of `H4_predictions.csv` except minor ones (`EMIT_MINOR = False`, D-018). Minor alerts drive alert fatigue, fatigue drives dismissal, and dismissal buries the serious alert; the clinician view still shows them, ranked last. Each row carries the table's severity and action, a confidence (the resolution confidence of the least certain line behind it), and the confidence-and-limitations text: the rule that fired, what could not be checked for this patient, that the list may be incomplete, and that a clinician decides.

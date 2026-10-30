@@ -89,6 +89,6 @@ def run_pipeline(dataset: Dataset, settings: Settings = Settings(),
         results.append(PatientResult(
             patient=patient, notes=data_quality_notes(patient), resolutions=resolutions,
             findings=rules.findings,
-            alerts=tuple(submitted(alert_rows(patient.patient_id, rules.findings))),
+            alerts=tuple(submitted(alert_rows(patient, rules))),
             rules=rules))
     return PipelineResult(settings=settings, stages_built=BUILT_STAGES, patients=tuple(results))
