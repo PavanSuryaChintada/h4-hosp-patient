@@ -1,8 +1,11 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../auth';
 import type { PatientView } from '../data/contract';
 import { SEVERITY_TONE, plural } from '../data/format';
+import { useLocalDecisions } from '../data/decisions';
 import { useData } from '../data/load';
+import { Modal } from '../components/Modal';
 import { EhrScreen } from '../components/Ehr';
 import { Actions, AlertGraph, type Decisions } from '../components/Medsafe';
 import { MedicationPanel } from '../components/Medications';
@@ -81,7 +84,7 @@ function Tiles({ p }: { p: PatientView }) {
         <div className="pt-k">{plural(p.prescriber_count ?? 0, 'prescriber')}</div>
       </div>
       <div className="pt-tile pt-tile-wide">
-        <div className="pt-k">Kidney function {stage && <span className="tag tag-grey">KDIGO {stage.code}, {stage.label}</span>}</div>
+        <div className="pt-k">Kidney function {stage?.code && <span className="tag tag-grey">KDIGO {stage.code}, {stage.label}</span>}</div>
         {p.egfr === null
           ? <div className="pt-v"><span className="pt-u">eGFR not recorded</span></div>
           : <>
@@ -105,12 +108,12 @@ function Tiles({ p }: { p: PatientView }) {
   );
 }
 
-function Header({ p, mode, setMode }: { p: PatientView; mode: Mode; setMode: (m: Mode) => void }) {
+function Header({ p, mode, setMode, title }: { p: PatientView; mode: Mode; setMode: (m: Mode) => void; title?: ReactNode }) {
   const sex = p.sex === 'F' ? 'female' : p.sex === 'M' ? 'male' : null;
   return (
     <section className="pt-head" aria-label="Patient">
       <div className="pt-top">
-        <h1 className="display">Patient <span className="mono">{p.id}</span></h1>
+        <h1 className="display">{title ?? <>Patient <span className="mono">{p.id}</span></>}</h1>
         <Segmented className="seg-lg" label="Which check to show" value={mode} onChange={setMode} segments={[
           { value: 'ehr', label: 'Standard EHR check' },
           { value: 'medsafe', label: 'Medsafe' },
@@ -138,7 +141,7 @@ function MedsafeBody({ p, d }: { p: PatientView; d?: Decisions }) {
   const { actions, alerts, collapse } = p.medsafe;
   return (
     <div className="ms-body">
-      <section className="panel" aria-label="Prioritised actions">
+      <section id="actions" className="panel" aria-label="Prioritised actions">
         <div className="panel-head">
           <h2 className="section">Prioritised actions</h2>
           {actions && alerts && <span className="meta"><span className="mono">{actions.length}</span> {actions.length === 1 ? 'action' : 'actions'} from <span className="mono">{alerts.length}</span> {alerts.length === 1 ? 'finding' : 'findings'}</span>}
@@ -166,8 +169,45 @@ function MedsafeBody({ p, d }: { p: PatientView; d?: Decisions }) {
   );
 }
 
+/**
+ * The one alert that interrupts: contraindicated combinations nobody has decided on yet, shown to
+ * a prescriber once per patient per session. Everything else waits in the prioritised list.
+ */
+function HardStop({ p, d }: { p: PatientView; d?: Decisions }) {
+  const { user } = useAuth();
+  const key = `medsafe.hardstop.${p.id}`;
+  const open = (p.medsafe.alerts ?? []).filter((a) => a.submitted && a.severity === 'contraindicated' && !d?.states[a.key]);
+  const [shown, setShown] = useState(() => {
+    try { return user?.key === 'prescriber' && open.length > 0 && !sessionStorage.getItem(key); } catch { return false; }
+  });
+  if (!shown) return null;
+  const close = () => { try { sessionStorage.setItem(key, '1'); } catch { /* storage unavailable */ } setShown(false); };
+  const review = () => { close(); document.getElementById('actions')?.scrollIntoView({ block: 'start' }); };
+  const collapse = p.medsafe.actions?.find((a) => a.kind === 'collapse');
+  return (
+    <Modal tone="danger" kicker="Hard stop" title={`${plural(open.length, 'contraindicated combination')} on this list`} onClose={close}
+      footer={<><button type="button" className="btn btn-danger" onClick={review}>Review the actions</button><button type="button" className="btn btn-secondary" onClick={close}>Remind me later</button></>}>
+      {collapse && collapse.kind === 'collapse' && <p className="modal-quote">{collapse.summary}</p>}
+      <ul className="hardstop-list">
+        {open.map((a) => (
+          <li key={a.key} className="status-line tone-danger"><span className="sq" aria-hidden="true" /><span><strong className="mono">{a.drugs.join(' + ')}</strong> {a.suggested_action}</span></li>
+        ))}
+      </ul>
+      <p className="meta" style={{ marginTop: 12 }}>This is the only alert that interrupts. Everything else waits in the prioritised list, most serious first.</p>
+    </Modal>
+  );
+}
+
+function ModeBanner({ mode, d }: { mode: Mode; d?: Decisions }) {
+  return mode === 'ehr'
+    ? <p className="mode-banner mode-ehr"><strong>Standard EHR check, reproduced.</strong> Every pair at the table's severity, eGFR not read, names outside the formulary skipped. Flip to Medsafe to compare the same list.</p>
+    : <p className="mode-banner mode-ms"><strong>Medsafe.</strong> The most serious first, one drug to review per cluster, every alert with its reasons.{d ? ' Decide on each action below.' : ''}</p>;
+}
+
 /** One patient, either from the training-set export or a ward record. `ward` adds its decisions and handoffs. */
-export function PatientScreen({ p, ward, top }: { p: PatientView; ward?: { d: Decisions; trust: WardTrust }; top?: ReactNode }) {
+export function PatientScreen({ p, ward, top, title, decisions }: {
+  p: PatientView; ward?: { d: Decisions; trust: WardTrust }; top?: ReactNode; title?: ReactNode; decisions?: Decisions;
+}) {
   const [params, setParams] = useSearchParams();
   const mode: Mode = params.get('mode') === 'ehr' ? 'ehr' : 'medsafe';
   const setMode = (m: Mode) => {
@@ -175,17 +215,26 @@ export function PatientScreen({ p, ward, top }: { p: PatientView; ward?: { d: De
     if (m === 'ehr') next.set('mode', 'ehr'); else next.delete('mode');
     setParams(next, { replace: true });
   };
+  const d = ward?.d ?? decisions;
   return (
     <div className="content">
-      <Header p={p} mode={mode} setMode={setMode} />
+      <Header p={p} mode={mode} setMode={setMode} title={title} />
       {top}
+      <ModeBanner mode={mode} d={d} />
       <CompareStrip p={p} mode={mode} />
       <div className="pt-body">
-        <div className="pt-main">{mode === 'ehr' ? <EhrScreen p={p} /> : <MedsafeBody p={p} d={ward?.d} />}</div>
+        <div className="pt-main">{mode === 'ehr' ? <EhrScreen p={p} /> : <MedsafeBody p={p} d={d} />}</div>
         <TrustPanel p={p} ward={ward?.trust} />
       </div>
+      {mode === 'medsafe' && <HardStop key={p.id} p={p} d={d} />}
     </div>
   );
+}
+
+function TrainingPatient({ p }: { p: PatientView }) {
+  const { user } = useAuth();
+  const decisions = useLocalDecisions(p.id, user);
+  return <PatientScreen p={p} decisions={decisions} />;
 }
 
 export function PatientDetail() {
@@ -200,5 +249,5 @@ export function PatientDetail() {
       </div>
     );
   }
-  return <PatientScreen p={p} />;
+  return <TrainingPatient p={p} />;
 }

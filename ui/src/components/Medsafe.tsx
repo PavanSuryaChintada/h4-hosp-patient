@@ -7,84 +7,114 @@ import { useAuth } from '../auth';
 import type { AlertEvent, AuditEvent, Collapse, MedsafeAlert, PatientView } from '../data/contract';
 import { ISSUE_LABEL, SEVERITY_TONE, conf, plural } from '../data/format';
 import { useData } from '../data/load';
+import { Modal } from './Modal';
+import { useToast, type Tone } from './Toast';
 import { NotBuilt, StatusInline } from './ui';
 
 export type Decisions = {
   states: Record<string, AuditEvent>;
   onEvent: (alert: string, event: AlertEvent, reason?: string, note?: string) => Promise<boolean>;
+  /** Kept in this browser (training-set patients), not on the ward server. */
+  local?: boolean;
 };
 
+type Act = Exclude<AlertEvent, 'shown'>;
 const DONE: Record<AlertEvent, string> = {
-  shown: 'Shown', accept: 'Accepted', override: 'Overridden', defer: 'Deferred to pharmacist', escalate: 'Escalated to pharmacist',
+  shown: 'Shown', accept: 'Accepted', override: 'Overridden', defer: 'Deferred to the pharmacist', escalate: 'Escalated to the pharmacist',
 };
-const ASK: Record<Exclude<AlertEvent, 'shown'>, string> = {
+const ASK: Record<Act, string> = {
   accept: 'Accept', override: 'Override', defer: 'Defer to pharmacist', escalate: 'Escalate to pharmacist',
 };
+/** The colour of a decision: done (accepted), wait (overridden: on record, worth a look), handed (with the pharmacist). */
+export const EVENT_TONE: Record<AlertEvent, Tone> = { shown: 'turn', accept: 'done', override: 'wait', defer: 'handed', escalate: 'handed' };
 
 function when(iso: string) {
   return new Date(iso).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+}
+
+function OverrideDialog({ alert, onClose, onDone }: { alert: MedsafeAlert; onClose: () => void; onDone: (reason: string, note: string) => Promise<boolean> }) {
+  const { x } = useData();
+  const [reason, setReason] = useState('');
+  const [note, setNote] = useState('');
+  const needsNote = reason === 'other' && !note.trim();
+  return (
+    <Modal tone="wait" kicker={<><StatusInline severity={alert.severity} /> {ISSUE_LABEL[alert.issue_type]}</>} title={`Override: ${alert.drugs.join(' + ')}`} onClose={onClose}
+      footer={<>
+        <button type="button" className="btn btn-warn" disabled={!reason || needsNote} onClick={async () => { if (await onDone(reason, note)) onClose(); }}>Record override</button>
+        <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+      </>}>
+      <p className="modal-quote">{alert.suggested_action}</p>
+      <label className="field">
+        <span className="label">Reason for overriding (required)</span>
+        <select value={reason} onChange={(e) => setReason(e.target.value)}>
+          <option value="">Choose a reason</option>
+          {x.workflow.override_reasons.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+      </label>
+      <label className="field">
+        <span className="label">Note{reason === 'other' ? ' (required for "other")' : ' (optional)'}</span>
+        <input value={note} onChange={(e) => setNote(e.target.value)} />
+      </label>
+      <p className="meta" style={{ marginTop: 12 }}>The override is written to the audit log with your name and the time. Rules overridden for the same reason again and again show up under Override patterns.</p>
+    </Modal>
+  );
 }
 
 /** The latest decision on an alert, and the actions this role may take (medsafe.workflow.PERMISSIONS). */
 function Decide({ alert, d }: { alert: MedsafeAlert; d: Decisions }) {
   const { x } = useData();
   const { user } = useAuth();
+  const toast = useToast();
   const [overriding, setOverriding] = useState(false);
-  const [reason, setReason] = useState('');
-  const [note, setNote] = useState('');
+  const [changing, setChanging] = useState(false);
   const state = d.states[alert.key];
-  const allowed = user && user.key !== 'reviewer' ? x.workflow.permissions[user.key].filter((e) => e !== 'shown') : [];
+  const allowed = (user && user.key !== 'reviewer' ? x.workflow.permissions[user.key].filter((e) => e !== 'shown') : []) as Act[];
+  const what = alert.drugs.join(' + ');
 
-  const act = async (event: AlertEvent) => {
-    if (event === 'override') { setOverriding(true); return; }
-    await d.onEvent(alert.key, event);
-  };
-  const override = async () => {
-    if (await d.onEvent(alert.key, 'override', reason, note)) { setOverriding(false); setReason(''); setNote(''); }
+  const record = async (event: Act, reason?: string, note?: string) => {
+    const ok = await d.onEvent(alert.key, event, reason, note);
+    if (!ok) return false;
+    setChanging(false);
+    if (event === 'accept') toast({ tone: 'done', title: `Accepted: ${what}`, body: alert.suggested_action });
+    if (event === 'override') toast({ tone: 'wait', title: `Overridden: ${what}`, body: `Reason: ${reason}${note ? `. ${note}` : ''}. Written to the audit log.` });
+    if (event === 'defer' || event === 'escalate') {
+      toast({ tone: 'handed', title: `${event === 'defer' ? 'Deferred' : 'Escalated'} to the pharmacist: ${what}`, body: d.local ? 'Recorded in this browser.' : 'It is now on the pharmacist\'s task list.' });
+    }
+    return true;
   };
 
   return (
     <div className="decide">
       {state ? (
-        <p className={`decide-state ev-${state.event}`}>
-          {DONE[state.event]} by {state.user} <span className="ink-3">({state.role}, <span className="mono">{when(state.timestamp)}</span>)</span>
+        <p className={`decide-state status-line tone-${EVENT_TONE[state.event]}`}>
+          <span className="sq" aria-hidden="true" />
+          <strong>{DONE[state.event]}</strong> by {state.user} <span className="ink-3">({state.role}, <span className="mono">{when(state.timestamp)}</span>)</span>
           {state.reason && <>: {state.reason}</>}{state.note && <span className="ink-2"> · {state.note}</span>}
         </p>
-      ) : <p className="decide-state ink-3">No decision recorded.</p>}
-      {allowed.length > 0 && !overriding && (
+      ) : <p className="decide-state status-line tone-turn"><span className="sq" aria-hidden="true" /><strong>Waiting for a decision</strong></p>}
+      {allowed.length > 0 && state && !changing && (
+        <div className="decide-actions"><button type="button" className="btn-link" onClick={() => setChanging(true)}>Change this decision</button></div>
+      )}
+      {allowed.length > 0 && (!state || changing) && (
         <div className="decide-actions">
           {allowed.map((e) => (
-            <button key={e} type="button" className={`btn btn-sm ${e === 'accept' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => act(e)}>{ASK[e as Exclude<AlertEvent, 'shown'>]}</button>
+            <button key={e} type="button" className={`btn btn-sm btn-${EVENT_TONE[e]}`}
+              onClick={() => (e === 'override' ? setOverriding(true) : record(e))}>{state ? `${ASK[e]} instead` : ASK[e]}</button>
           ))}
+          {state && <button type="button" className="btn btn-secondary btn-sm" onClick={() => setChanging(false)}>Keep it</button>}
         </div>
       )}
-      {overriding && (
-        <div className="decide-override">
-          <label className="field" style={{ marginTop: 0 }}>
-            <span className="label">Reason for overriding (required)</span>
-            <select value={reason} onChange={(e) => setReason(e.target.value)}>
-              <option value="">Choose a reason</option>
-              {x.workflow.override_reasons.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
-          </label>
-          <label className="field">
-            <span className="label">Note{reason === 'other' ? ' (required for "other")' : ''}</span>
-            <input value={note} onChange={(e) => setNote(e.target.value)} />
-          </label>
-          <div className="decide-actions">
-            <button type="button" className="btn btn-primary btn-sm" disabled={!reason} onClick={override}>Record override</button>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOverriding(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
+      {overriding && <OverrideDialog alert={alert} onClose={() => setOverriding(false)} onDone={(reason, note) => record('override', reason, note)} />}
     </div>
   );
 }
 
 export function MedsafeAlertCard({ a, d, compact = false }: { a: MedsafeAlert; d?: Decisions; compact?: boolean }) {
+  const state = d?.states[a.key];
+  const decided = state && (state.event === 'accept' || state.event === 'override');
+  const handed = state && (state.event === 'defer' || state.event === 'escalate');
   return (
-    <article className={`ms-alert${a.submitted ? '' : ' ms-minor'}`} style={{ ['--c' as string]: SEVERITY_TONE[a.severity] }}>
+    <article id={`alert-${a.rank}`} className={`ms-alert${a.submitted ? '' : ' ms-minor'}${decided ? ' ms-decided' : ''}${handed ? ' ms-handed' : ''}`} style={{ ['--c' as string]: SEVERITY_TONE[a.severity] }}>
       <header className="ms-head">
         <span className="mono ms-rank">{a.rank}</span>
         <StatusInline severity={a.severity} />
@@ -98,7 +128,7 @@ export function MedsafeAlertCard({ a, d, compact = false }: { a: MedsafeAlert; d
       )}
       {!compact && a.reasons.map((r) => <p key={r} className="ms-why">{r}</p>)}
       <p className="ms-limit">{a.limitations}</p>
-      {d && <Decide alert={a} d={d} />}
+      {d && a.submitted && <Decide alert={a} d={d} />}
     </article>
   );
 }
@@ -116,6 +146,7 @@ export function Actions({ p, d }: { p: PatientView; d?: Decisions }) {
       {actions.length === 0 && <p className="empty-ok">{summary}</p>}
       {actions.map((act) => act.kind === 'collapse' ? (
         <section key="collapse" className="ms-collapse" aria-label="Review first">
+          <p className="ms-collapse-k">Review first</p>
           <p className="ms-collapse-head">{act.summary}</p>
           <div className="ms-collapse-list">
             {act.covers.map((r) => <MedsafeAlertCard key={r} a={byRank.get(r)!} d={d} compact />)}
@@ -129,6 +160,7 @@ export function Actions({ p, d }: { p: PatientView; d?: Decisions }) {
           {minor.map((a) => <MedsafeAlertCard key={a.rank} a={a} d={d} compact />)}
         </details>
       )}
+      {d?.local && <p className="meta">Decisions on training-set patients are kept in this browser. Ward patients record them on the ward server's audit log.</p>}
     </div>
   );
 }

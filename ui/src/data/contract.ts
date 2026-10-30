@@ -259,11 +259,19 @@ export type WardRecord = {
   alert_states: Record<string, AuditEvent>;
   events: AuditEvent[];
   pharmacist_queue: string[];
+  /** What each role still has to do on this record (tools/serve_ui.Ward.progress). */
+  tasks: WardTask[];
+  decisions: WardDecisions;
 };
+
+/** One thing a role still has to do on a ward record. Workflow bookkeeping, not a finding. */
+export type WardTask = { role: Role; kind: 'egfr' | 'confirm_name' | 'answer' | 'review' | 'decide'; count: number; text: string };
+export type WardDecisions = { submitted: number; decided: number; handed: number; undecided: number };
 
 export type WardRow = {
   id: string; created_at: string; created_by: string; age: number | null; sex: string | null;
   egfr: number | null; lines: number; actions: number | null; to_verify: number; pharmacist_queue: string[];
+  top_severity: Severity | 'none' | null; review_requested: boolean; tasks: WardTask[]; decisions: WardDecisions;
 };
 
 /** A consent in the ABHA sandbox (tools/serve_ui.py). Simulated; never connected to ABDM. */

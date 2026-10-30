@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from medsafe.data.adapter import Dataset
-from tools.serve_ui import Ward, WardError, make_handler, split_lines
+from tools.serve_ui import Ward, WardError, archive_store, make_handler, split_lines
 
 NURSE = {"user": "Staff nurse", "role": "nurse"}
 LAB = {"user": "Lab technician", "role": "lab"}
@@ -116,6 +116,32 @@ def test_same_entry_same_check(ward: Ward) -> None:
     two = ward.admit(NURSE, FIELDS, "Dolo 650 SOS; Crocin 500 sos; Tab Warf 2mg OD")
     strip = lambda v: {**v["result"], "id": None}  # noqa: E731
     assert strip(one) == strip(two)
+
+
+def test_tasks_follow_the_record_round_the_ward(ward: Ward) -> None:
+    def roles(view: dict) -> list[str]:
+        return [t["role"] for t in view["tasks"]]
+
+    record = ward.admit(NURSE, FIELDS, "Tab Qxzrvy 400; Brufen 400 tds; Tab Warf 2mg OD")
+    assert roles(record) == ["lab", "pharmacist", "prescriber"]           # eGFR, a name, a decision
+    record = ward.set_egfr(LAB, record["id"], "60")
+    record = ward.confirm_name(PHARMACIST, record["id"], 0, ["paracetamol"])
+    assert roles(record) == ["prescriber"]
+    key = "interaction:ibuprofen;warfarin"
+    record = ward.record_event(PRESCRIBER, record["id"], key, "defer")
+    assert [t["kind"] for t in record["tasks"]] == ["answer"]              # handed to the pharmacist
+    assert record["decisions"] == {"submitted": 1, "decided": 0, "handed": 1, "undecided": 0}
+    record = ward.record_event(PHARMACIST, record["id"], key, "accept")
+    assert record["tasks"] == [] and record["decisions"]["decided"] == 1
+    assert ward.listing()[0]["tasks"] == []
+
+
+def test_fresh_moves_the_old_ward_aside(ward: Ward) -> None:
+    ward.admit(NURSE, FIELDS, "Brufen 400 tds")
+    moved = archive_store(ward.store)
+    assert moved is not None and (moved / "records.json").is_file()
+    assert not (ward.store / "records.json").exists()
+    assert archive_store(ward.store) is None
 
 
 def test_http_round_trip(ward: Ward) -> None:

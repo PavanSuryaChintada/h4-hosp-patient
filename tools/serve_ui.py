@@ -1,6 +1,7 @@
 """The ward portal's local server: runs the real pipeline on patients entered by hand.
 
     python tools/serve_ui.py                   # http://127.0.0.1:8765 (serves ui/dist if built)
+    python tools/serve_ui.py --fresh --open    # an empty ward, opened in the browser (demo.cmd)
 
 Never on the scoring path: run.py and src/medsafe/ never import it. It exists so the portal can
 check a patient a nurse types in without the browser holding any detection logic. Each check
@@ -28,6 +29,7 @@ import mimetypes
 import re
 import sys
 import tempfile
+import webbrowser
 from dataclasses import asdict, replace
 from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
@@ -147,10 +149,42 @@ class Ward:
             why.append("pharmacist review requested")
         return why
 
+    def progress(self, record: dict[str, Any]) -> dict[str, Any]:
+        """Where a record is on the ward, and what each role still has to do on it.
+
+        Workflow bookkeeping only, read from the record and the audit log: an eGFR the lab has
+        not entered, lines and handed-over alerts waiting on the pharmacist, and submitted alerts
+        nobody has accepted or overridden. Nothing here reads what an alert says.
+        """
+        states = self.alert_states(record["id"])
+        submitted = [a for a in record["result"]["medsafe"]["alerts"] or () if a["submitted"]]
+        decided = [a for a in submitted if states.get(a["key"], {}).get("event") in ("accept", "override")]
+        handed = [a for a in submitted if states.get(a["key"], {}).get("event") in REVIEW_EVENTS]
+        undecided = [a for a in submitted if a["key"] not in states]
+        unresolved = [m for m in record["result"]["medications"] if m["status"] == "unresolved"]
+        tasks = []
+        if not record.get("egfr"):
+            tasks.append({"role": "lab", "kind": "egfr", "count": 1, "text": "Enter eGFR"})
+        if unresolved:
+            tasks.append({"role": "pharmacist", "kind": "confirm_name", "count": len(unresolved),
+                          "text": f"Confirm {len(unresolved)} line(s) by name"})
+        if handed:
+            tasks.append({"role": "pharmacist", "kind": "answer", "count": len(handed),
+                          "text": f"Answer {len(handed)} alert(s) handed over"})
+        if record.get("review_requested"):
+            tasks.append({"role": "pharmacist", "kind": "review", "count": 1, "text": "Review requested"})
+        if undecided:
+            tasks.append({"role": "prescriber", "kind": "decide", "count": len(undecided),
+                          "text": f"Decide on {len(undecided)} alert(s)"})
+        return {"tasks": tasks, "decisions": {"submitted": len(submitted), "decided": len(decided),
+                                              "handed": len(handed), "undecided": len(undecided)}}
+
     def view(self, record: dict[str, Any]) -> dict[str, Any]:
-        """A record as the portal reads it: the record, its alert decisions and its queue reasons."""
+        """A record as the portal reads it: the record, its alert decisions, its queue reasons and
+        what each role still has to do on it."""
         return {**record, "alert_states": self.alert_states(record["id"]),
-                "events": self.events(record["id"]), "pharmacist_queue": self.needs_pharmacist(record)}
+                "events": self.events(record["id"]), "pharmacist_queue": self.needs_pharmacist(record),
+                **self.progress(record)}
 
     def listing(self) -> list[dict[str, Any]]:
         """Every record, newest first, as a summary row."""
@@ -162,7 +196,9 @@ class Ward:
                          "egfr": result["egfr"], "lines": len(result["medications"]),
                          "actions": result["compare"]["medsafe"]["actions"],
                          "to_verify": result["compare"]["medsafe"]["to_verify"],
-                         "pharmacist_queue": self.needs_pharmacist(record)})
+                         "top_severity": result["compare"]["medsafe"]["top_severity"],
+                         "review_requested": bool(record.get("review_requested")),
+                         "pharmacist_queue": self.needs_pharmacist(record), **self.progress(record)})
         return rows
 
     def get(self, record_id: str) -> dict[str, Any]:
@@ -486,16 +522,40 @@ def make_handler(ward: Ward, ui_dist: Path | None) -> type[BaseHTTPRequestHandle
     return Handler
 
 
+def archive_store(store: Path) -> Path | None:
+    """Move a ward's records, consents and audit log into a dated folder under ``store/archive``,
+    so a demo starts on an empty ward without deleting anything. Returns that folder, or None if
+    there was nothing to move."""
+    files = [store / name for name in ("records.json", "consents.json", "audit.jsonl") if (store / name).is_file()]
+    if not files:
+        return None
+    target = store / "archive" / datetime.now().strftime("%Y%m%d-%H%M%S")
+    target.mkdir(parents=True, exist_ok=True)
+    for path in files:
+        path.rename(target / path.name)
+    return target
+
+
 def main(argv: list[str] | None = None) -> int:
     """Load the reference tables once and serve the ward until interrupted."""
     parser = argparse.ArgumentParser(description="Local server for the ward portal.")
     parser.add_argument("--input", type=Path, default=data_dir(), help="the pack's data folder")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--store", type=Path, default=DEFAULT_STORE)
+    parser.add_argument("--fresh", action="store_true",
+                        help="start on an empty ward: move existing records into store/archive/<time>")
+    parser.add_argument("--open", action="store_true", help="open the portal in the default browser")
     args = parser.parse_args(argv)
+    if args.fresh and (moved := archive_store(args.store)):
+        print(f"previous ward records moved to {moved}")
     ward = Ward(load_dataset(args.input, "train"), args.store, sandbox=load_dataset(args.input, "test").patients)
     server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(ward, UI_DIST))
-    print(f"ward portal on http://127.0.0.1:{args.port}  (records in {args.store})")
+    url = f"http://127.0.0.1:{args.port}"
+    print(f"ward portal on {url}  (records in {args.store})")
+    if not (UI_DIST / "index.html").is_file():
+        print("the web app is not built: cd ui && npm ci && npm run build (or run demo.cmd)")
+    if args.open:
+        webbrowser.open(f"{url}/login")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

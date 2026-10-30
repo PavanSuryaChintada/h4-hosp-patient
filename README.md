@@ -32,7 +32,21 @@ Sign in with any demo account below; clicking an account on the sign-in page sig
 | Clinical pharmacist | `pharmacist@medsafe.demo` | `Pharma@2026` | Confirms names the system would not guess; answers deferred alerts |
 | Reviewer | `reviewer@medsafe.demo` | `Review@2026` | Read-only |
 
-These are hardcoded demo accounts with no real authentication. Who may enter what and do what is `src/medsafe/workflow.py` (`ENTRIES`, `PERMISSIONS`), enforced by the ward server; the UI only hides what a role cannot do. The ward needs the local server below; the hosted demo shows the training-data screens only.
+These are hardcoded demo accounts with no real authentication. Who may enter what and do what is `src/medsafe/workflow.py` (`ENTRIES`, `PERMISSIONS`), enforced by the ward server; the UI only hides what a role cannot do.
+
+### Running the ward demo end to end
+
+The ward runs the real pipeline on every patient typed in, so it needs its local server. On the demo laptop, double-click **`demo.cmd`** (Windows) or run **`./demo.sh`** (macOS, Linux): it builds the app, starts the ward on an empty record store (earlier records move to `data/ward/archive/`, nothing is deleted) and opens the sign-in page. `demo.cmd --keep` carries on with the ward as it was.
+
+1. **Ward nurse**: admit a patient. Fetch records through the ABHA sandbox (request consent, approve on the patient's phone, fetch) or start from a training-set patient.
+2. **Lab technician**: enter eGFR. The kidney-dose rules re-run; a toast says which alerts changed.
+3. **Pharmacist**: confirm any line the system would not guess.
+4. **Prescriber**: accept, override (a reason is required) or defer each alert.
+5. **Pharmacist**: answer what was deferred. Then open *Override patterns*.
+
+Switch role from the top bar without signing out; the bell lists each role's tasks, new tasks pop up as other roles create them, and the *Demo guide* drawer ticks the steps off as they happen. Colour means the state of the work everywhere: blue is your turn, amber is waiting on someone (or overridden), purple is with the pharmacist, green is done, and red is kept for serious alerts in the data. A contraindicated combination nobody has decided on opens one hard-stop dialog for the prescriber; nothing else interrupts.
+
+The hosted site has no ward server: the ward pages say how to start one, and the training-set patients work as they are, with decisions kept in the browser.
 
 ## Screens
 

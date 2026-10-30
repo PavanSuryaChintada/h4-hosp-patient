@@ -52,6 +52,16 @@ const PATHS: Record<string, string> = {
   toggle: 'M3 7h18v10H3z M12 7v10 M15 12h3',
   graph: 'M5 5h3v3H5z M16 5h3v3h-3z M10.5 16h3v3h-3z M8 6.5h8 M7 8l4 8 M17 8l-4 8',
   lock: 'M6 11h12v10H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  x: 'M6 6l12 12 M18 6L6 18',
+  clock: 'M12 3a9 9 0 1 1 0 18a9 9 0 0 1 0-18z M12 7v5l3 3',
+  pill: 'M9.5 4.5a4.95 4.95 0 0 1 7 7l-5 5a4.95 4.95 0 0 1-7-7z M7 9.5l7 7',
+  flask: 'M9 3h6 M10 3v6l-5 10h14l-5-10V3 M7.5 14h9',
+  stethoscope: 'M6 3v5a4 4 0 0 0 8 0V3 M10 12v3a4 4 0 0 0 8 0v-3 M18 8a2 2 0 1 1 0 4a2 2 0 0 1 0-4z',
+  eye: 'M2 12c2.5-4.5 6-7 10-7s7.5 2.5 10 7c-2.5 4.5-6 7-10 7s-7.5-2.5-10-7z M12 9a3 3 0 1 1 0 6a3 3 0 0 1 0-6z',
+  bell: 'M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z M10 21h4',
+  swap: 'M4 8h14 M15 5l3 3l-3 3 M20 16H6 M9 13l-3 3l3 3',
+  phone: 'M7 2h10v20H7z M11 18h2',
+  guide: 'M5 4h11l3 3v13H5z M8 9h8 M8 13h8 M8 17h5',
 };
 
 export type IconName = keyof typeof PATHS;

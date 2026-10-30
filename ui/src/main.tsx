@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useParams 
 import { AuthProvider, RequireAuth } from './auth';
 import { DataProvider } from './data/load';
 import { Shell } from './components/Shell';
+import { ToastProvider } from './components/Toast';
+import { WardProvider } from './data/ward';
 import { Home } from './screens/Home';
 import { ArchitecturePage } from './screens/Architecture';
 import { Results } from './screens/Results';
@@ -50,29 +52,33 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ScrollTop />
-        <Routes>
-          <Route path="/" element={<DataProvider><Home /></DataProvider>} />
-          <Route path="/results" element={<DataProvider><Results /></DataProvider>} />
-          <Route path="/architecture" element={<DataProvider><ArchitecturePage /></DataProvider>} />
-          <Route path="/models" element={<Navigate to="/architecture" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/app" element={<AppLayout />}>
-            <Route index element={<Queue />} />
-            <Route path="patient/:id" element={<PatientRoute />} />
-            <Route path="why" element={<Why />} />
-            <Route path="intake" element={<Intake />} />
-            <Route path="resolution" element={<Resolution />} />
-            <Route path="evaluation" element={<Navigate to="/results" replace />} />
-            <Route path="ward" element={<WardList />} />
-            <Route path="ward/new" element={<WardAdmit />} />
-            <Route path="ward/patterns" element={<Patterns />} />
-            <Route path="ward/:id" element={<WardRecordScreen />} />
-            <Route path="*" element={<Navigate to="/app" replace />} />
-          </Route>
-          <Route path="/why" element={<Short to="/app/why" />} />
-          <Route path="/intake" element={<Short to="/app/intake" />} />
-          <Route path="*" element={<Short to="/app" />} />
-        </Routes>
+        <ToastProvider>
+          <WardProvider>
+            <Routes>
+              <Route path="/" element={<DataProvider><Home /></DataProvider>} />
+              <Route path="/results" element={<DataProvider><Results /></DataProvider>} />
+              <Route path="/architecture" element={<DataProvider><ArchitecturePage /></DataProvider>} />
+              <Route path="/models" element={<Navigate to="/architecture" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/app" element={<AppLayout />}>
+                <Route index element={<Queue />} />
+                <Route path="patient/:id" element={<PatientRoute />} />
+                <Route path="why" element={<Why />} />
+                <Route path="intake" element={<Intake />} />
+                <Route path="resolution" element={<Resolution />} />
+                <Route path="evaluation" element={<Navigate to="/results" replace />} />
+                <Route path="ward" element={<WardList />} />
+                <Route path="ward/new" element={<WardAdmit />} />
+                <Route path="ward/patterns" element={<Patterns />} />
+                <Route path="ward/:id" element={<WardRecordScreen />} />
+                <Route path="*" element={<Navigate to="/app" replace />} />
+              </Route>
+              <Route path="/why" element={<Short to="/app/why" />} />
+              <Route path="/intake" element={<Short to="/app/intake" />} />
+              <Route path="*" element={<Short to="/app" />} />
+            </Routes>
+          </WardProvider>
+        </ToastProvider>
       </BrowserRouter>
     </AuthProvider>
   </StrictMode>,
