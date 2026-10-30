@@ -1,17 +1,27 @@
-# Python pipeline
+# Works for both layouts: the repository (code at the root) and the submission zip (code in FULL_CODE/).
+
+# The organisers' pack goes in data/pack/ (FULL_CODE/data/pack/ in the zip) and is never committed.
 /data/
+/FULL_CODE/data/
+models/
+.env
 .venv/
+node_modules/
+
+# Python
 __pycache__/
 .pytest_cache/
 *.db
 *.db-journal
-eval/reports/*.json
+**/eval/reports/*.json
+**/eval/work/
+submission_train/
 
-# UI (Vite app in ui/)
-ui/node_modules/
-ui/dist/
+# Web app (ui/)
+**/ui/dist/
 *.log
 *.tsbuildinfo
 .vercel
-eval/work/
-submission_train/
+
+# Built by tools/make_submission.py
+/dist/
