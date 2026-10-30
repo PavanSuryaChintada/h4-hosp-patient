@@ -54,6 +54,34 @@ Every figure on every screen is read from `ui/public/data/pipeline.json`, which 
 
 ## How it works
 
+```mermaid
+flowchart LR
+  subgraph IN[Inputs]
+    PACK[H4 data pack<br/>patients and reference tables]
+    WARD[Ward entry<br/>nurse, ABHA sandbox, lab, pharmacist]
+  end
+  subgraph ENGINE[Medsafe engine: src/medsafe, Python stdlib + rapidfuzz]
+    LOAD[1 Load and validate] --> READ[2 Read every line<br/>exact, synonym, parts, prefix, fuzzy, or abstain]
+    READ --> RULES[3 Check the tables<br/>interactions, duplicates, renal tiers, contraindications]
+    RULES --> POLICY[4 Output policy<br/>table severity, no minor, limitations text]
+  end
+  PACK --> LOAD
+  WARD --> LOAD
+  POLICY --> SUB[Track A: run.py writes<br/>H4_predictions.csv and H4_resolution.csv]
+  SUB --> EVAL[Organisers' evaluate.py]
+  POLICY --> CLIN[Track B: clinician layer<br/>prioritise, collapse, roles, audit log]
+  CLIN --> SERVER[tools/serve_ui.py<br/>ward server] --> APP[Web app: React, TypeScript, Vite]
+  CLIN --> EXPORT[tools/export_ui.py<br/>pipeline.json] --> APP
+  subgraph SIDE[Off the scoring path: eval/]
+    HARNESS[dev / holdout harness with evaluate.py]
+    EHR[standard EHR check reproduction]
+    ML[three trained models measured against the rules<br/>n-gram kNN, logistic regression, boosted trees]
+  end
+```
+
+No language model anywhere, no network at runtime: the same input gives the same output on every run. The graphs of the trained models are in `docs/figures/` (`python -m eval.ml_challenger`, then `python -m eval.ml_plots`).
+
+
 1. **Resolve names.** Raw slip text such as `"Warf 5"`, `"crocine"` or `"PAN-D"` maps to a generic with a confidence. When the top two candidates are too close, the system abstains and asks for a manual check instead of guessing.
 2. **Check rules.** Interaction pairs (class-level rules such as NSAID + ACE inhibitor), duplicate therapy (including the same drug under two brands), renal dose against eGFR, and pregnancy contraindications.
 3. **Severity from the table, tier from the patient.** Every alert carries the reference table's severity and action, word for word. Renal rules are tiered by eGFR and the most restrictive tier that applies sets the severity: the same metformin line is major at eGFR 28 and raises nothing at eGFR 79.

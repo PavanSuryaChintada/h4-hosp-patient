@@ -15,6 +15,7 @@ const NAV = [
   { to: '/app/intake', label: 'Intake' },
   { to: '/app/resolution', label: 'Name resolution' },
   { to: '/app/evaluation', label: 'Evaluation' },
+  { to: '/models', label: 'Models and architecture' },
 ];
 
 const DEMO_KEY = 'medsafe.demo';

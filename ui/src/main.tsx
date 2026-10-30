@@ -5,6 +5,7 @@ import { AuthProvider, RequireAuth } from './auth';
 import { DataProvider } from './data/load';
 import { Shell } from './components/Shell';
 import { Home } from './screens/Home';
+import { Models } from './screens/Models';
 import { Login } from './screens/Login';
 import { Queue } from './screens/Queue';
 import { PatientDetail } from './screens/PatientDetail';
@@ -50,6 +51,7 @@ createRoot(document.getElementById('root')!).render(
         <ScrollTop />
         <Routes>
           <Route path="/" element={<DataProvider><Home /></DataProvider>} />
+          <Route path="/models" element={<DataProvider><Models /></DataProvider>} />
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<Queue />} />

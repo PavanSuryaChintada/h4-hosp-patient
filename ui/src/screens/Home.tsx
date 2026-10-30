@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import type { OfficialScore } from '../data/contract';
 import { ISSUE_LABEL, num, plural } from '../data/format';
 import { useData } from '../data/load';
+import { Architecture } from '../components/Architecture';
 import { StatusInline } from '../components/ui';
 import { fmtEgfr } from './PatientDetail';
 
@@ -19,14 +20,14 @@ function Score({ label, value, sub, tone }: { label: string; value: string; sub:
   );
 }
 
-function Nav() {
+export function Nav() {
   return (
     <header className="home-nav">
       <div className="home-wrap home-nav-inner">
         <Link to="/" className="lp-brand"><span className="brand-mark" aria-hidden="true" />Medsafe</Link>
         <nav className="home-links" aria-label="On this page">
           <a href="#problem">The problem</a><a href="#two-screens">Two screens</a><a href="#how">How it works</a>
-          <a href="#ward">The ward</a><a href="#results">Results</a>
+          <a href="#ward">The ward</a><a href="#results">Results</a><Link to="/models">Architecture and models</Link>
         </nav>
         <span className="chip">Prototype · simulated dataset</span>
         <Link className="btn btn-primary btn-sm" to="/login">Sign in</Link>
@@ -171,6 +172,19 @@ export function Home() {
             <li><span className="home-step-n mono">04</span><h3 className="lp-h3">A clinician decides</h3><p>Every alert carries its rule, its confidence and what could not be checked. The prescriber accepts, overrides with a reason, or hands it to a pharmacist.</p></li>
           </ol>
           <p className="home-note">No model decides anything. Three trained models were measured against the rules and are reported on the evaluation page; the rules held.</p>
+        </div>
+      </section>
+
+      <section id="built" className="home-section home-alt">
+        <div className="home-wrap">
+          <h2 className="home-h2">What it is built from.</h2>
+          <p className="home-lead home-measure">One deterministic Python engine writes the submission files and serves the ward. No language model anywhere, no network at runtime.</p>
+          <Architecture />
+          <figure className="model-fig" style={{ marginTop: 32 }}>
+            <h3 className="lp-h3">Three trained models, measured against the rules on the holdout split</h3>
+            <img src={`${import.meta.env.BASE_URL}figures/2_scores.png`} alt="Official scores: rules against each trained model, and a standard EHR check with and without learned triage" loading="lazy" />
+            <figcaption>Drawn by <span className="mono">eval/ml_plots.py</span> from the organisers' scorer. <Link to="/models">All the graphs, with training curves →</Link></figcaption>
+          </figure>
         </div>
       </section>
 

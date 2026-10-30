@@ -566,3 +566,13 @@ table.t { width: 100%; border-collapse: collapse; background: var(--paper); tabl
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ---- architecture and model figures ---------------------------------------------- */
+
+.arch-fig { margin: 32px 0 0; padding: 16px; background: var(--paper); border: var(--border); }
+.arch-scroll { overflow-x: auto; }
+.model-figs { display: grid; gap: 32px; margin-top: 32px; }
+.model-fig { display: grid; gap: 12px; margin: 0; padding: 16px; background: var(--paper); border: var(--border); }
+.home-alt .model-fig { background: var(--canvas); }
+.model-fig img { display: block; width: 100%; height: auto; background: #fff; border: var(--border); }
+.model-fig figcaption { font-size: 13px; line-height: 20px; color: var(--ink-2); }
