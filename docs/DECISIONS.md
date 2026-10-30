@@ -207,3 +207,17 @@ This is a rule violation, not a gap: skipping an age-based rule when age is unkn
 ## D-022 Do not submit the current build
 
 With name resolution done and no rule engine yet, the predictions file is empty. The official score is then 0.15 (the resolution term alone), below the pack baseline's 0.4071. Until Phase 3 lands, the pack baseline is the better submission.
+
+## D-023 The LLM resolution fallback ships off: a measured decision
+
+The proposed fallback (an LLM picking from our top candidates, or "none") would only ever see lines the deterministic resolver abstains on. It abstains on 1 of 7,131 dev lines, 0 of 1,956 holdout lines, and 7 of 20,867 test lines. Even if it resolved all 7 test lines correctly, resolution accuracy would rise by 0.03 points, about +0.00005 on the primary score, against the risk that one wrong pick raises a false alert. Not built; this measurement is the reason.
+
+## D-024 How an LLM may be used: train text only, offline, never on the scoring path
+
+The pack forbids "having someone or something label [test patients] case by case". Sending test patients' diagnosis text to a model and committing its answers would read as exactly that: 807 diagnosis fragments occur only in test. So:
+
+- **The LLM sees training text only.** It proposes vocabulary per `condition_id` (synonyms, abbreviations, vernacular terms, negation cues) from train diagnosis and allergy text. People review the proposals, and the accepted ones are committed as a deterministic matcher that runs on test like any other code. No test string is ever sent to a model.
+- **Offline only.** `tools/llm_*.py` run by hand, through OpenRouter, with the key read from an environment variable and never written to disk. `run.py` and `src/medsafe/` never call a model; `tests/test_guards.py` fails if they import a network or LLM client.
+- **Traceable.** Prompts live in `tools/prompts/` with a version; every generated file records the model name and a hash of the prompt.
+- **Measured.** The matcher's contraindication recall and precision on train, with and without the LLM-proposed vocabulary, go in `docs/ABLATION.md`. If the vocabulary does not help, it ships disabled and the doc says why.
+- **Order.** Phase 3 (the rule engine, with a deterministic condition matcher and negation detector) comes first, so the LLM layer is measured against a working baseline.
