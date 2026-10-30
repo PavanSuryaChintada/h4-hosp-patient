@@ -8,6 +8,8 @@ import { Actions, AlertGraph, type Decisions } from '../components/Medsafe';
 import { MedicationPanel } from '../components/Medications';
 import { TrustPanel, type WardTrust } from '../components/Trust';
 import { NotBuilt, NotBuiltValue, Segmented } from '../components/ui';
+import { EgfrGauge } from '../components/Charts';
+import { Units } from '../components/viz';
 
 type Mode = 'ehr' | 'medsafe';
 
@@ -53,6 +55,56 @@ function CompareStrip({ p, mode }: { p: PatientView; mode: Mode }) {
   );
 }
 
+const LINE_TONE: Record<string, { color: string; hollow?: boolean; word: string }> = {
+  active: { color: 'var(--action)', word: 'resolved and checked' },
+  stopped: { color: 'var(--hairline-firm)', word: 'marked stopped' },
+  not_a_medicine: { color: 'var(--hairline-firm)', word: 'not a medicine' },
+  unresolved: { color: 'var(--warn)', hollow: true, word: 'verify manually' },
+};
+
+/** Summary tiles: who the patient is, kidney function on its scale, the list, and the alerts. */
+function Tiles({ p }: { p: PatientView }) {
+  const { x } = useData();
+  const m = p.compare.medsafe;
+  const stage = x.cohort.egfr_stages.find((s) => s.code === m.egfr_stage);
+  const alerts = p.medsafe.alerts ?? [];
+  return (
+    <div className="pt-tiles">
+      <div className="pt-tile">
+        <div className="pt-k">Age</div>
+        <div className="pt-v"><span className="mono">{p.age ?? '—'}</span> <span className="pt-u">y{p.sex ? `, ${p.sex === 'F' ? 'female' : 'male'}` : ''}</span></div>
+        <div className="pt-k">{p.pregnant === null ? 'pregnancy not applicable' : p.pregnant ? 'pregnant' : 'not pregnant'}</div>
+      </div>
+      <div className="pt-tile">
+        <div className="pt-k">Weight</div>
+        <div className="pt-v">{p.weight_kg === null ? <span className="pt-u">not recorded</span> : <><span className="mono">{p.weight_kg}</span> <span className="pt-u">kg</span></>}</div>
+        <div className="pt-k">{plural(p.prescriber_count ?? 0, 'prescriber')}</div>
+      </div>
+      <div className="pt-tile pt-tile-wide">
+        <div className="pt-k">Kidney function {stage && <span className="tag tag-grey">KDIGO {stage.code}, {stage.label}</span>}</div>
+        {p.egfr === null
+          ? <div className="pt-v"><span className="pt-u">eGFR not recorded</span></div>
+          : <>
+              <div className="pt-v"><span className="mono">{fmtEgfr(p.egfr)}</span> <span className="pt-u">eGFR</span> <Tier p={p} /></div>
+              <EgfrGauge value={p.egfr} stages={x.cohort.egfr_stages} />
+            </>}
+      </div>
+      <div className="pt-tile">
+        <div className="pt-k">Medicines</div>
+        <div className="pt-v"><span className="mono">{m.checked}</span> <span className="pt-u">of {m.lines} resolved</span></div>
+        <Units label={p.medications.map((md) => `"${md.raw}": ${LINE_TONE[md.status ?? 'active'].word}`).join('; ')} size={10} gap={3}
+          items={p.medications.map((md) => ({ ...LINE_TONE[md.status ?? 'active'], title: `"${md.raw}": ${LINE_TONE[md.status ?? 'active'].word}` }))} />
+      </div>
+      <div className="pt-tile">
+        <div className="pt-k">Alerts</div>
+        <div className="pt-v"><span className="mono">{m.actions ?? '—'}</span> <span className="pt-u">actions of {alerts.length} found</span></div>
+        <Units label={`${m.actions ?? 0} actions from ${alerts.length} findings`} size={10} gap={3}
+          items={alerts.map((a) => ({ color: SEVERITY_TONE[a.severity], hollow: !a.submitted, title: `${a.severity} ${a.issue_type}: ${a.drugs.join(' + ')}${a.submitted ? '' : ' (minor, shown last)'}` }))} />
+      </div>
+    </div>
+  );
+}
+
 function Header({ p, mode, setMode }: { p: PatientView; mode: Mode; setMode: (m: Mode) => void }) {
   const sex = p.sex === 'F' ? 'female' : p.sex === 'M' ? 'male' : null;
   return (
@@ -64,26 +116,18 @@ function Header({ p, mode, setMode }: { p: PatientView; mode: Mode; setMode: (m:
           { value: 'medsafe', label: 'Medsafe' },
         ]} />
       </div>
-      <div className="pt-facts">
-        {p.age !== null && <span><span className="mono">{p.age}</span> y{sex ? `, ${sex}` : ''}</span>}
-        {p.weight_kg !== null && <><span className="dot">·</span><span><span className="mono">{p.weight_kg}</span> kg</span></>}
-        <span className="dot">·</span><span>{plural(p.medications.length, 'line')} on the list</span>
-        {mode === 'medsafe' && p.prescriber_count !== null && <><span className="dot">·</span><span>{plural(p.prescriber_count, 'prescriber')}</span></>}
-        {mode === 'medsafe' && p.pregnant !== null && <><span className="dot">·</span><span>{p.pregnant ? 'pregnant' : 'not pregnant'}</span></>}
-      </div>
+      {mode === 'ehr' && (
+        <div className="pt-facts">
+          {p.age !== null && <span><span className="mono">{p.age}</span> y{sex ? `, ${sex}` : ''}</span>}
+          {p.weight_kg !== null && <><span className="dot">·</span><span><span className="mono">{p.weight_kg}</span> kg</span></>}
+          <span className="dot">·</span><span>{plural(p.medications.length, 'line')} on the list</span>
+        </div>
+      )}
+      {mode === 'medsafe' && <Tiles p={p} />}
       {mode === 'medsafe' && (
-        <div className="pt-context">
-          <div className="egfr-big">
-            <span className="label">eGFR</span>
-            {p.egfr === null
-              ? <span className="egfr-none">not recorded</span>
-              : <span className="egfr-val mono">{fmtEgfr(p.egfr)}</span>}
-            {p.egfr !== null && <Tier p={p} />}
-          </div>
-          <div className="pt-dx">
-            {p.diagnoses.map((d) => <span key={d} className="dx-tag">{d}</span>)}
-            {p.allergies && <span className="dx-tag dx-allergy">Allergies: {p.allergies}</span>}
-          </div>
+        <div className="pt-dx" style={{ marginTop: 12 }}>
+          {p.diagnoses.map((d) => <span key={d} className="dx-tag">{d}</span>)}
+          {p.allergies && <span className="dx-tag dx-allergy">Allergies: {p.allergies}</span>}
         </div>
       )}
     </section>

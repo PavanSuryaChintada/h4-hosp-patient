@@ -96,6 +96,12 @@ export type Compare = {
     actions: number | null;
     egfr: number | null;
     egfr_tier: { generic: string; egfr_below: number; severity: Severity } | null;
+    /** KDIGO category, display only; the renal alerts use each drug's own tiers. */
+    egfr_stage: string | null;
+    findings: number | null;
+    submitted: number | null;
+    /** Most severe submitted alert, or "none". */
+    top_severity: Severity | 'none' | null;
   };
 };
 
@@ -200,6 +206,16 @@ export type Report = {
   splits: Record<string, EvalSplit>;
 };
 
+/** Cohort figures for the queue overview and the charts, counted by the exporter. */
+export type Cohort = {
+  queue_order: string[];
+  by_top_severity: Partial<Record<Severity | 'none', number>> | null;
+  egfr_stages: { code: string | null; from?: number; to?: number | null; label: string; patients: number }[];
+  totals: { patients: number; ehr_alerts: number; medsafe_findings: number; medsafe_submitted: number; medsafe_actions: number; lines_to_verify: number };
+  per_patient_by_severity: Record<Severity, { ehr: number; medsafe: number }>;
+  confidence_histogram: { edges: number[]; below_first: Record<string, number>; counts: Record<'exact' | 'approximate' | 'abstained', number[]> };
+};
+
 /** medsafe.workflow: who may do and enter what. The portal enforces none of it on its own. */
 export type Role = 'prescriber' | 'pharmacist' | 'nurse' | 'lab';
 export type AlertEvent = 'shown' | 'accept' | 'override' | 'defer' | 'escalate';
@@ -265,6 +281,7 @@ export type Export = {
   settings: Record<string, number>;
   patients: PatientView[];
   workflow: Workflow;
+  cohort: Cohort;
   resolution: {
     lines: number; by_method: Partial<Record<Method, number>>; brand_combinations: number;
     patients_with_lines_to_verify: number; label_mismatches: number | null;

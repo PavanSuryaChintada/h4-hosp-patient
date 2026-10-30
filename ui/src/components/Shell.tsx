@@ -14,8 +14,8 @@ const NAV = [
   { to: '/app/why', label: 'Why it matters' },
   { to: '/app/intake', label: 'Intake' },
   { to: '/app/resolution', label: 'Name resolution' },
-  { to: '/app/evaluation', label: 'Evaluation' },
-  { to: '/models', label: 'Models and architecture' },
+  { to: '/results', label: 'Results' },
+  { to: '/architecture', label: 'Architecture' },
 ];
 
 const DEMO_KEY = 'medsafe.demo';

@@ -4,10 +4,15 @@ import { METHOD_LABEL, METHOD_TAG, conf, pct } from '../data/format';
 import { useData } from '../data/load';
 import { Kpi } from '../components/viz';
 import { PatientLink, Segmented } from '../components/ui';
+import { ConfidenceHistogram, StackedBar } from '../components/Charts';
 
 type Filter = 'all' | Method | 'mismatch';
 const ORDER: Method[] = ['exact', 'synonym', 'parts', 'prefix', 'fuzzy', 'non_drug', 'abstained'];
 const PAGE = 100;
+const METHOD_COLOR: Record<Method, string> = {
+  exact: 'var(--ok)', synonym: 'var(--ok)', parts: 'var(--action)', prefix: 'var(--action)', fuzzy: 'var(--action)',
+  non_drug: 'var(--hairline-firm)', abstained: 'var(--warn)',
+};
 
 function LabelCheck({ m }: { m: Medication }) {
   if (!m.truth) return <span className="ink-3">no label</span>;
@@ -44,6 +49,19 @@ export function Resolution() {
         <Kpi label="Marked for a manual check, all exported lines"
           value={<>{r.by_method.abstained ?? 0} <span className="kpi-of">of {r.lines}</span></>}
           sub={<>Never dropped: shown as "could not resolve, verify manually" wherever the line appears.</>} />
+      </div>
+
+      <div className="res-charts">
+        <section className="panel">
+          <div className="panel-head"><h2 className="section">How each line was matched</h2><span className="meta"><span className="mono">{r.lines.toLocaleString('en-GB')}</span> lines</span></div>
+          <div className="results-chart-body">
+            <StackedBar label="Lines by how they were matched" segments={ORDER.filter((m) => r.by_method[m]).map((m) => ({ name: METHOD_LABEL[m], value: r.by_method[m] ?? 0, color: METHOD_COLOR[m] }))} />
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-head"><h2 className="section">How sure each match was</h2><span className="meta">every line that names a medicine</span></div>
+          <div className="results-chart-body"><ConfidenceHistogram h={x.cohort.confidence_histogram} /></div>
+        </section>
       </div>
 
       <div className="queue-tools">

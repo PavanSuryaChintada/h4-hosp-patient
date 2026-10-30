@@ -20,7 +20,7 @@ from medsafe.pipeline import run_pipeline
 from tools.export_ui import SCHEMA_VERSION, build_export, medsafe_view
 
 TOP_LEVEL = {"schema_version", "source", "stages", "settings", "patients", "workflow", "resolution",
-             "demo", "ehr_reference", "evaluation", "ml_challenger"}
+             "cohort", "demo", "ehr_reference", "evaluation", "ml_challenger"}
 
 
 @pytest.fixture(scope="module")
@@ -97,3 +97,22 @@ def test_same_input_same_file(mini: Dataset, export: dict, tmp_path: Path) -> No
     truth = load_truth(MINI_DIR, {p.patient_id for p in mini.patients})
     again = build_export(mini, run_pipeline(mini), truth, reports_dir=tmp_path, score_ehr=False)
     assert json.dumps(again, sort_keys=True) == json.dumps(export, sort_keys=True)
+
+
+def test_cohort_figures_add_up(export: dict) -> None:
+    cohort = export["cohort"]
+    assert sorted(cohort["queue_order"]) == sorted(p["id"] for p in export["patients"])
+    assert sum(cohort["by_top_severity"].values()) == len(export["patients"])
+    assert sum(s["patients"] for s in cohort["egfr_stages"]) == len(export["patients"])
+    assert cohort["totals"]["medsafe_submitted"] == sum(
+        a["submitted"] for p in export["patients"] for a in p["medsafe"]["alerts"])
+    histogram = cohort["confidence_histogram"]
+    counted = sum(map(sum, histogram["counts"].values())) + sum(histogram["below_first"].values())
+    assert counted == sum(1 for p in export["patients"] for m in p["medications"] if m["method"] != "non_drug")
+
+
+def test_queue_puts_the_most_severe_first(export: dict) -> None:
+    rank = ("contraindicated", "major", "moderate", "minor", "none")
+    by_id = {p["id"]: p for p in export["patients"]}
+    order = [rank.index(by_id[i]["compare"]["medsafe"]["top_severity"]) for i in export["cohort"]["queue_order"]]
+    assert order == sorted(order)

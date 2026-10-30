@@ -6,6 +6,10 @@ import type { Export, OfficialScore } from '../data/contract';
 import { ISSUE_LABEL, num } from '../data/format';
 import { useData } from '../data/load';
 import { PatientLink, Segmented, Stat, StatusInline } from '../components/ui';
+import { GroupedBars } from '../components/Charts';
+import { Units, repeat } from '../components/viz';
+import { Nav } from './Home';
+import { ModelFigures } from './Architecture';
 
 function Row({ who, s, note }: { who: string; s: OfficialScore; note?: string }) {
   const c = s.components;
@@ -91,7 +95,8 @@ function Challengers({ c }: { c: NonNullable<Export['ml_challenger']> }) {
   );
 }
 
-export function Evaluation() {
+/** The public results page: the evaluation report, the charts, the misses and the trained models. */
+export function Results() {
   const { x } = useData();
   const report = x.evaluation.report;
   const names = report ? Object.keys(report.splits) : [];
@@ -99,9 +104,11 @@ export function Evaluation() {
 
   if (!report) {
     return (
-      <div className="content">
-        <div className="page-head"><h1 className="display">Evaluation</h1></div>
-        <p className="empty">{x.evaluation.unavailable}</p>
+      <div className="home"><Nav />
+        <div className="home-wrap results-wrap">
+          <h1 className="home-h2">Results</h1>
+          <p className="empty">{x.evaluation.unavailable}</p>
+        </div>
       </div>
     );
   }
@@ -110,11 +117,15 @@ export function Evaluation() {
   const o = s.official;
   const ehr = x.ehr_reference.score?.split === split ? x.ehr_reference.score.official : undefined;
   const missed = s.near_misses.filter((n) => n.status !== 'caught');
+  const caught = s.near_misses.length - missed.length;
+  const per = x.cohort.per_patient_by_severity;
 
   return (
-    <div className="content" style={{ maxWidth: 1200 }}>
+    <div className="home"><Nav />
+    <div className="home-wrap results-wrap">
       <div className="page-head">
-        <h1 className="display">Evaluation</h1>
+        <p className="lp-kicker">Results</p>
+        <h1 className="home-h2">How Medsafe scores, and what it missed.</h1>
         <p className="meta">
           Scored by the organisers' <span className="mono">evaluate.py</span>, unmodified. Report <span className="mono">{x.evaluation.path}</span>,
           generated <span className="mono">{report.generated_at}</span> at <span className="mono">{report.git_revision}</span>, data <span className="mono">{report.data_version}</span>.
@@ -132,6 +143,25 @@ export function Evaluation() {
         <div className="panel"><Stat caption="Near-miss recall" figure={num(o.components.near_miss_serious_recall)} sub={<><span className="mono">{o.counts.true_near_miss}</span> seeded near-misses.</>} /></div>
         <div className="panel"><Stat caption="Noise per patient" figure={num(o.components.noise_alerts_per_patient)} sub="Two per patient zeroes the score." /></div>
         <div className="panel"><Stat caption="Resolution, misspelled lines" figure={num(o.resolution_accuracy_misspelled, 3)} sub={<>All lines: <span className="mono">{num(o.components.resolution_accuracy, 3)}</span></>} /></div>
+      </div>
+
+      <div className="results-charts">
+        <section className="panel">
+          <div className="panel-head"><h2 className="section">Seeded near-misses on this split</h2><span className="meta"><span className="mono">{caught}</span> caught of <span className="mono">{s.near_misses.length}</span></span></div>
+          <div className="results-chart-body">
+            <Units label={`${caught} near-misses caught, ${missed.length} missed`} size={18} gap={4} columns={15}
+              items={[...repeat(caught, { color: 'var(--action)' }), ...repeat(missed.length, { color: 'var(--critical)', hollow: true, title: 'Missed: see the list below' })]} />
+            <p className="meta">Hard cases the organisers seeded: misspelled brands, hidden combinations, eGFR at a threshold, a pregnant patient on a brand-name teratogen.</p>
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-head"><h2 className="section">Alerts per patient, by severity</h2><span className="meta">All {x.source.patients.toLocaleString('en-GB')} training patients</span></div>
+          <div className="results-chart-body">
+            <GroupedBars label="Alerts per patient by severity: standard EHR check against Medsafe" series={['standard check', 'Medsafe']}
+              groups={(['contraindicated', 'major', 'moderate', 'minor'] as const).map((sev) => ({ label: sev[0].toUpperCase() + sev.slice(1), a: per[sev].ehr, b: per[sev].medsafe }))} />
+            <p className="meta">Medsafe sends no minor alerts (they are shown, last). It raises more serious ones than the standard check, because it reads the names the standard check cannot.</p>
+          </div>
+        </section>
       </div>
 
       {!s.stages_built.includes('rules') && (
@@ -172,6 +202,7 @@ export function Evaluation() {
       </section>
 
       {x.ml_challenger && <Challengers c={x.ml_challenger} />}
+      {x.ml_challenger && <ModelFigures />}
 
       <h2 className="section" style={{ marginTop: 48, marginBottom: 16 }}>What we missed</h2>
       <div className="panel">
@@ -193,6 +224,7 @@ export function Evaluation() {
         {missed.length === 0 && <p className="empty">Every seeded near-miss on this split was caught.</p>}
       </div>
       <p className="meta" style={{ marginTop: 12 }}><span className="mono">{missed.length}</span> of <span className="mono">{s.near_misses.length}</span> seeded near-misses missed on this split.</p>
+    </div>
     </div>
   );
 }

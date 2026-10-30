@@ -5,14 +5,14 @@ import { AuthProvider, RequireAuth } from './auth';
 import { DataProvider } from './data/load';
 import { Shell } from './components/Shell';
 import { Home } from './screens/Home';
-import { Models } from './screens/Models';
+import { ArchitecturePage } from './screens/Architecture';
+import { Results } from './screens/Results';
 import { Login } from './screens/Login';
 import { Queue } from './screens/Queue';
 import { PatientDetail } from './screens/PatientDetail';
 import { Why } from './screens/Why';
 import { Intake } from './screens/Intake';
 import { Resolution } from './screens/Resolution';
-import { Evaluation } from './screens/Evaluation';
 import { Patterns, WardAdmit, WardList, WardRecordScreen } from './screens/Ward';
 import './styles.css';
 
@@ -51,7 +51,9 @@ createRoot(document.getElementById('root')!).render(
         <ScrollTop />
         <Routes>
           <Route path="/" element={<DataProvider><Home /></DataProvider>} />
-          <Route path="/models" element={<DataProvider><Models /></DataProvider>} />
+          <Route path="/results" element={<DataProvider><Results /></DataProvider>} />
+          <Route path="/architecture" element={<DataProvider><ArchitecturePage /></DataProvider>} />
+          <Route path="/models" element={<Navigate to="/architecture" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<Queue />} />
@@ -59,7 +61,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="why" element={<Why />} />
             <Route path="intake" element={<Intake />} />
             <Route path="resolution" element={<Resolution />} />
-            <Route path="evaluation" element={<Evaluation />} />
+            <Route path="evaluation" element={<Navigate to="/results" replace />} />
             <Route path="ward" element={<WardList />} />
             <Route path="ward/new" element={<WardAdmit />} />
             <Route path="ward/patterns" element={<Patterns />} />

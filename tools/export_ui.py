@@ -62,6 +62,15 @@ FATIGUE_MAX_LINES = 12                      # demo patients must fit on one scre
 EGFR_PAIR_HIGH = 80                         # the pair's well-kidney patient: eGFR nearest this
 NO_ISSUE_MIN_MEDICINES = 6                  # "stays quiet" means something only on a long list
 
+# KDIGO eGFR categories, for display only (the kidney gauge and the queue histogram). The renal
+# alerts never use these: they use each drug's own tiers from renal_rules.csv.
+EGFR_STAGES = (("G1", 90, None, "normal or high"), ("G2", 60, 90, "mildly decreased"),
+               ("G3a", 45, 60, "mildly to moderately decreased"), ("G3b", 30, 45, "moderately to severely decreased"),
+               ("G4", 15, 30, "severely decreased"), ("G5", 0, 15, "kidney failure"))
+CONFIDENCE_BINS = tuple(round(0.40 + 0.05 * i, 2) for i in range(13))     # 0.40 .. 1.00
+METHOD_GROUPS = {"exact": "exact", "synonym": "exact", "parts": "approximate", "prefix": "approximate",
+                 "fuzzy": "approximate", "abstained": "abstained"}
+
 
 # ---- per patient -------------------------------------------------------------------------------
 
@@ -209,6 +218,19 @@ def ehr_alert_view(alert: EhrAlert) -> dict[str, Any]:
             "action": alert.action}
 
 
+def egfr_stage(egfr: float | None) -> str | None:
+    """The KDIGO category of an eGFR, for display only; None when eGFR is not recorded."""
+    if egfr is None:
+        return None
+    return next(code for code, low, _, _ in EGFR_STAGES if egfr >= low)
+
+
+def top_severity(medsafe: dict[str, Any]) -> str:
+    """The most severe submitted alert's severity, or "none" when nothing was submitted."""
+    submitted = [a["severity"] for a in medsafe["alerts"] if a["submitted"]]
+    return min(submitted, key=SEVERITIES.index) if submitted else "none"
+
+
 def comparison(patient: Patient, resolutions: Sequence[Resolution], ehr: EhrResult,
                medsafe: dict[str, Any]) -> dict[str, Any]:
     """The header strip: what each checker did with the same list, counted here, not in the UI."""
@@ -236,6 +258,10 @@ def comparison(patient: Patient, resolutions: Sequence[Resolution], ehr: EhrResu
             "actions": None if medsafe["actions"] is None else len(medsafe["actions"]),
             "egfr": patient.egfr,
             "egfr_tier": None if medsafe["alerts"] is None else egfr_tier(medsafe),
+            "egfr_stage": egfr_stage(patient.egfr),
+            "findings": None if medsafe["alerts"] is None else len(medsafe["alerts"]),
+            "submitted": None if medsafe["alerts"] is None else sum(a["submitted"] for a in medsafe["alerts"]),
+            "top_severity": None if medsafe["alerts"] is None else top_severity(medsafe),
         },
     }
 
@@ -603,6 +629,46 @@ def resolution_summary(result: PipelineResult, patients: Sequence[dict[str, Any]
             "label_mismatches": sum(1 for t in labelled if not t["match"]) if labelled else None}
 
 
+def cohort_view(patients: Sequence[dict[str, Any]], ehr: Mapping[str, EhrResult]) -> dict[str, Any]:
+    """Cohort figures for the queue overview and the evaluation charts, counted here so the UI
+    never counts: the queue order, severity per patient, eGFR categories, alert totals by
+    severity for the standard check and for Medsafe, and how confident each name match was."""
+    n = max(len(patients), 1)
+    built = all(p["medsafe"]["alerts"] is not None for p in patients)
+    order = sorted(patients, key=lambda p: (
+        (SEVERITIES + ("none",)).index(p["compare"]["medsafe"]["top_severity"] or "none"),
+        -(p["compare"]["medsafe"]["actions"] or 0), p["id"])) if built else patients
+    egfr = Counter(p["compare"]["medsafe"]["egfr_stage"] for p in patients)
+    ehr_sev = Counter(a.severity for r in ehr.values() for a in r.alerts)
+    ms_sev = Counter(a["severity"] for p in patients for a in p["medsafe"]["alerts"] or () if a["submitted"])
+    bins: dict[str, list[int]] = {g: [0] * (len(CONFIDENCE_BINS) - 1) for g in ("exact", "approximate", "abstained")}
+    below: Counter = Counter()
+    for p in patients:
+        for m in p["medications"]:
+            group = METHOD_GROUPS.get(m["method"])
+            if group is None:
+                continue
+            if m["confidence"] < CONFIDENCE_BINS[0]:
+                below[group] += 1
+                continue
+            k = min(int((m["confidence"] - CONFIDENCE_BINS[0]) / 0.05 + 1e-9), len(CONFIDENCE_BINS) - 2)
+            bins[group][k] += 1
+    return {
+        "queue_order": [p["id"] for p in order],
+        "by_top_severity": dict(Counter(p["compare"]["medsafe"]["top_severity"] for p in patients)) if built else None,
+        "egfr_stages": [{"code": c, "from": low, "to": high, "label": label, "patients": egfr.get(c, 0)}
+                        for c, low, high, label in EGFR_STAGES] + [{"code": None, "label": "not recorded", "patients": egfr.get(None, 0)}],
+        "totals": {"patients": len(patients), "ehr_alerts": sum(len(r.alerts) for r in ehr.values()),
+                   "medsafe_findings": sum(p["compare"]["medsafe"]["findings"] or 0 for p in patients),
+                   "medsafe_submitted": sum(p["compare"]["medsafe"]["submitted"] or 0 for p in patients),
+                   "medsafe_actions": sum(p["compare"]["medsafe"]["actions"] or 0 for p in patients),
+                   "lines_to_verify": sum(p["compare"]["medsafe"]["to_verify"] for p in patients)},
+        "per_patient_by_severity": {s: {"ehr": round(ehr_sev.get(s, 0) / n, 3), "medsafe": round(ms_sev.get(s, 0) / n, 3)}
+                                    for s in SEVERITIES},
+        "confidence_histogram": {"edges": list(CONFIDENCE_BINS), "below_first": dict(below), "counts": bins},
+    }
+
+
 def ehr_cohort_stats(ehr: Mapping[str, EhrResult]) -> dict[str, Any]:
     """How loud the standard check is across the exported patients."""
     alerts = [a for r in ehr.values() for a in r.alerts]
@@ -712,6 +778,7 @@ def build_export(dataset: Dataset, result: PipelineResult, truth: Truth | None,
         "patients": patients,
         "workflow": workflow_view(dataset),
         "resolution": resolution_summary(result, patients),
+        "cohort": cohort_view(patients, ehr),
         "demo": demo_view(result, dataset, ehr, labels) if labels else None,
         "ehr_reference": {"cohort": ehr_cohort_stats(ehr),
                           "score": score_ehr_reference(dataset, ehr) if score_ehr and truth is not None else None},

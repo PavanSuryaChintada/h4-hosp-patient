@@ -2,7 +2,9 @@
 // (public/data/pipeline.json): the evaluation report, the standard-check reproduction and the
 // demo cases. The page computes nothing; it chooses which exported numbers to show.
 
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import { useAuth } from '../auth';
+import { FatigueWall } from '../components/Fatigue';
 import type { OfficialScore } from '../data/contract';
 import { ISSUE_LABEL, num, plural } from '../data/format';
 import { useData } from '../data/load';
@@ -21,16 +23,17 @@ function Score({ label, value, sub, tone }: { label: string; value: string; sub:
 }
 
 export function Nav() {
+  const { user } = useAuth();
   return (
     <header className="home-nav">
       <div className="home-wrap home-nav-inner">
         <Link to="/" className="lp-brand"><span className="brand-mark" aria-hidden="true" />Medsafe</Link>
-        <nav className="home-links" aria-label="On this page">
-          <a href="#problem">The problem</a><a href="#two-screens">Two screens</a><a href="#how">How it works</a>
-          <a href="#ward">The ward</a><a href="#results">Results</a><Link to="/models">Architecture and models</Link>
+        <nav className="home-links" aria-label="Main">
+          <NavLink to="/" end>Overview</NavLink><NavLink to="/results">Results</NavLink><NavLink to="/architecture">Architecture</NavLink>
+          <NavLink to="/app/why">Why it matters</NavLink>
         </nav>
         <span className="chip">Prototype · simulated dataset</span>
-        <Link className="btn btn-primary btn-sm" to="/login">Sign in</Link>
+        {user ? <Link className="btn btn-primary btn-sm" to={user.home}>Open the app</Link> : <Link className="btn btn-primary btn-sm" to="/login">Sign in</Link>}
       </div>
     </header>
   );
@@ -95,6 +98,16 @@ export function Home() {
         </div>
       </section>
 
+      {loud && fatigue && (
+        <section id="fatigue" className="home-section" aria-label="Alert fatigue">
+          <div className="home-wrap">
+            <h2 className="home-h2">The same patient, the wall and the answer.</h2>
+            <p className="home-lead home-measure">Flip the switch: the standard check's every warning on one real patient, then Medsafe's actions for the same list.</p>
+            <FatigueWall p={loud} seriousLabelled={fatigue.serious_labelled} seriousRaised={fatigue.serious_raised} />
+          </div>
+        </section>
+      )}
+
       {ours && (
         <section id="results" className="home-proof" aria-label="Results">
           <div className="home-wrap">
@@ -106,7 +119,7 @@ export function Home() {
             </div>
             <p className="home-caveat">
               <span className="mono">{holdout!.patients}</span> training patients held out from tuning, scored by the organisers' unmodified <span className="mono">evaluate.py</span>.
-              The rules' vocabulary was built on all training text, so these figures are optimistic for the hidden test set. <Link to="/app/evaluation">Every number, with the misses →</Link>
+              The rules' vocabulary was built on all training text, so these figures are optimistic for the hidden test set. <Link to="/results">Every number, the misses and the model graphs →</Link>
             </p>
           </div>
         </section>
@@ -183,7 +196,7 @@ export function Home() {
           <figure className="model-fig" style={{ marginTop: 32 }}>
             <h3 className="lp-h3">Three trained models, measured against the rules on the holdout split</h3>
             <img src={`${import.meta.env.BASE_URL}figures/2_scores.png`} alt="Official scores: rules against each trained model, and a standard EHR check with and without learned triage" loading="lazy" />
-            <figcaption>Drawn by <span className="mono">eval/ml_plots.py</span> from the organisers' scorer. <Link to="/models">All the graphs, with training curves →</Link></figcaption>
+            <figcaption>Drawn by <span className="mono">eval/ml_plots.py</span> from the organisers' scorer. <Link to="/results">All the graphs, with training curves →</Link> · <Link to="/architecture">The full architecture →</Link></figcaption>
           </figure>
         </div>
       </section>
