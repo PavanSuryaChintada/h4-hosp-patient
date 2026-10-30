@@ -1,0 +1,19 @@
+patient_id,written_token,resolved_generic,token_kind
+H4P-MINI0001,Tab Glycomet-GP 1 1-0-1,glimepiride;metformin,exact_brand
+H4P-MINI0001,Dolo 650 SOS,paracetamol,exact_brand
+H4P-MINI0001,Crocin 500 sos,paracetamol,exact_brand
+H4P-MINI0001,T Telma-AM 0-0-1,amlodipine;telmisartan,exact_brand
+H4P-MINI0002,Brufen 400 tds,ibuprofen,exact_brand
+H4P-MINI0002,T. Pan 40 OD,pantoprazole,exact_brand
+H4P-MINI0002,Physiotherapy,,non_drug
+H4P-MINI0003,Tab Warf 2mg OD,warfarin,exact_brand
+H4P-MINI0003,tab Glycomet 500 BD (stopped),metformin,exact_brand
+H4P-MINI0004,Tab Glycomett 500 BD,metformin,misspelled_brand
+H4P-MINI0004,Amlopress-AT od,amlodipine;atenolol,misspelled_brand
+H4P-MINI0004,x Brufen 400 PRN stopped,ibuprofen,exact_brand
+H4P-MINI0004,T. PCM 650 SOS,paracetamol,abbreviation
+H4P-MINI0005,Vit D3 60000 IU weekly,cholecalciferol,synonym
+H4P-MINI0005,T telmisartan + amlodipine OD,amlodipine;telmisartan,generic_combo
+H4P-MINI0005,Shelcal 500 BD,calcium carbonate;cholecalciferol,exact_brand
+H4P-MINI0005,monteleukast-LC HS,levocetirizine;montelukast,generic_combo
+H4P-MINI0006,Tab Telma 40 OD,telmisartan,exact_brand

@@ -1,63 +1,75 @@
-"""Ground truth the harness scores against. The only module that knows the label file layout.
+"""Ground truth from the pack: train_labels.csv and train_resolution.csv.
 
-Fixtures: ``expected_issues.csv`` and ``ground_truth.csv`` beside the input files, written by
-``tools/make_fixtures.py``. When the real labels arrive, change this module and nothing else.
+The only module in eval/ that knows the label file layout. The pipeline (src/medsafe/) never
+reads these files; tests/test_guards.py enforces it.
 """
 
 from __future__ import annotations
 
 import csv
+from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 
-from eval.records import Issue, TruthMedication
+from eval.records import Issue, TruthToken
 
-ISSUES_FILE = "expected_issues.csv"
-MEDICATIONS_FILE = "ground_truth.csv"
-LIST_SEPARATOR = "|"
+LABELS_FILE = "train_labels.csv"
+RESOLUTION_FILE = "train_resolution.csv"
+SEPARATOR = ";"
 
 
 @dataclass(frozen=True)
 class Truth:
-    """Every true issue, and what every medication line really is."""
+    """Every true issue and every true resolution, for some set of training patients."""
 
     issues: tuple[Issue, ...]
-    medications: tuple[TruthMedication, ...]
+    tokens: tuple[TruthToken, ...]
 
 
-def _read(path: Path) -> list[dict[str, str]]:
-    """Read a CSV file into rows."""
+def _rows(path: Path) -> list[dict[str, str]]:
+    """Read a CSV file into rows of strings."""
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
-def _split(cell: str) -> tuple[str, ...]:
-    """Split a separator-joined cell into its non-empty items."""
-    return tuple(item for item in cell.split(LIST_SEPARATOR) if item)
+def _drugs(cell: str) -> frozenset[str]:
+    """A ';'-separated generic list as a set, lowercased and trimmed."""
+    return frozenset(part.strip().lower() for part in cell.split(SEPARATOR) if part.strip())
 
 
-def load_truth(input_dir: str | Path) -> Truth | None:
-    """Load the labels that sit beside an input directory's data files.
+def load_truth(data_dir: Path, patient_ids: Collection[str] | None = None) -> Truth:
+    """Load the training labels and resolutions, optionally for some patients only.
 
     Args:
-        input_dir: The directory passed to ``run.py --input``.
+        data_dir: The pack's data folder.
+        patient_ids: Keep only these patients; all when None.
+    """
+    keep = (lambda pid: True) if patient_ids is None else (lambda pid: pid in patient_ids)
+    issues = tuple(Issue(row["patient_id"], row["issue_type"], _drugs(row["drugs_involved"]),
+                         row["severity"], row["near_miss"] == "1", row["suggested_action"])
+                   for row in _rows(data_dir / LABELS_FILE) if keep(row["patient_id"]))
+    tokens = tuple(TruthToken(row["patient_id"], row["written_token"],
+                              _drugs(row["resolved_generic"]), row["token_kind"])
+                   for row in _rows(data_dir / RESOLUTION_FILE) if keep(row["patient_id"]))
+    return Truth(issues, tokens)
+
+
+def write_truth_subset(data_dir: Path, patient_ids: Collection[str], out_dir: Path) -> tuple[Path, Path]:
+    """Copy the truth rows of some patients, unchanged, for the official scorer.
 
     Returns:
-        The labels, or None if the directory has no issue labels (recall cannot be measured).
+        Paths of the labels and resolution files written. Named ``*_labels.csv`` and
+        ``*_resolution.csv`` as the scorer expects.
     """
-    input_dir = Path(input_dir)
-    if not (input_dir / ISSUES_FILE).is_file():
-        return None
-    issues = tuple(
-        Issue(patient_id=row["patient_id"], issue_type=row["issue_type"],
-              drugs=frozenset(_split(row["drugs"])), severity=row["severity"],
-              rule_id=row["rule_id"], near_miss=row["near_miss"] == "Y",
-              near_miss_reason=row["near_miss_reason"], raw_drugs=_split(row["raw_drugs"]))
-        for row in _read(input_dir / ISSUES_FILE))
-    medications_path = input_dir / MEDICATIONS_FILE
-    medications = tuple(
-        TruthMedication(patient_id=row["patient_id"], med_index=int(row["med_index"]),
-                        raw=row["raw"], generic=row["true_generic"] or None,
-                        mangling=tuple(row["mangling"].split("+")))
-        for row in (_read(medications_path) if medications_path.is_file() else ()))
-    return Truth(issues=issues, medications=medications)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for name in (LABELS_FILE, RESOLUTION_FILE):
+        with (data_dir / name).open(newline="", encoding="utf-8") as source:
+            reader = csv.DictReader(source)
+            target_path = out_dir / name
+            with target_path.open("w", newline="", encoding="utf-8") as target:
+                writer = csv.DictWriter(target, fieldnames=reader.fieldnames, lineterminator="\n")
+                writer.writeheader()
+                writer.writerows(row for row in reader if row["patient_id"] in patient_ids)
+        written.append(target_path)
+    return written[0], written[1]

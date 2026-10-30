@@ -55,6 +55,8 @@ Phase 1 froze the `Patient` dataclass. We added one field, defaulting to `()`, s
 
 **Why:** pandas coerces blank cells to `NaN`, which is exactly the missing-as-a-value bug Phase 1 R4 warns about, and it would need undoing on every read. It is also the largest dependency we had. Fewer dependencies is fewer ways the grader's run fails.
 
+The organisers' `evaluate.py` does need pandas and numpy, so they live in `requirements-dev.txt`, used only by the evaluation harness (D-014). The pipeline still runs on the standard library plus `rapidfuzz`.
+
 ---
 
 ## D-005 `.gitignore` anchors `/data/`, not `data/`
@@ -89,7 +91,7 @@ A `CLAUDE.md` for an unrelated project (Q-ResQ NER) sits in the parent `Download
 
 ---
 
-## D-009 Fixture issue labels: Round 1 logic on the true drug list
+## D-009 Fixture issue labels: Round 1 logic on the true drug list (superseded by D-012)
 
 Phase 7 scores recall against labelled issues, and no phase specified how the fixtures get them. `tools/fixture_labels.py` ports the Round 1 rule logic (`ui/src/data/engine.ts`: context modifiers, renal thresholds, duplicate classes, pregnancy levels) and applies it to each patient's **true** generics and **true** values, before any name was mangled or any value blanked. The detector sees the slip as written; the labels see what was meant.
 
@@ -101,7 +103,7 @@ Phase 7 scores recall against labelled issues, and no phase specified how the fi
 
 ---
 
-## D-010 Our reading of the scoring function
+## D-010 Our reading of the scoring function (superseded by D-014)
 
 `eval/mirror.py`, one function, replaced wholesale when the real `evaluate.py` arrives:
 
@@ -119,3 +121,89 @@ score = max(0, serious_recall - 0.05 x low-value alerts per patient)
 ## D-011 Dropped patients count against recall
 
 Alerts per patient divide by loaded patients, but recall divides by **every** labelled issue, including those of patients the adapter dropped. A dropped patient's issues are listed as missed with the reason "patient not loaded". This is what makes D-001's cost visible: `tests/test_eval.py` shows a patient with a bad weight keeps their issues in play, while a patient with no medications loses them.
+
+---
+
+## D-012 The real data pack replaces the synthetic fixtures
+
+The H4 pack arrived (unzipped to `data/pack/`, ignored by git). Phase 1 was rebuilt on its schema: patients with sex, allergies and prescriber count, and seven reference tables (drugs, combination brands, interactions, renal tiers, duplicate groups, contraindications, conditions). Medication lists split on `;` or a line break, exactly as the scorer defines a written token; `tests/test_adapter.py` checks every one of the 9,087 training tokens lines up.
+
+- **Missing means an empty cell only**, as the pack README instructs (`keep_default_na=False`). We read with the standard `csv` module, which does exactly that (D-004). The one word that is not a value, `NA` in the pregnancy column for male patients, is mapped explicitly to "not applicable".
+- **The Round 1 generator, labeller and synthetic fixtures are retired** (git history keeps them). Committed tests use hand-written mini fixtures in the pack's exact layout (`tests/fixtures/mini/`), which run anywhere; tests on the real pack, including a 100-patient day-to-day slice, read it at test time and skip with a clear reason without it. No pack data is copied into the repo.
+
+## D-013 Reference rows degrade too (extends D-001)
+
+A drug, interaction, renal tier, duplicate group or contraindication row with one unreadable field is kept, with that field `None` and the row named in the load report. Dropping a drug row would silently remove it from every patient on it. A reference row is skipped only when it has no identity: a drug with no generic name, an interaction missing either drug, a combination with no components. Tested on paracetamol, which four of the mini patients take: a bad pregnancy letter leaves it loaded and still resolvable.
+
+## D-014 The official scorer replaces our mirror
+
+The harness runs the organisers' `evaluate.py` unmodified, in its own process (`eval/official.py`). Our mirror (D-010) is deleted. Its numbers were a guess and the real formula is known: `base = 0.40 serious_recall + 0.15 near_miss_recall + 0.15 precision + 0.15 graded_recall + 0.15 resolution_accuracy`, times `max(0, 1 - noise_per_patient / 2)`.
+
+- **Dev and holdout.** The 1,500 training patients are split, seeded and fixed, into 1,200 dev (every threshold is tuned here) and 300 holdout (reported, never tuned on). `python -m eval.run` scores both.
+- **Disclosure.** After the first resolver sweep I printed the holdout's two errors once, to check the dev errors' pattern was general. Both were the same transposition pattern already seen in dev; no rule was written for a holdout string, and since then only dev failures are inspected.
+- **The floor**, from `python -m eval.floor` on all 1,500 training patients: the pack baseline scores **0.4071** (serious recall 0.2954, near-miss 0.0000, precision 0.9263, graded 0.3498, resolution 0.7787). Committed in `eval/floor.json` and `docs/baseline-floor.md`.
+
+## D-015 Table severity, verbatim; no re-scoring, no collapse, no cap in the submission
+
+**Evidence:** `python tools/verify_label_severity.py` recomputes every training label's severity from the tables. 3,241 of 3,241 match:
+
+| Issue type | Labels | Match | How the table severity is found |
+|---|---|---|---|
+| interaction | 1,834 | 1,834 | the pair's severity |
+| renal_dose | 698 | 698 | most restrictive tier below the patient's eGFR |
+| duplicate_therapy | 507 | 507 | group severity (403); paracetamol override, major (104) |
+| contraindication | 202 | 202 | the drug's only candidate (89); one of its candidates (113) |
+
+`graded_recall` credits only the exact severity, and the scorer matches an alert only on the exact (patient, issue type, set of drugs). So, reversing the plan in Phases 4 to 6:
+
+- **Phase 4** re-scoring would turn right severities into wrong ones. Rewritten as a UI-only context layer (`docs/phases/04-context-severity.md`).
+- **Phase 5** collapse would replace matchable pair alerts with a cluster alert that matches nothing. UI and explanation only.
+- **Phase 6** cap: noise counts only false alerts and alerts on minor issues, so capping a *true* alert loses recall and saves nothing. Removed.
+
+## D-016 Resolver thresholds: best official score, false resolutions at most 2%
+
+Chosen policy: the setting with the best official primary score whose false-resolution rate is at most 2%. `python -m eval.sweep` scores 140 settings on dev with the real scorer and picks **MIN_CONFIDENCE 0.45, MIN_MARGIN 0.00, MIN_PREFIX_LENGTH 5**: dev resolution accuracy 0.9999 with no false resolutions, holdout 1.0000 with none. The spec's starting guesses (0.72, 0.05) abstained on 5.9% of dev lines, nearly all misspellings whose top candidate was right.
+
+**Re-run after Phase 3.** With no alerts, a false resolution costs only its own line. Once alerts exist it can also raise a false alert (a full noise unit, a precision hit, and a missed true issue), so the trade-off changes.
+
+## D-017 Where the resolver departs from the Phase 2 spec
+
+Each change came from a dev failure and is general, not a patch for one string:
+
+- **Transposition-aware edit similarity** (optimal string alignment, not plain Levenshtein). "Telam" for "Telma" is one swap, not two edits; Levenshtein ranked such handwriting below unrelated drugs.
+- **An exact tie between two different drugs always abstains**, whatever MIN_MARGIN is. Picking one alphabetically is a coin toss presented as an answer.
+- **Hyphenated names**: a fuzzy piece must score 0.80 or more. "monteleukast-LC" (generic plus a combination suffix) resolves; "Mftal-Spas" (a misspelt brand) is not split into a fake combination.
+- **Numbered brands**: the words after the name are part of the search, so "Huminsulin 30/70" finds the premix, not one of its two insulins.
+- **Non-medicine lines** are recognised by general words (devices, monitoring, tests, diet, follow-up), checked only after an exact name match fails, so a real brand always wins.
+- **Curated synonyms and abbreviations** (PCM, ISMN, MTX, frusemide, mecobalamin, insulin 30/70, ...) from general prescribing knowledge, not memorised patient strings. "Vitamin B12" is deliberately absent: both methylcobalamin and cyanocobalamin are listed.
+- **Several generics per line.** `Resolution.generics` replaces the spec's single `resolved_generic`, because combination brands hide several.
+- **Not built:** the spec's small bonus when a candidate's class matches a diagnosis. At 99.99% dev accuracy there is nothing left for it to fix.
+
+## D-018 Minor alerts are detected, shown, never submitted
+
+`EMIT_MINOR = False` (`src/medsafe/output/policy.py`). An alert on a true minor issue earns nothing in serious, near-miss or graded recall and costs 0.25 noise units. Measured both ways on all 1,500 training patients by `python -m eval.floor`:
+
+| Detector | With minor alerts | Without | Change |
+|---|---|---|---|
+| oracle (perfect detection) | 0.9482 | 1.0000 | +0.0518 |
+| pack baseline (weak detection) | 0.4071 | 0.4121 | +0.0050 |
+
+For the weak detector, precision falls (0.9263 to 0.9133) because its matched minor alerts were propping it up, but noise falls more (0.0903 to 0.0580). Dropping them wins for both.
+
+## D-019 The oracle's 0.94 (E1), answered
+
+Under our old mirror the oracle scored 0.94 because it emitted the true *low* issues and the mirror penalised them. That was not a mirror bug: the real scorer does the same thing to minor issues, at 0.25 noise each. Under the real scorer, an oracle that reports every true issue scores 0.9482 on train; without the minor ones, 1.0000. So the ceiling is 1.0, and only for a submission that leaves minor issues out (D-018).
+
+## D-020 What a training score measures (E2)
+
+The organisers' labels come from a deterministic rule engine running the published tables on each patient's true regimen; the hidden test labels come from the same engine. Our rule engine implements the same published rules. So a training score measures whether name resolution, list parsing and our implementation of the published rules are right. It does **not** measure whether the rules are clinically right: labeller and detector share them by design. Expect test numbers to differ where the test lists are written differently, not where the rules differ.
+
+Guarded in `tests/test_guards.py`: nothing on the scoring path (`run.py`, `src/medsafe/`) may read `train_labels.csv` or `train_resolution.csv`, import the harness or the tools, touch the SQLite cache, or import a network or LLM client.
+
+## D-021 Unknown age must never read as "not elderly" (E4)
+
+This is a rule violation, not a gap: skipping an age-based rule when age is unknown treats unknown as safe. With severity fixed to the table (D-015), age now affects only the UI's context notes, but the rule still holds there. With age unknown, the age rule does not fire **and** `age` is named as unverifiable, exactly as an unknown eGFR is. `tests/test_phase4_contract.py` enforces it. It starts running the moment `src/medsafe/explain/context.py` exists, so Phase 4 cannot land without it.
+
+## D-022 Do not submit the current build
+
+With name resolution done and no rule engine yet, the predictions file is empty. The official score is then 0.15 (the resolution term alone), below the pack baseline's 0.4071. Until Phase 3 lands, the pack baseline is the better submission.

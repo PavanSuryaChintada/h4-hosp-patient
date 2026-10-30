@@ -1,0 +1,5 @@
+duplicate_group,group_name,severity,recommended_action,member_generics
+paracetamol,Paracetamol (any product),major,Keep one paracetamol source,paracetamol
+nsaid,NSAIDs,major,Stop one NSAID,ibuprofen
+biguanide,Biguanides,moderate,Keep one metformin product,metformin
+sulfonylurea,Sulfonylureas,major,Keep one sulfonylurea,glimepiride

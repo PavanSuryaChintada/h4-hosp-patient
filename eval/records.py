@@ -1,72 +1,62 @@
 """Plain records the harness scores.
 
 Ground truth is read into these (``eval/truth.py``) and pipeline output is converted into them
-(``eval/trace.py``), so the metrics never depend on pipeline internals.
+(``eval/trace.py``), so the metrics never depend on pipeline internals. Severities and issue
+types use the pack's published vocabulary.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-SERIOUS = frozenset({"high", "medium"})
-SEVERITIES = ("high", "medium", "low", "info")
+from medsafe.data.schema import SERIOUS, SEVERITIES  # noqa: F401  (re-exported for eval/)
 
 
 @dataclass(frozen=True)
 class Issue:
-    """One true issue for one patient."""
+    """One true issue for one patient, as train_labels.csv states it."""
 
     patient_id: str
-    issue_type: str                       # interaction | duplicate | renal | contraindication
+    issue_type: str                       # interaction | duplicate_therapy | renal_dose | contraindication
     drugs: frozenset[str]                 # generics
-    severity: str                         # high | medium | low
-    rule_id: str = ""
+    severity: str                         # contraindicated | major | moderate | minor
     near_miss: bool = False
-    near_miss_reason: str = ""
-    raw_drugs: tuple[str, ...] = ()       # the lines on the slip naming these drugs
+    action: str = ""
 
     @property
     def serious(self) -> bool:
-        """True for high and medium severity."""
+        """True for contraindicated and major: the issues serious recall counts."""
         return self.severity in SERIOUS
 
 
 @dataclass(frozen=True)
 class Alert:
-    """One alert or finding the pipeline raised for one patient.
-
-    ``covers`` lists extra drug sets this alert answers for, for a collapsed alert such as
-    "Stop warfarin: clears 4 of the 5 serious interactions". It covers those specific edges,
-    not every pair among its drugs.
-    """
+    """One alert or finding the pipeline raised for one patient."""
 
     patient_id: str
     issue_type: str
     drugs: frozenset[str]
     severity: str
-    rule_id: str = ""
-    covers: frozenset[frozenset[str]] = frozenset()
+
+
+@dataclass(frozen=True)
+class TruthToken:
+    """One written medication line and the generics it really is (empty: not a medicine)."""
+
+    patient_id: str
+    written_token: str
+    generics: frozenset[str]
+    token_kind: str                       # exact_brand, misspelled_brand, non_drug, ...
 
 
 @dataclass(frozen=True)
 class Resolution:
-    """What the pipeline resolved one medication line to. ``resolved`` is None on abstention."""
+    """What the pipeline resolved one written line to. Empty generics: none."""
 
     patient_id: str
-    med_index: int
-    resolved: str | None
-    method: str                           # exact | fuzzy | abstained
-
-
-@dataclass(frozen=True)
-class TruthMedication:
-    """What one medication line really is. ``generic`` is None for a product outside the table."""
-
-    patient_id: str
-    med_index: int
-    raw: str
-    generic: str | None
-    mangling: tuple[str, ...]
+    written_token: str
+    generics: frozenset[str]
+    method: str                           # exact | synonym | parts | prefix | fuzzy | non_drug | abstained
 
 
 @dataclass(frozen=True)
@@ -79,5 +69,5 @@ class PatientTrace:
 
     patient_id: str
     resolutions: tuple[Resolution, ...] | None
-    findings: tuple[Alert, ...] | None    # before collapse
-    shipped: tuple[Alert, ...] | None     # after collapse and cap: what the output contains
+    findings: tuple[Alert, ...] | None
+    shipped: tuple[Alert, ...] | None     # what the predictions file holds

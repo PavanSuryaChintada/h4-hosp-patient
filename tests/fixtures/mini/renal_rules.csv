@@ -1,0 +1,6 @@
+generic_name,egfr_below,severity,recommended_action
+ibuprofen,60,moderate,Lowest dose for the shortest time
+ibuprofen,30,major,Avoid NSAIDs at eGFR below 30
+metformin,45,moderate,Cap metformin at 1 g/day
+metformin,30,major,Stop metformin
+atenolol,35,moderate,Halve the atenolol dose

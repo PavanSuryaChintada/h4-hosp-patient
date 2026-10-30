@@ -1,11 +1,9 @@
-"""Phase 1: the adapter loads source files into the internal schema, and refuses bad rows loudly.
+"""Phase 1: the adapter loads the pack's files into the internal schema, and never drops a row
+for one bad value.
 
-The swap tests run against tests/fixtures by default. When the real dataset lands, edit
-COLUMN_MAP and point the same tests at it:
+The swap tests run on the real pack (data/pack, or MEDSAFE_DATA_DIR):
 
-    MEDSAFE_DATA_DIR=data pytest tests/test_adapter.py -k swap
-
-If they pass, everything downstream of the adapter works on the real files.
+    MEDSAFE_DATA_DIR=data/pack pytest -k swap
 """
 
 from __future__ import annotations
@@ -13,388 +11,269 @@ from __future__ import annotations
 import csv
 import json
 import logging
-import os
+import shutil
 from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
+from conftest import MINI_DIR, requires_pack
+from eval.pack import data_dir
 from medsafe.data import adapter
-from medsafe.data.adapter import (COLUMN_MAP, MISSING_TOKENS, find_input, load_dataset,
-                                  load_drugs, load_interactions, load_patients)
-from medsafe.data.validate import (LoadReport, RowError, SchemaError, check_range, coerce_bool,
-                                   coerce_float, coerce_int, coerce_text)
+from medsafe.data.adapter import COLUMN_MAP, find_input, load_dataset, load_patients, split_medications
+from medsafe.data.validate import LoadReport, RowError, SchemaError, check_range, coerce_float, coerce_int
+from medsafe.resolve.resolver import NameIndex, Resolver
 
-FIXTURES_DIR = Path(__file__).parent / "fixtures"
-DATA_DIR = Path(os.environ.get("MEDSAFE_DATA_DIR", FIXTURES_DIR))
-OPTIONAL_PATIENT_FIELDS = ("age", "weight_kg", "egfr", "pregnant")
-CORRUPT_INDEX = 41  # 0-based record index of the row the malformed-row tests break (P0042)
-
-fixtures_only = pytest.mark.skipif(DATA_DIR.resolve() != FIXTURES_DIR.resolve(),
-                                   reason="counts specific to the synthetic fixtures")
+Rows = list[list[str]]
 
 
-@pytest.fixture(scope="module")
-def dataset() -> adapter.Dataset:
-    """Everything in DATA_DIR, loaded once for the module."""
-    return load_dataset(DATA_DIR)
-
-
-def write_copy(tmp_path: Path, name: str, mutate: Callable[[list[list[str]]], None]) -> Path:
-    """Copy a fixture CSV into tmp_path after ``mutate`` edits its rows (row 0 is the header)."""
-    with (FIXTURES_DIR / name).open(newline="", encoding="utf-8") as handle:
+def mini_copy(tmp_path: Path, name: str, mutate: Callable[[Rows], None]) -> Path:
+    """Copy the mini fixtures to tmp_path after ``mutate`` edits one file's rows (row 0 is the
+    header). Returns the copied folder."""
+    folder = tmp_path / "mini"
+    shutil.copytree(MINI_DIR, folder)
+    with (folder / name).open(newline="", encoding="utf-8") as handle:
         rows = list(csv.reader(handle))
     mutate(rows)
-    path = tmp_path / name
-    with path.open("w", newline="", encoding="utf-8") as handle:
+    with (folder / name).open("w", newline="", encoding="utf-8") as handle:
         csv.writer(handle, lineterminator="\n").writerows(rows)
-    return path
+    return folder
 
 
-def set_cell(column: str, value: str, index: int = CORRUPT_INDEX) -> Callable[[list[list[str]]], None]:
-    """A mutation that overwrites one cell of record ``index``."""
-    def mutate(rows: list[list[str]]) -> None:
+def set_cell(column: str, value: str, index: int = 0) -> Callable[[Rows], None]:
+    """A mutation that overwrites one cell of data row ``index``."""
+    def mutate(rows: Rows) -> None:
         rows[index + 1][rows[0].index(column)] = value
     return mutate
 
 
-# --- Swap tests: hold for the fixtures now and for the real dataset later ---------------------
-
-def test_swap_every_patient_fully_populated(dataset: adapter.Dataset) -> None:
-    assert dataset.patients, "no patients loaded"
-    for patient in dataset.patients:
-        assert type(patient.patient_id) is str and patient.patient_id
-        assert patient.patient_id == patient.patient_id.strip()
-        assert patient.age is None or type(patient.age) is int
-        assert patient.weight_kg is None or type(patient.weight_kg) is float
-        assert patient.egfr is None or type(patient.egfr) is float
-        assert patient.pregnant is None or type(patient.pregnant) is bool
-        assert type(patient.diagnoses) is tuple
-        assert all(type(d) is str and d for d in patient.diagnoses)
-        assert type(patient.medications) is tuple and patient.medications, patient.patient_id
-        assert [m.index for m in patient.medications] == list(range(len(patient.medications)))
-        assert all(type(m.raw) is str and m.raw and m.raw == m.raw.strip()
-                   for m in patient.medications)
+def report_for(dataset: adapter.Dataset, kind: str) -> LoadReport:
+    """The load report of one table."""
+    return next(r for r in dataset.reports if r.kind == kind)
 
 
-def test_swap_missing_loads_as_none_never_zero(dataset: adapter.Dataset) -> None:
-    """A blank or unreadable cell loads as None; a readable one never does."""
-    table = adapter.read_table(find_input(DATA_DIR, "patients"))
-    id_column = COLUMN_MAP["patients"]["patient_id"]
-    first_record: dict[str, dict] = {}
-    for record in table.records:
-        first_record.setdefault(str(record.get(id_column)).strip(), record)
+# --- The mini fixtures: the real layout, always available -------------------------------------
 
-    for patient in dataset.patients:
-        record = first_record[patient.patient_id]
-        for name in OPTIONAL_PATIENT_FIELDS:
-            column = COLUMN_MAP["patients"][name]
-            cell = record.get(column) if column else None
-            blank = cell is None or (isinstance(cell, str)
-                                     and cell.strip().lower() in MISSING_TOKENS)
-            unreadable = name in patient.unreadable_fields
-            value = getattr(patient, name)
-            assert not (blank and unreadable), f"{patient.patient_id}.{name}: blank is not unreadable"
-            assert (value is None) == (blank or unreadable), \
-                f"{patient.patient_id}.{name}: {cell!r} -> {value!r}"
+def test_mini_loads_every_table_cleanly(mini: adapter.Dataset) -> None:
+    sizes = (len(mini.patients), len(mini.drugs), len(mini.combinations), len(mini.interactions),
+             len(mini.renal_rules), len(mini.duplicate_groups), len(mini.contraindications),
+             len(mini.conditions))
+    assert sizes == (6, 13, 7, 4, 5, 4, 2, 2)
+    for report in mini.reports:
+        assert report.skipped == 0 and report.loaded_degraded == 0, report.summary()
 
 
-def test_swap_reference_tables_fully_populated(dataset: adapter.Dataset) -> None:
-    assert dataset.drugs and dataset.interactions
-    for key, drug in dataset.drugs.items():
-        assert key == drug.generic and drug.generic == drug.generic.lower().strip() != ""
-        assert type(drug.drug_class) is str and drug.drug_class
-        assert type(drug.brands) is tuple and all(type(b) is str and b for b in drug.brands)
-        assert type(drug.renal_adjust) is bool
-        assert drug.pregnancy_category is None or drug.pregnancy_category
-    for pair in dataset.interactions:
-        assert pair.drug_a and pair.drug_b and pair.drug_a != pair.drug_b
-        assert type(pair.severity) is str and pair.severity
-        assert pair.mechanism is None or pair.mechanism
+def test_medication_list_splits_on_semicolons_and_line_breaks(mini: adapter.Dataset) -> None:
+    by_id = {p.patient_id: p for p in mini.patients}
+    assert [m.raw for m in by_id["H4P-MINI0002"].medications] == [
+        "Brufen 400 tds", "T. Pan 40 OD", "Physiotherapy"]
+    assert [m.index for m in by_id["H4P-MINI0001"].medications] == [0, 1, 2, 3]
+    assert split_medications(" a ;\n b\r\n;; c ") == ("a", "b", "c")
 
 
-# --- The synthetic fixtures specifically ------------------------------------------------------
-
-@fixtures_only
-def test_fixtures_load_200_patients_with_nothing_skipped(dataset: adapter.Dataset) -> None:
-    assert len(dataset.patients) == 200
-    assert len(dataset.drugs) == 68
-    assert len(dataset.interactions) == 195
-    for report in dataset.reports:
-        assert report.skipped == 0 and report.loaded_degraded == 0 and not report.notes, \
-            report.summary()
-
-
-@fixtures_only
-def test_fixtures_have_the_shape_the_brief_describes(dataset: adapter.Dataset) -> None:
-    patients = dataset.patients
-    assert all(4 <= len(p.medications) <= 12 for p in patients)
-    egfrs = [p.egfr for p in patients if p.egfr is not None]
-    assert 15 <= min(egfrs) < 30 and max(egfrs) <= 110
-    assert any(p.pregnant for p in patients)
-    assert any(p.age is not None and p.age > 75 for p in patients)
+def test_blank_is_none_and_na_pregnancy_means_not_applicable(mini: adapter.Dataset) -> None:
+    by_id = {p.patient_id: p for p in mini.patients}
+    male = by_id["H4P-MINI0002"]
+    assert (male.pregnant, male.weight_kg, male.egfr) == (None, None, None)
+    assert male.unreadable_fields == ()
+    assert by_id["H4P-MINI0003"].pregnant is True
+    assert by_id["H4P-MINI0001"].pregnant is False
+    assert by_id["H4P-MINI0004"].allergies is None
+    assert by_id["H4P-MINI0002"].allergies == "allergic to penicillin"
+    assert by_id["H4P-MINI0001"].diagnoses == ("HTN", "DM2", "CKD 3b")
 
 
-@fixtures_only
-def test_fixtures_exercise_every_missing_value_path(dataset: adapter.Dataset) -> None:
-    for name in OPTIONAL_PATIENT_FIELDS:
-        assert any(getattr(p, name) is None for p in dataset.patients), name
+def test_reference_tables_keep_their_structure(mini: adapter.Dataset) -> None:
+    assert mini.drugs["paracetamol"].brands == ("Crocin", "Dolo", "Calpol")
+    assert mini.drugs["ibuprofen"].renal_adjust is True
+    assert mini.drugs["warfarin"].duplicate_group is None
+    assert mini.drugs["warfarin"].pregnancy_category == "X"
+    glycomet = [c for c in mini.combinations if c.brand == "Glycomet-GP"]
+    assert [(c.strength_label, c.generics) for c in glycomet] == [
+        ("1", ("glimepiride", "metformin")), ("2", ("glimepiride", "metformin"))]
+    assert mini.duplicate_groups["paracetamol"].members == ("paracetamol",)
+    assert {(r.generic, r.egfr_below) for r in mini.renal_rules} >= {("metformin", 30)}
 
 
-@fixtures_only
-def test_ground_truth_lines_up_with_loaded_medications(dataset: adapter.Dataset) -> None:
-    with (FIXTURES_DIR / "ground_truth.csv").open(newline="", encoding="utf-8") as handle:
-        truth = list(csv.DictReader(handle))
-    loaded = {(p.patient_id, m.index): m.raw for p in dataset.patients for m in p.medications}
-    assert len(truth) == len(loaded)
-    for row in truth:
-        assert loaded[(row["patient_id"], int(row["med_index"]))] == row["raw"]
+def test_split_selects_the_patients_file() -> None:
+    assert [p.patient_id for p in load_dataset(MINI_DIR, "test").patients] == [
+        "H4P-MINIT001", "H4P-MINIT002"]
+    with pytest.raises(SchemaError, match="unknown split"):
+        find_input(MINI_DIR, "patients", "validation")
 
 
-# --- Bad clinical values degrade the field; the patient is kept --------------------------------
+# --- Patients: a bad value degrades one field, the patient is kept (D-001) ------------------
 
-@pytest.mark.parametrize(("column", "value", "code"), [
-    ("egfr", "abc", "bad_type:egfr"),
-    ("egfr", "250", "out_of_range:egfr"),
-    ("egfr", "-3", "out_of_range:egfr"),
-    ("age", "130", "out_of_range:age"),
-    ("age", "72.5", "bad_type:age"),
-    ("weight_kg", "400", "out_of_range:weight_kg"),
-    ("weight_kg", "seventy", "bad_type:weight_kg"),
-    ("pregnant", "maybe", "bad_type:pregnant"),
+@pytest.mark.parametrize(("column", "value", "field", "code"), [
+    ("weight_kg", "seventy", "weight_kg", "bad_type:weight_kg"),
+    ("weight_kg", "NA", "weight_kg", "bad_type:weight_kg"),   # only blank means missing
+    ("egfr_ml_min_1_73m2", "250", "egfr", "out_of_range:egfr"),
+    ("age", "72.5", "age", "bad_type:age"),
+    ("pregnant", "maybe", "pregnant", "bad_value:pregnant"),
+    ("sex", "X", "sex", "bad_value:sex"),
+    ("prescriber_count", "0", "prescriber_count", "out_of_range:prescriber_count"),
 ])
-def test_bad_value_degrades_the_field_and_keeps_the_patient(
-        tmp_path: Path, caplog: pytest.LogCaptureFixture, column: str, value: str, code: str) -> None:
-    original = load_patients(FIXTURES_DIR / "patients.csv")[CORRUPT_INDEX]
-    path = write_copy(tmp_path, "patients.csv", set_cell(column, value))
-    report = LoadReport()
+def test_bad_patient_value_degrades_the_field(tmp_path: Path, caplog: pytest.LogCaptureFixture,
+                                              column: str, value: str, field: str, code: str) -> None:
+    folder = mini_copy(tmp_path, "patients_train.csv", set_cell(column, value))
     with caplog.at_level(logging.WARNING, logger="medsafe.data.adapter"):
-        patients = load_patients(path, report)
-
-    assert (report.rows_read, report.loaded, report.skipped) == (200, 200, 0)
-    assert (report.loaded_clean, report.loaded_degraded) == (199, 1)
+        dataset = load_dataset(folder, "train")
+    report = report_for(dataset, "patients")
+    assert (report.loaded, report.loaded_degraded, report.skipped) == (6, 1, 0)
     assert report.degraded_fields == {code: 1}
-    degradation = report.degradations[0]
-    assert (degradation.index, degradation.patient_id, degradation.field, degradation.raw_value) \
-        == (CORRUPT_INDEX, "P0042", column, value)
-    assert f"row {CORRUPT_INDEX} P0042: {column} loaded as None" in caplog.text
-
-    patient = patients[CORRUPT_INDEX]
-    assert patient.patient_id == "P0042"
-    assert getattr(patient, column) is None and patient.unreadable_fields == (column,)
-    assert patient.medications == original.medications
+    assert report.degradations[0].record_id == "H4P-MINI0001"
+    assert report.degradations[0].raw_value == value
+    patient = dataset.patients[0]
+    assert getattr(patient, field) is None and patient.unreadable_fields == (field,)
+    assert len(patient.medications) == 4
+    assert f"H4P-MINI0001: {field} loaded as None" in caplog.text
 
 
 @pytest.mark.parametrize(("column", "value", "code"), [
     ("patient_id", "", "missing_value:patient_id"),
-    ("medications", "", "missing_value:medications"),
-    ("medications", " | ", "missing_value:medications"),
+    ("medication_list", "", "missing_value:medications"),
+    ("medication_list", " ; \n ", "missing_value:medications"),
+    ("patient_id", "H4P-MINI0002", "duplicate"),
 ])
-def test_only_missing_id_or_medications_drop_the_patient(
-        tmp_path: Path, caplog: pytest.LogCaptureFixture, column: str, value: str, code: str) -> None:
-    path = write_copy(tmp_path, "patients.csv", set_cell(column, value))
-    report = LoadReport()
-    with caplog.at_level(logging.WARNING, logger="medsafe.data.adapter"):
-        patients = load_patients(path, report)
-
-    assert (report.rows_read, report.loaded, report.skipped) == (200, 199, 1)
-    assert report.reasons == {code: 1} and report.loaded_degraded == 0
-    assert report.skipped_rows[0].index == CORRUPT_INDEX
-    assert f"row {CORRUPT_INDEX} skipped ({code})" in caplog.text
-    assert len(patients) == 199 and "P0042" not in {p.patient_id for p in patients}
+def test_only_no_id_duplicate_id_or_no_medications_skip_a_patient(
+        tmp_path: Path, column: str, value: str, code: str) -> None:
+    folder = mini_copy(tmp_path, "patients_train.csv", set_cell(column, value))
+    report = report_for(load_dataset(folder, "train"), "patients")
+    assert (report.loaded, report.skipped) == (5, 1)
+    assert report.reasons == {code: 1}
 
 
-def test_several_bad_values_on_one_patient_count_as_one_degraded_patient(tmp_path: Path) -> None:
-    def mutate(rows: list[list[str]]) -> None:
-        set_cell("egfr", "high")(rows)
-        set_cell("age", "unknown")(rows)
-    report = LoadReport()
-    patient = load_patients(write_copy(tmp_path, "patients.csv", mutate), report)[CORRUPT_INDEX]
-    assert patient.unreadable_fields == ("age", "egfr")
-    assert report.loaded_degraded == 1
-    assert report.degraded_fields == {"bad_type:age": 1, "bad_type:egfr": 1}
+def test_summary_separates_clean_degraded_and_skipped(tmp_path: Path) -> None:
+    def mutate(rows: Rows) -> None:
+        set_cell("weight_kg", "heavy", index=0)(rows)
+        set_cell("patient_id", "", index=1)(rows)
+    report = report_for(load_dataset(mini_copy(tmp_path, "patients_train.csv", mutate), "train"),
+                        "patients")
+    assert "6 read, 5 loaded (4 clean, 1 degraded), 1 skipped" in report.summary()
+    assert report.to_dict()["degradations"][0]["record_id"] == "H4P-MINI0001"
 
 
-def test_row_with_an_extra_field_is_kept_as_degraded(tmp_path: Path) -> None:
-    path = write_copy(tmp_path, "patients.csv", lambda rows: rows[CORRUPT_INDEX + 1].append("x"))
-    report = LoadReport()
-    patients = load_patients(path, report)
-    assert len(patients) == 200 and report.skipped == 0
-    assert report.degraded_fields == {"malformed_row:row": 1}
-    assert patients[CORRUPT_INDEX].unreadable_fields == ("row",)
+# --- Reference rows: the same rule (E3) ------------------------------------------------------
+
+def test_drug_with_one_bad_field_is_kept_and_its_patients_still_resolve(tmp_path: Path) -> None:
+    """Paracetamol is on four of the mini patients' lists. A bad pregnancy letter must not
+    remove it: dropping the row would silently stop every check on every one of them."""
+    row = 1 - 1                                   # paracetamol is the first drug row
+    folder = mini_copy(tmp_path, "drug_reference.csv", set_cell("pregnancy_category", "Q", row))
+    dataset = load_dataset(folder, "train")
+    report = report_for(dataset, "drugs")
+    assert (report.loaded, report.skipped, report.degraded_fields) == (13, 0, {
+        "bad_value:pregnancy_category": 1})
+    paracetamol = dataset.drugs["paracetamol"]
+    assert paracetamol.pregnancy_category is None
+    assert paracetamol.unreadable_fields == ("pregnancy_category",)
+    resolver = Resolver(NameIndex.build(dataset.drugs, dataset.combinations))
+    assert resolver.resolve("Dolo 650 SOS").generics == ("paracetamol",)
+    assert resolver.resolve("T. PCM 650 SOS").generics == ("paracetamol",)
 
 
-def test_truncated_row_without_medications_is_skipped(tmp_path: Path) -> None:
-    def truncate(rows: list[list[str]]) -> None:
-        del rows[CORRUPT_INDEX + 1][3:]
-    report = LoadReport()
-    assert len(load_patients(write_copy(tmp_path, "patients.csv", truncate), report)) == 199
-    assert report.reasons == {"missing_value:medications": 1}
+@pytest.mark.parametrize(("name", "column", "value", "kind", "outcome"), [
+    ("drug_reference.csv", "generic_name", "", "drugs", "skipped"),
+    ("drug_reference.csv", "renal_adjustment_flag", "maybe", "drugs", "degraded"),
+    ("interactions.csv", "drug_b", "", "interactions", "skipped"),
+    ("interactions.csv", "severity", "severe", "interactions", "degraded"),
+    ("renal_rules.csv", "egfr_below", "thirty", "renal_rules", "degraded"),
+    ("combination_brands.csv", "generic_components", "", "combinations", "skipped"),
+    ("duplicate_therapy_groups.csv", "severity", "high", "duplicate_groups", "degraded"),
+    ("drug_disease_contraindications.csv", "generic_name", "", "contraindications", "skipped"),
+])
+def test_reference_rows_skip_only_when_the_row_is_not_a_row(
+        tmp_path: Path, name: str, column: str, value: str, kind: str, outcome: str) -> None:
+    report = report_for(load_dataset(mini_copy(tmp_path, name, set_cell(column, value)), "train"),
+                        kind)
+    assert (report.skipped, report.loaded_degraded) == ((1, 0) if outcome == "skipped" else (0, 1))
 
 
-def test_duplicate_patient_id_keeps_the_first_row(tmp_path: Path) -> None:
-    original = load_patients(FIXTURES_DIR / "patients.csv")[0]
-    report = LoadReport()
-    patients = load_patients(write_copy(tmp_path, "patients.csv", set_cell("patient_id", "P0001")),
-                             report)
-    assert report.reasons == {"duplicate:patient_id": 1}
-    assert report.skipped_rows[0].index == CORRUPT_INDEX
-    assert patients[0] == original
+# --- COLUMN_MAP is the single point of change --------------------------------------------------
 
-
-def test_report_summary_separates_clean_degraded_and_skipped(tmp_path: Path) -> None:
-    def mutate(rows: list[list[str]]) -> None:
-        set_cell("egfr", "abc")(rows)
-        set_cell("patient_id", "", index=0)(rows)
-    report = LoadReport()
-    load_patients(write_copy(tmp_path, "patients.csv", mutate), report)
-    summary = report.summary()
-    assert "200 read, 199 loaded (198 clean, 1 degraded), 1 skipped" in summary
-    assert "degraded bad_type:egfr: 1" in summary
-    assert "skipped missing_value:patient_id: 1" in summary
-    as_dict = report.to_dict()
-    assert as_dict["degradations"][0]["patient_id"] == "P0042"
-    assert as_dict["skipped_rows"][0]["index"] == 0
-
-
-def test_self_paired_interaction_is_skipped(tmp_path: Path) -> None:
-    def self_pair(rows: list[list[str]]) -> None:
-        rows[1][rows[0].index("drug_b")] = rows[1][rows[0].index("drug_a")]
-    report = LoadReport()
-    assert len(load_interactions(write_copy(tmp_path, "interactions.csv", self_pair), report)) == 194
-    assert report.reasons == {"self_pair:drug_b": 1}
-
-
-def test_drug_without_a_renal_flag_is_skipped_not_defaulted(tmp_path: Path) -> None:
-    report = LoadReport()
-    drugs = load_drugs(write_copy(tmp_path, "drugs.csv", set_cell("renal_adjust", "", index=0)),
-                       report)
-    assert len(drugs) == 67 and "warfarin" not in drugs
-    assert report.reasons == {"missing_value:renal_adjust": 1}
-
-
-# --- Missing is a value, not zero -------------------------------------------------------------
-
-def test_egfr_zero_is_a_value_and_blank_is_none(tmp_path: Path) -> None:
-    def mutate(rows: list[list[str]]) -> None:
-        column = rows[0].index("egfr")
-        rows[1][column], rows[2][column], rows[3][column] = "0", "", "NA"
-    patients = load_patients(write_copy(tmp_path, "patients.csv", mutate))
-    assert patients[0].egfr == 0.0 and patients[0].egfr is not None
-    assert patients[1].egfr is None
-    assert patients[2].egfr is None
-
-
-# --- COLUMN_MAP is the single point of change -------------------------------------------------
-
-def test_changing_column_map_redirects_a_field(tmp_path: Path,
-                                               monkeypatch: pytest.MonkeyPatch) -> None:
-    def add_lab_column(rows: list[list[str]]) -> None:
+def test_changing_column_map_redirects_a_field(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def add_column(rows: Rows) -> None:
         rows[0].append("egfr_lab")
         for row in rows[1:]:
             row.append("42")
-    path = write_copy(tmp_path, "patients.csv", add_lab_column)
-    before = load_patients(path)
-    assert not all(p.egfr == 42.0 for p in before)
-
+    folder = mini_copy(tmp_path, "patients_train.csv", add_column)
+    before = load_patients(folder / "patients_train.csv")
     monkeypatch.setitem(COLUMN_MAP["patients"], "egfr", "egfr_lab")
-    after = load_patients(path)
-    assert all(p.egfr == 42.0 for p in after)
+    after = load_patients(folder / "patients_train.csv")
+    assert {p.egfr for p in after} == {42.0} and {p.egfr for p in before} != {42.0}
     assert [p.age for p in after] == [p.age for p in before]
 
 
 def test_mapped_column_absent_from_the_file_raises(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(COLUMN_MAP["patients"], "egfr", "eGFR_mL_min")
-    with pytest.raises(SchemaError, match="eGFR_mL_min"):
-        load_patients(FIXTURES_DIR / "patients.csv")
+    monkeypatch.setitem(COLUMN_MAP["patients"], "egfr", "egfr_mdrd")
+    with pytest.raises(SchemaError, match="egfr_mdrd"):
+        load_patients(MINI_DIR / "patients_train.csv")
 
-
-def test_unmapped_optional_field_loads_as_none_with_a_note(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(COLUMN_MAP["patients"], "pregnant", None)
-    report = LoadReport()
-    patients = load_patients(FIXTURES_DIR / "patients.csv", report)
-    assert len(patients) == 200 and all(p.pregnant is None for p in patients)
-    assert any(note.startswith("pregnant:") for note in report.notes)
-
-
-def test_unmapped_required_field_raises(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(COLUMN_MAP["patients"], "medications", None)
-    with pytest.raises(SchemaError, match="medications"):
-        load_patients(FIXTURES_DIR / "patients.csv")
-
-
-# --- File formats -----------------------------------------------------------------------------
 
 def test_json_input_loads_identically_to_csv(tmp_path: Path) -> None:
-    with (FIXTURES_DIR / "patients.csv").open(newline="", encoding="utf-8") as handle:
+    with (MINI_DIR / "patients_train.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    records = [{
-        "patient_id": row["patient_id"],
-        "age": int(row["age"]) if row["age"] else None,
-        "weight_kg": float(row["weight_kg"]) if row["weight_kg"] else None,
-        "egfr": float(row["egfr"]) if row["egfr"] else None,
-        "pregnant": {"Y": True, "N": False}.get(row["pregnant"]),
-        "diagnoses": row["diagnoses"].split("|") if row["diagnoses"] else [],
-        "medications": row["medications"].split("|"),
-    } for row in rows]
-    path = tmp_path / "patients.json"
-    path.write_text(json.dumps(records), encoding="utf-8")
-    assert load_patients(path) == load_patients(FIXTURES_DIR / "patients.csv")
+    path = tmp_path / "patients_train.json"
+    path.write_text(json.dumps(rows), encoding="utf-8")
+    assert load_patients(path) == load_patients(MINI_DIR / "patients_train.csv")
 
 
-def test_unsupported_extension_raises(tmp_path: Path) -> None:
-    path = tmp_path / "patients.xlsx"
-    path.write_bytes(b"")
-    with pytest.raises(SchemaError, match="unsupported extension"):
-        load_patients(path)
-
-
-def test_find_input_refuses_a_missing_or_ambiguous_table(tmp_path: Path) -> None:
-    with pytest.raises(SchemaError, match="no patients.csv or patients.json"):
-        find_input(tmp_path, "patients")
-    (tmp_path / "patients.csv").write_text("patient_id\n", encoding="utf-8")
-    (tmp_path / "patients.json").write_text("[]", encoding="utf-8")
-    with pytest.raises(SchemaError, match="both"):
-        find_input(tmp_path, "patients")
-
-
-# --- Coercion edge cases ----------------------------------------------------------------------
-
-@pytest.mark.parametrize(("token", "expected"), [
-    ("Y", True), ("yes", True), ("TRUE", True), ("1", True), (True, True),
-    ("n", False), ("No", False), ("0", False), (False, False), (None, None),
-])
-def test_coerce_bool_tokens(token: object, expected: bool | None) -> None:
-    assert coerce_bool(token, "pregnant") is expected
-
-
-def test_coerce_text_blank_is_none_and_structures_are_refused() -> None:
-    assert coerce_text("  Warf 5 ", "raw") == "Warf 5"
-    assert coerce_text("   ", "raw") is None
-    with pytest.raises(RowError, match="missing"):
-        coerce_text("", "patient_id", required=True)
-    with pytest.raises(RowError, match="not text"):
-        coerce_text(["P0001"], "patient_id")
-
-
-def test_coerce_int_takes_whole_numbers_only() -> None:
-    assert coerce_int("72", "age") == 72
+def test_coercion_edge_cases() -> None:
     assert coerce_int("72.0", "age") == 72
-    for bad in ("72.5", "seventy", "nan", True):
+    assert coerce_float(" 38.5 ", "egfr") == 38.5
+    assert check_range(0.0, "egfr") == 0.0
+    for bad in ("72.5", "nan", True):
         with pytest.raises(RowError):
             coerce_int(bad, "age")
-
-
-def test_coerce_float_refuses_non_finite() -> None:
-    assert coerce_float(" 38.5 ", "egfr") == 38.5
-    for bad in ("inf", "nan", "38,5"):
-        with pytest.raises(RowError):
-            coerce_float(bad, "egfr")
-
-
-def test_range_bounds_are_inclusive() -> None:
-    assert check_range(0.0, "egfr") == 0.0
-    assert check_range(200.0, "egfr") == 200.0
-    assert check_range(None, "egfr") is None
-    with pytest.raises(RowError, match="outside 0-200"):
+    with pytest.raises(RowError):
         check_range(200.5, "egfr")
+
+
+# --- Swap tests: the real pack ------------------------------------------------------------------
+
+@requires_pack
+def test_swap_pack_loads_completely() -> None:
+    train, test = load_dataset(data_dir(), "train"), load_dataset(data_dir(), "test")
+    assert (len(train.patients), len(test.patients)) == (1500, 3500)
+    sizes = (len(train.drugs), len(train.combinations), len(train.interactions),
+             len(train.renal_rules), len(train.duplicate_groups), len(train.contraindications),
+             len(train.conditions))
+    assert sizes == (496, 98, 2196, 169, 74, 152, 58)
+    for report in train.reports + test.reports:
+        assert report.skipped == 0 and report.loaded_degraded == 0, report.summary()
+
+
+@requires_pack
+@pytest.mark.parametrize("split", ["train", "test"])
+def test_swap_every_patient_fully_populated(split: str) -> None:
+    for patient in load_dataset(data_dir(), split).patients:
+        assert patient.patient_id and patient.medications
+        assert type(patient.age) is int and patient.sex in ("M", "F")
+        assert patient.weight_kg is None or type(patient.weight_kg) is float
+        assert patient.egfr is None or type(patient.egfr) is float
+        assert patient.pregnant is None or type(patient.pregnant) is bool
+        assert patient.pregnant is None if patient.sex == "M" else patient.pregnant is not None
+        assert type(patient.prescriber_count) is int
+        assert all(m.raw == m.raw.strip() and m.raw for m in patient.medications)
+        assert patient.unreadable_fields == ()
+
+
+@requires_pack
+def test_swap_blank_loads_as_none_never_zero(pack_train: adapter.Dataset) -> None:
+    with (data_dir() / "patients_train.csv").open(newline="", encoding="utf-8") as handle:
+        raw = {row["patient_id"]: row for row in csv.DictReader(handle)}
+    for patient in pack_train.patients:
+        assert (patient.egfr is None) == (raw[patient.patient_id]["egfr_ml_min_1_73m2"] == "")
+        assert (patient.weight_kg is None) == (raw[patient.patient_id]["weight_kg"] == "")
+    assert sum(p.egfr is None for p in pack_train.patients) == 116
+    assert sum(p.weight_kg is None for p in pack_train.patients) == 41
+
+
+@requires_pack
+def test_swap_written_tokens_match_the_official_resolution_rows(pack_train: adapter.Dataset) -> None:
+    with (data_dir() / "train_resolution.csv").open(newline="", encoding="utf-8") as handle:
+        official: dict[str, list[str]] = {}
+        for row in csv.DictReader(handle):
+            official.setdefault(row["patient_id"], []).append(row["written_token"])
+    ours = {p.patient_id: sorted(m.raw for m in p.medications) for p in pack_train.patients}
+    assert ours == {pid: sorted(tokens) for pid, tokens in official.items()}   # order is not scored

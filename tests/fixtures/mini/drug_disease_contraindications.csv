@@ -1,0 +1,3 @@
+condition_id,condition_name,generic_name,severity,reason,recommended_action
+pregnancy,Pregnancy,warfarin,contraindicated,Teratogenic,Switch to low-molecular-weight heparin
+asthma,Asthma,atenolol,moderate,Beta blockade can worsen bronchospasm,Prefer the lowest dose of a cardioselective agent

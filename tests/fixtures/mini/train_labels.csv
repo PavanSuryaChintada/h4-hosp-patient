@@ -1,0 +1,7 @@
+issue_id,patient_id,issue_type,severity,drugs_involved,suggested_action,near_miss
+ISS-MINI0001,H4P-MINI0001,duplicate_therapy,major,paracetamol,Keep one paracetamol source,0
+ISS-MINI0002,H4P-MINI0001,renal_dose,major,metformin,Stop metformin,1
+ISS-MINI0003,H4P-MINI0001,interaction,minor,amlodipine;telmisartan,Check standing blood pressure,0
+ISS-MINI0004,H4P-MINI0003,contraindication,contraindicated,warfarin,Switch to low-molecular-weight heparin,0
+ISS-MINI0005,H4P-MINI0005,interaction,minor,amlodipine;telmisartan,Check standing blood pressure,0
+ISS-MINI0006,H4P-MINI0006,duplicate_therapy,moderate,telmisartan,Keep one telmisartan product,0

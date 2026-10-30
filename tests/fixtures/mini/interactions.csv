@@ -1,0 +1,5 @@
+drug_a,drug_b,severity,mechanism_effect,recommended_action
+ibuprofen,warfarin,major,Increased bleeding risk,Avoid the NSAID; use paracetamol
+paracetamol,warfarin,minor,Regular paracetamol can raise INR,Keep paracetamol at or below 2 g/day
+atenolol,glimepiride,moderate,Beta blocker can mask hypoglycaemia,Advise on hypoglycaemia symptoms
+amlodipine,telmisartan,minor,Additive blood pressure lowering,Check standing blood pressure

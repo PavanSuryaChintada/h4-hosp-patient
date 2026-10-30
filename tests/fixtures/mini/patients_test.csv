@@ -1,0 +1,3 @@
+patient_id,age,sex,weight_kg,egfr_ml_min_1_73m2,pregnant,diagnoses,allergies,medication_list,prescriber_count
+H4P-MINIT001,66,F,59,48,N,DM2,NKDA,Tab Glycomet-GP 2 BD; Dolo 650 SOS,2
+H4P-MINIT002,40,M,72,90,NA,acidity,,T. Pan 40 OD; Combiflam SOS,1

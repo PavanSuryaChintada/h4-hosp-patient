@@ -1,0 +1,5 @@
+# The evaluation harness runs the organisers' evaluate.py, which needs pandas and numpy.
+# The pipeline itself (run.py, src/medsafe/) does not: requirements.txt is all it needs.
+-r requirements.txt
+pandas==3.1.0
+numpy==2.4.6

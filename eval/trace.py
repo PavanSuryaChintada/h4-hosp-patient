@@ -10,7 +10,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from eval.metrics import covers
-from eval.records import Issue, PatientTrace, TruthMedication
+from eval.records import Issue, PatientTrace, Resolution, TruthToken
+from medsafe.output.writer import token_key
 from medsafe.pipeline import PatientResult, PipelineResult
 
 
@@ -22,13 +23,15 @@ def _unconverted(stage: str, phase: int) -> NotImplementedError:
 
 def trace_patient(result: PatientResult) -> PatientTrace:
     """Convert one patient's pipeline output into the records the harness scores."""
-    if result.resolutions is not None:
-        raise _unconverted("resolutions", 2)
     if result.findings is not None:
         raise _unconverted("findings", 3)
     if result.alerts is not None:
         raise _unconverted("alerts", 6)
-    return PatientTrace(patient_id=result.patient.patient_id, resolutions=None, findings=None,
+    patient_id = result.patient.patient_id
+    resolutions = None if result.resolutions is None else tuple(
+        Resolution(patient_id, entry.raw, frozenset(r.generics), r.method)
+        for entry, r in zip(result.patient.medications, result.resolutions))
+    return PatientTrace(patient_id=patient_id, resolutions=resolutions, findings=None,
                         shipped=None)
 
 
@@ -37,14 +40,13 @@ def traces_from(result: PipelineResult) -> dict[str, PatientTrace]:
     return {r.patient.patient_id: trace_patient(r) for r in result.patients}
 
 
-def diagnose(issue: Issue, trace: PatientTrace | None,
-             medications: Sequence[TruthMedication]) -> str:
+def diagnose(issue: Issue, trace: PatientTrace | None, tokens: Sequence[TruthToken]) -> str:
     """Why a true issue was missed, walking the pipeline stage by stage.
 
     Args:
         issue: A true issue that no shipped alert covers.
         trace: The patient's trace, or None if the adapter did not load the patient.
-        medications: Ground truth for this patient's medication lines.
+        tokens: True resolutions of this patient's written lines.
 
     Returns:
         The first stage where the issue was lost, in plain English.
@@ -53,21 +55,22 @@ def diagnose(issue: Issue, trace: PatientTrace | None,
         return "patient not loaded: dropped by the adapter (see the load report)"
     if trace.resolutions is None:
         return "name resolution not built yet (Phase 2): no drug on this list was checked"
-    resolved = {r.med_index: r.resolved for r in trace.resolutions}
-    for generic in sorted(issue.drugs):
-        lines = [m for m in medications if m.generic == generic]
-        if lines and not any(resolved.get(m.med_index) == generic for m in lines):
+    ours = {token_key(r.written_token): r for r in trace.resolutions}
+    for drug in sorted(issue.drugs):
+        lines = [t for t in tokens if drug in t.generics]
+        if lines and not any(drug in ours[token_key(t.written_token)].generics
+                             for t in lines if token_key(t.written_token) in ours):
             line = lines[0]
-            got = resolved.get(line.med_index)
-            if got is None:
-                return f"'{line.raw}' abstained, so {generic} was never checked"
-            return f"'{line.raw}' resolved to {got} instead of {generic}"
+            got = ours.get(token_key(line.written_token))
+            if got is None or not got.generics:
+                return f"'{line.written_token}' was not resolved, so {drug} was never checked"
+            return (f"'{line.written_token}' resolved to {';'.join(sorted(got.generics))} "
+                    f"instead of {';'.join(sorted(line.generics))}")
     if trace.findings is None:
-        return "rule engine not built yet (Phase 3)"
+        return "every drug resolved; rule engine not built yet (Phase 3)"
     found = [f for f in trace.findings if covers(f, issue)]
     if not found:
         return f"no {issue.issue_type} finding for {' + '.join(sorted(issue.drugs))}"
     if trace.shipped is None:
-        return "alert budget and output not built yet (Phase 6)"
-    severities = ", ".join(sorted({f.severity for f in found}))
-    return f"found at {severities} but not shipped: collapsed away or capped out"
+        return "output not built yet (Phase 6)"
+    return "found but not written to the predictions file"

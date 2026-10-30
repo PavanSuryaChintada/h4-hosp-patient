@@ -1,5 +1,7 @@
 # Phase 5 — Alert Graph Collapse
 
+> **Amended (docs/DECISIONS.md D-015).** The official scorer matches an alert only on the exact (patient, issue type, set of drugs). A collapsed cluster alert would match nothing, so the predictions file keeps one row per issue. Collapse lives in the UI and the explanation text only.
+
 **Time:** 3h. **The differentiator.** Nobody else will build this.
 
 ---

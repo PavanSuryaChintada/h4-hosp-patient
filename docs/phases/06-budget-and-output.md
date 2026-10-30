@@ -1,5 +1,7 @@
 # Phase 6 — Alert Budget & Output Contract
 
+> **Amended (docs/DECISIONS.md D-015, D-018).** The real output is the pack's two files (`H4_predictions.csv`, six columns; `H4_resolution.csv`). There is **no per-patient cap**: noise counts only false alerts and alerts on minor issues, so capping a true alert loses recall and saves nothing. Minor alerts are left out by one measured constant, `EMIT_MINOR = False`. Severity is the table's, unchanged.
+
 **Time:** 2h. **If the output does not parse, the score is zero regardless of the detector.**
 
 ---

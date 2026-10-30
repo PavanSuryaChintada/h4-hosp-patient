@@ -1,11 +1,11 @@
 """Type coercion, range checks and the structured load report.
 
 The adapter hands each source cell to the coercers here. A cell that cannot be coerced, or falls
-outside its sane range, raises ``RowError``. For a patient's clinical field the adapter catches it,
-loads that field as ``None`` and records a ``Degradation``; the patient is kept. Only a missing or
-duplicate patient id, or a missing or empty medication list, skips the row (docs/DECISIONS.md).
-A file that does not match ``COLUMN_MAP`` at all raises ``SchemaError`` and stops the load.
-Nothing is dropped silently.
+outside its sane range, raises ``RowError``. The adapter catches it, loads that field as ``None``
+and records a ``Degradation``; the row is kept. A row is skipped only when it lacks what makes it
+a row at all: a patient with no id or no medications, a drug with no generic name, an
+interaction missing either drug (docs/DECISIONS.md D-001, D-013). A file that does not match
+``COLUMN_MAP`` at all raises ``SchemaError`` and stops the load. Nothing is dropped silently.
 
 Missing stays ``None`` through every coercer. ``0`` is a value, never a stand-in for missing.
 """
@@ -25,14 +25,22 @@ RANGES: dict[str, tuple[float, float]] = {
     "age": (0, 120),
     "weight_kg": (0, 300),
     "egfr": (0, 200),
+    "egfr_below": (0, 200),
+    "prescriber_count": (1, 10),
+    "max_daily_dose_mg": (0, 1_000_000),
 }
 
-# Internal fields that must be mapped to a source column. Every other field may be mapped to
-# None in COLUMN_MAP when the source has no such column, and then loads as None.
+# Internal fields that must be mapped to a source column: without them a row is not a row.
+# Every other field may be mapped to None in COLUMN_MAP and then loads as None.
 REQUIRED_FIELDS: dict[str, tuple[str, ...]] = {
     "patients": ("patient_id", "medications"),
-    "drugs": ("generic", "drug_class", "renal_adjust"),
-    "interactions": ("drug_a", "drug_b", "severity"),
+    "drugs": ("generic",),
+    "combinations": ("brand", "generics"),
+    "interactions": ("drug_a", "drug_b"),
+    "renal_rules": ("generic",),
+    "duplicate_groups": ("group_id",),
+    "contraindications": ("condition_id", "generic"),
+    "conditions": ("condition_id",),
 }
 
 TRUE_TOKENS = frozenset({"true", "t", "yes", "y", "1"})
@@ -77,10 +85,10 @@ class SkippedRow:
 
 @dataclass(frozen=True)
 class Degradation:
-    """One patient field that failed validation and was loaded as None. The patient was kept."""
+    """One field that failed validation and was loaded as None. The row was kept."""
 
     index: int               # 0-based position of the record in the file, header excluded
-    patient_id: str
+    record_id: str           # patient id, generic name, drug pair, ... of the kept row
     field: str               # internal field name, or "row" for a malformed record
     raw_value: str           # the source value exactly as read
     reason: str              # bad_type, out_of_range or malformed_row
@@ -135,10 +143,10 @@ class LoadReport:
         self.skipped_rows.append(row)
         return row
 
-    def record_degradation(self, index: int, patient_id: str, field_name: str,
+    def record_degradation(self, index: int, record_id: str, field_name: str,
                            raw_value: Any, error: RowError) -> Degradation:
         """Record that ``field_name`` of the row at ``index`` loaded as None. Returns the record."""
-        degradation = Degradation(index=index, patient_id=patient_id, field=field_name,
+        degradation = Degradation(index=index, record_id=record_id, field=field_name,
                                   raw_value="" if raw_value is None else str(raw_value),
                                   reason=error.reason, detail=error.detail)
         self.degradations.append(degradation)
@@ -282,6 +290,22 @@ def coerce_bool(value: Any, name: str, *, required: bool = False) -> bool | None
     if token in FALSE_TOKENS:
         return False
     raise RowError("bad_type", name, f"{name}={value!r} is not a yes/no value")
+
+
+def coerce_choice(value: Any, name: str, allowed: Iterable[str], *,
+                  required: bool = False) -> str | None:
+    """Coerce a cell to one of ``allowed``, matched case-insensitively, returned as written there.
+
+    Raises:
+        RowError: Not one of the allowed values, or required and missing.
+    """
+    text = coerce_text(value, name, required=required)
+    if text is None:
+        return None
+    by_lower = {choice.lower(): choice for choice in allowed}
+    if text.lower() not in by_lower:
+        raise RowError("bad_value", name, f"{name}={value!r} is not one of {sorted(by_lower.values())}")
+    return by_lower[text.lower()]
 
 
 def check_range(value: Number | None, name: str) -> Number | None:

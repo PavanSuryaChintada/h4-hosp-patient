@@ -13,3 +13,4 @@ ui/dist/
 *.log
 *.tsbuildinfo
 .vercel
+eval/work/

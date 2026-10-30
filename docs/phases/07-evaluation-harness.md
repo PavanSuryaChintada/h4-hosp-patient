@@ -1,5 +1,7 @@
 # Phase 7 — Evaluation Harness
 
+> **Amended (docs/DECISIONS.md D-014).** The real `evaluate.py` arrived: the harness now runs it unmodified, and the scoring mirror is deleted. Thresholds are tuned on a fixed 1,200-patient dev split and reported on a 300-patient holdout.
+
 **Time:** 2h. **Build this second, right after Phase 1. Not last.**
 
 ---

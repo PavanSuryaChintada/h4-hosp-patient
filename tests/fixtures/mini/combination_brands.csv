@@ -1,0 +1,8 @@
+brand_name,strength_label,dose_form,components,generic_components
+Glycomet-GP,1,tab,glimepiride 1 mg + metformin 500 mg,glimepiride;metformin
+Glycomet-GP,2,tab,glimepiride 2 mg + metformin 500 mg,glimepiride;metformin
+Amlopres-AT,,tab,amlodipine 5 mg + atenolol 50 mg,amlodipine;atenolol
+Telma-AM,,tab,telmisartan 40 mg + amlodipine 5 mg,amlodipine;telmisartan
+Combiflam,,tab,ibuprofen 400 mg + paracetamol 325 mg,ibuprofen;paracetamol
+Shelcal,500,tab,calcium carbonate 1250 mg + cholecalciferol 250 IU,calcium carbonate;cholecalciferol
+Montair-LC,,tab,montelukast 10 mg + levocetirizine 5 mg,levocetirizine;montelukast

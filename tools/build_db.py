@@ -1,6 +1,6 @@
 """Build data/medsafe.db, a SQLite convenience cache of the pipeline's output.
 
-    python tools/build_db.py --input tests/fixtures [--db data/medsafe.db]
+    python tools/build_db.py --input data/pack/data --split train [--db data/medsafe.db]
 
 For querying (``tools/query.py``) and for the UI. Never on the scoring path: ``run.py`` reads the
 supplied input files directly and gives identical output with this database deleted. Rebuilt
@@ -8,12 +8,11 @@ from scratch on every run; nothing in it is hand-edited.
 
 Each table, and the phase that fills it:
 
-    patients          Phase 1   clinical context, unreadable fields and their notes;
-                                alerts_suppressed from Phase 6
-    medications       Phase 1   raw strings; resolution columns from Phase 2
-    findings          Phase 3-4 every rule hit before collapse, with table and final severity
-    alerts            Phase 6   what ships after collapse and the cap: one submission row each
-    collapse_results  Phase 5   per patient, the chosen drug set and the edges it clears
+    patients          Phase 1   clinical context, unreadable fields and their notes
+    medications       Phase 1-2 each line as written, and what it resolved to and how
+    findings          Phase 3   every rule hit, including minor ones (the UI shows them)
+    alerts            Phase 6   what the predictions file holds: table severity, no minor
+    collapse_results  UI only   per patient, the drug set whose change clears the most edges
     metrics           Phase 1   load counts; the Phase 7 evaluation report later. Phase 7 stores
                                 the missed near-misses as metric ``near_miss_recall`` with
                                 detail ``{"missed": [{patient_id, rule_id, drugs, reason}]}``
@@ -44,14 +43,16 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE patients (
     patient_id        TEXT PRIMARY KEY,
     age               INTEGER,
+    sex               TEXT,
     weight_kg         REAL,
     egfr              REAL,
-    pregnant          INTEGER CHECK (pregnant IN (0, 1)),
+    pregnant          INTEGER CHECK (pregnant IN (0, 1)),   -- NULL: not applicable or unknown
     diagnoses         TEXT NOT NULL,              -- JSON array
+    allergies         TEXT,
+    prescriber_count  INTEGER,
     medication_count  INTEGER NOT NULL,
     unreadable_fields TEXT NOT NULL,              -- JSON array: fields loaded as None, unreadable
-    data_notes        TEXT NOT NULL,              -- JSON array: what that means for the checks
-    alerts_suppressed INTEGER                     -- Phase 6
+    data_notes        TEXT NOT NULL               -- JSON array: what that means for the checks
 );
 
 -- Primary key leads with patient_id, so it doubles as the patient_id index.
@@ -59,9 +60,10 @@ CREATE TABLE medications (
     patient_id        TEXT NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
     med_index         INTEGER NOT NULL,
     raw               TEXT NOT NULL,
-    normalised        TEXT,                       -- Phase 2 onward
-    resolved_generic  TEXT,
-    method            TEXT CHECK (method IN ('exact', 'fuzzy', 'abstained')),
+    normalised        TEXT,                       -- the name words the resolver matched on
+    resolved_generic  TEXT,                       -- ';'-joined; NULL for non-drug or abstained
+    method            TEXT CHECK (method IN ('exact', 'synonym', 'parts', 'prefix', 'fuzzy',
+                                             'non_drug', 'abstained')),
     confidence        REAL,
     abstained         INTEGER CHECK (abstained IN (0, 1)),
     abstain_reason    TEXT,
@@ -71,28 +73,24 @@ CREATE TABLE medications (
 CREATE TABLE findings (
     finding_id        INTEGER PRIMARY KEY,
     patient_id        TEXT NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
-    issue_type        TEXT NOT NULL,              -- interaction, duplicate, renal, contraindication
+    issue_type        TEXT NOT NULL,              -- interaction, duplicate_therapy, renal_dose,
+                                                  -- contraindication
     rule_id           TEXT NOT NULL,
     drugs             TEXT NOT NULL,              -- JSON array of generics
-    table_severity    TEXT,
-    final_severity    TEXT,
-    reasons           TEXT                        -- JSON
+    severity          TEXT NOT NULL,              -- the table's severity, unchanged (D-015)
+    evidence          TEXT                        -- JSON: the patient values that triggered it
 );
 CREATE INDEX findings_patient_id ON findings(patient_id);
 
 CREATE TABLE alerts (
     alert_id          INTEGER PRIMARY KEY,
     patient_id        TEXT NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
-    alert_rank        INTEGER NOT NULL,
     issue_type        TEXT NOT NULL,
-    rule_id           TEXT NOT NULL,
     severity          TEXT NOT NULL,
-    drugs_involved    TEXT NOT NULL,              -- JSON array of generics
-    suggested_action  TEXT,
-    confidence        REAL,
-    reasons           TEXT,
-    limitations       TEXT,
-    UNIQUE (patient_id, alert_rank)
+    drugs_involved    TEXT NOT NULL,              -- ';'-joined generics, as in the submission
+    suggested_action  TEXT NOT NULL,
+    confidence        REAL NOT NULL,
+    UNIQUE (patient_id, issue_type, drugs_involved)
 );
 CREATE INDEX alerts_patient_id ON alerts(patient_id);
 
@@ -120,19 +118,22 @@ def insert_patients(conn: sqlite3.Connection, result: PipelineResult) -> None:
     def patient_row(r: PatientResult) -> tuple:
         """One patients-table row. NULL stays NULL; lists are stored as JSON arrays."""
         p = r.patient
-        return (p.patient_id, p.age, p.weight_kg, p.egfr,
+        return (p.patient_id, p.age, p.sex, p.weight_kg, p.egfr,
                 None if p.pregnant is None else int(p.pregnant),
-                json.dumps(list(p.diagnoses)), len(p.medications),
-                json.dumps(list(p.unreadable_fields)), json.dumps(list(r.notes)))
+                json.dumps(list(p.diagnoses)), p.allergies, p.prescriber_count,
+                len(p.medications), json.dumps(list(p.unreadable_fields)), json.dumps(list(r.notes)))
 
     conn.executemany(
-        "INSERT INTO patients (patient_id, age, weight_kg, egfr, pregnant, diagnoses, "
-        "medication_count, unreadable_fields, data_notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO patients (patient_id, age, sex, weight_kg, egfr, pregnant, diagnoses, "
+        "allergies, prescriber_count, medication_count, unreadable_fields, data_notes) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [patient_row(r) for r in result.patients])
     conn.executemany(
-        "INSERT INTO medications (patient_id, med_index, raw) VALUES (?, ?, ?)",
-        [(r.patient.patient_id, m.index, m.raw)
-         for r in result.patients for m in r.patient.medications])
+        "INSERT INTO medications (patient_id, med_index, raw, normalised, resolved_generic, "
+        "method, confidence, abstained, abstain_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [(r.patient.patient_id, m.index, m.raw, res.normalised, res.resolved_generic,
+          res.method, res.confidence, int(res.verify_manually), res.abstain_reason)
+         for r in result.patients for m, res in zip(r.patient.medications, r.resolutions)])
 
 
 def insert_load_metrics(conn: sqlite3.Connection, dataset: Dataset, input_dir: Path) -> None:
@@ -159,15 +160,16 @@ def table_counts(conn: sqlite3.Connection) -> dict[str, int]:
     return {table: conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in TABLES}
 
 
-def build_db(input_dir: Path, db_path: Path = DEFAULT_DB) -> dict[str, int]:
+def build_db(input_dir: Path, db_path: Path = DEFAULT_DB, split: str = "train") -> dict[str, int]:
     """Run the pipeline stages built so far over ``input_dir`` and write them to ``db_path``.
 
     The database is written to a temporary file and moved into place, so a failed build never
     leaves a half-written cache behind.
 
     Args:
-        input_dir: Directory of supplied input files, as for ``run.py --input``.
+        input_dir: The pack's data folder, as for ``run.py --input``.
         db_path: Where to write the database. Replaced if it exists.
+        split: ``train`` or ``test`` patients.
 
     Returns:
         Row count per table.
@@ -175,7 +177,7 @@ def build_db(input_dir: Path, db_path: Path = DEFAULT_DB) -> dict[str, int]:
     Raises:
         SchemaError: The input does not match ``COLUMN_MAP``.
     """
-    dataset = load_dataset(input_dir)
+    dataset = load_dataset(input_dir, split)
     result = run_pipeline(dataset, Settings())
     db_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = db_path.with_name(db_path.name + ".tmp")
@@ -193,10 +195,11 @@ def build_db(input_dir: Path, db_path: Path = DEFAULT_DB) -> dict[str, int]:
 def main(argv: list[str] | None = None) -> int:
     """Command-line entry point. Returns the exit code."""
     parser = argparse.ArgumentParser(description="Build the SQLite convenience cache.")
-    parser.add_argument("--input", required=True, type=Path, help="directory of input files")
+    parser.add_argument("--input", required=True, type=Path, help="the pack's data folder")
+    parser.add_argument("--split", choices=("train", "test"), default="train")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB, help=f"default {DEFAULT_DB}")
     args = parser.parse_args(argv)
-    counts = build_db(args.input, args.db)
+    counts = build_db(args.input, args.db, args.split)
     print(f"built {args.db}")
     for table, count in counts.items():
         print(f"  {table:<17} {count}")

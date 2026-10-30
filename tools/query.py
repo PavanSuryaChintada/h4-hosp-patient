@@ -4,12 +4,14 @@
 
     most-alerts          patients with the most alerts
     abstained            every medication the resolver declined to resolve
-    severity             alerts by severity, before collapse (findings) and after (alerts)
+    severity             by severity: every finding detected, and the alerts submitted
+                         (minor findings are detected and shown, never submitted: D-018)
     missed-near-misses   near-misses the pipeline did not catch, with the reason for each
     degraded             patients kept with a field that could not be read, and the note
     counts               rows per table: which phases have filled the database so far
 
-Build the database first with ``python tools/build_db.py --input <dir>``. Opened read-only.
+Build the database first with ``python tools/build_db.py --input data/pack/data``. Opened
+read-only.
 """
 
 from __future__ import annotations
@@ -33,7 +35,8 @@ class Query(NamedTuple):
 
 QUERIES: dict[str, Query] = {
     "most-alerts": Query("""
-        SELECT p.patient_id, COUNT(*) AS alerts, SUM(a.severity = 'high') AS high,
+        SELECT p.patient_id, COUNT(*) AS alerts,
+               SUM(a.severity IN ('contraindicated', 'major')) AS serious,
                p.medication_count AS medications, p.egfr
         FROM alerts a JOIN patients p ON p.patient_id = a.patient_id
         GROUP BY p.patient_id
@@ -47,24 +50,23 @@ QUERIES: dict[str, Query] = {
         WHERE abstained = 1
         ORDER BY patient_id, med_index
         LIMIT :limit""",
-        "no abstentions recorded: resolution columns are filled from Phase 2"),
+        "no abstentions: every line resolved or was recognised as not a medicine"),
     "severity": Query("""
-        WITH before AS (SELECT final_severity AS severity, COUNT(*) AS n
-                        FROM findings GROUP BY final_severity),
-             after AS (SELECT severity, COUNT(*) AS n FROM alerts GROUP BY severity),
-             levels AS (SELECT severity FROM before UNION SELECT severity FROM after),
+        WITH detected AS (SELECT severity, COUNT(*) AS n FROM findings GROUP BY severity),
+             submitted AS (SELECT severity, COUNT(*) AS n FROM alerts GROUP BY severity),
+             levels AS (SELECT severity FROM detected UNION SELECT severity FROM submitted),
              cohort AS (SELECT MAX(COUNT(*), 1) AS patients FROM patients)
         SELECT l.severity,
-               COALESCE(b.n, 0) AS before_collapse,
-               COALESCE(a.n, 0) AS after_collapse,
-               ROUND(COALESCE(b.n, 0) * 1.0 / cohort.patients, 2) AS before_per_patient,
-               ROUND(COALESCE(a.n, 0) * 1.0 / cohort.patients, 2) AS after_per_patient
+               COALESCE(d.n, 0) AS detected,
+               COALESCE(s.n, 0) AS submitted,
+               ROUND(COALESCE(d.n, 0) * 1.0 / cohort.patients, 2) AS detected_per_patient,
+               ROUND(COALESCE(s.n, 0) * 1.0 / cohort.patients, 2) AS submitted_per_patient
         FROM levels l
-        LEFT JOIN before b ON b.severity IS l.severity
-        LEFT JOIN after a ON a.severity IS l.severity
+        LEFT JOIN detected d ON d.severity IS l.severity
+        LEFT JOIN submitted s ON s.severity IS l.severity
         CROSS JOIN cohort
-        ORDER BY CASE l.severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1
-                                 WHEN 'low' THEN 2 WHEN 'info' THEN 3 ELSE 4 END""",
+        ORDER BY CASE l.severity WHEN 'contraindicated' THEN 0 WHEN 'major' THEN 1
+                                 WHEN 'moderate' THEN 2 WHEN 'minor' THEN 3 ELSE 4 END""",
         "no findings or alerts yet: findings fill from Phase 3, alerts from Phase 6"),
     "missed-near-misses": Query("""
         SELECT json_extract(miss.value, '$.patient_id') AS patient_id,

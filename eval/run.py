@@ -1,11 +1,14 @@
-"""Evaluation harness: run the pipeline, score it against ground truth, write a report.
+"""Evaluation harness: run the pipeline on the training patients and score it officially.
 
-    python -m eval.run [--input tests/fixtures] [--compare eval/reports/<earlier>.json]
+    python -m eval.run [--compare eval/reports/<earlier>.json] [--no-docs]
 
-Prints the two headline numbers side by side (serious-issue recall, and alerts per patient
-before collapse -> after collapse and cap), then near-miss recall with every missed near-miss
-and the stage where it was lost. Writes ``eval/reports/<timestamp>-<git_sha>.json`` and
-regenerates ``docs/evaluation.md``. With ``--compare``, exits 1 if serious-issue recall dropped.
+For the dev split (1,200 patients, everything is tuned on it) and the holdout split (300
+patients, never tuned on), this runs the pipeline, writes the two submission files, and scores
+them with the organisers' ``evaluate.py``. It adds what the scorer does not report: false-
+resolution and abstention rates, and every near-miss with the stage where it was lost. It writes
+``eval/reports/<timestamp>-<git_sha>.json`` and regenerates ``docs/evaluation.md``.
+
+With ``--compare``, exits 1 if the holdout primary score or serious-issue recall dropped.
 """
 
 from __future__ import annotations
@@ -16,95 +19,97 @@ import json
 import subprocess
 import sys
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from eval import mirror
-from eval.baselines import evaluate_baselines
-from eval.metrics import caught, compute_metrics
-from eval.records import TruthMedication
+from eval import official
+from eval.baselines import score_references
+from eval.metrics import caught, index_resolutions, resolution_metrics
+from eval.pack import ROOT, data_dir, require_pack
+from eval.records import TruthToken
+from eval.split import split_ids
 from eval.trace import diagnose, traces_from
-from eval.truth import Truth, load_truth
+from eval.truth import load_truth, write_truth_subset
 from medsafe.data.adapter import Dataset, load_dataset
-from medsafe.data.validate import SchemaError
+from medsafe.output.writer import (PREDICTIONS_FILE, RESOLUTION_FILE, write_predictions,
+                                   write_resolution)
 from medsafe.pipeline import STAGES, Settings, run_pipeline
 
-ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = ROOT / "tests" / "fixtures"
-DEFAULT_REPORTS = ROOT / "eval" / "reports"
-DEFAULT_DOCS = ROOT / "docs" / "evaluation.md"
+WORK_DIR = ROOT / "eval" / "work"
+REPORTS_DIR = ROOT / "eval" / "reports"
+DOCS_PATH = ROOT / "docs" / "evaluation.md"
+REPORTED_SPLITS = ("dev", "holdout")
 
 
-@dataclass(frozen=True)
-class Evaluation:
-    """One scored run: what was built, what it scored, and what it missed."""
-
-    settings: Settings
-    stages_built: tuple[str, ...]
-    metrics: dict[str, Any]
-    score: float
-    missed_near_misses: list[dict[str, str]]
-    baselines: dict[str, dict[str, Any]]
-    load: list[dict[str, Any]]
-
-
-def evaluate(dataset: Dataset, truth: Truth, settings: Settings = Settings(), *,
-             with_baselines: bool = True) -> Evaluation:
-    """Run the pipeline over ``dataset`` and score it against ``truth``.
+def evaluate_split(dataset: Dataset, split: str, settings: Settings = Settings(), *,
+                   work_dir: Path = WORK_DIR, with_baselines: bool = True) -> dict[str, Any]:
+    """Run the pipeline on one split of the training patients and score it.
 
     Args:
-        dataset: Loaded input.
-        truth: Labels for the same patients.
-        settings: Thresholds to run the pipeline with.
-        with_baselines: Also score the calibration baselines (skipped by the sweep).
+        dataset: The training patients and reference tables (``load_dataset(..., "train")``).
+        split: ``dev``, ``holdout`` or ``train``.
+        settings: Pipeline thresholds.
+        work_dir: Where submission and truth files for the scorer are written.
+        with_baselines: Also score the reference submissions (oracle, flag nothing).
 
     Returns:
-        The metrics, mirror score, missed near-misses with the reason for each, and the load
-        counts. Deterministic for the same inputs.
+        The official report, our resolution metrics, and the near-miss table for the split.
     """
-    result = run_pipeline(dataset, settings)
+    ids = split_ids((p.patient_id for p in dataset.patients), split)
+    subset = replace(dataset, patients=[p for p in dataset.patients if p.patient_id in ids])
+    result = run_pipeline(subset, settings)
     traces = traces_from(result)
-    metrics = compute_metrics(truth.issues, traces, truth.medications)
+
+    folder = work_dir / split
+    write_resolution(result, folder / "submission" / RESOLUTION_FILE)
+    write_predictions([], folder / "submission" / PREDICTIONS_FILE)
+    labels, truth_resolution = write_truth_subset(data_dir(), ids, folder / "truth")
+    report = official.score(folder / "submission" / PREDICTIONS_FILE,
+                            folder / "submission" / RESOLUTION_FILE, labels, truth_resolution,
+                            folder / "score.json")
+
+    truth = load_truth(data_dir(), ids)
+    ours = index_resolutions(r for t in traces.values() for r in (t.resolutions or ()))
+    tokens_by_patient: dict[str, list[TruthToken]] = {}
+    for token in truth.tokens:
+        tokens_by_patient.setdefault(token.patient_id, []).append(token)
+
     shipped = [a for t in traces.values() for a in (t.shipped or ())]
-    medications: dict[str, list[TruthMedication]] = {}
-    for medication in truth.medications:
-        medications.setdefault(medication.patient_id, []).append(medication)
+    near_misses = []
+    for issue, hit in zip([i for i in truth.issues if i.near_miss],
+                          caught([i for i in truth.issues if i.near_miss], shipped)):
+        lines = [t for t in tokens_by_patient.get(issue.patient_id, [])
+                 if t.generics & issue.drugs]
+        reason = "caught" if hit else diagnose(issue, traces.get(issue.patient_id), lines)
+        near_misses.append({
+            "patient_id": issue.patient_id, "issue_type": issue.issue_type,
+            "severity": issue.severity, "drugs": " + ".join(sorted(issue.drugs)),
+            "as_written": " | ".join(t.written_token for t in lines),
+            "drugs_resolved": reason == "caught" or reason.startswith("every drug resolved"),
+            "status": reason,
+        })
+    near_misses.sort(key=lambda n: (n["drugs_resolved"], n["patient_id"], n["drugs"]))
 
-    near_misses = [i for i in truth.issues if i.near_miss]
-    missed = [{
-        "patient_id": issue.patient_id,
-        "issue_type": issue.issue_type,
-        "severity": issue.severity,
-        "drugs": " + ".join(sorted(issue.drugs)),
-        "as_written": " + ".join(f"'{raw}'" for raw in issue.raw_drugs),
-        "near_miss_because": issue.near_miss_reason,
-        "missed_because": diagnose(issue, traces.get(issue.patient_id),
-                                   medications.get(issue.patient_id, [])),
-    } for issue, hit in zip(near_misses, caught(near_misses, shipped)) if not hit]
-    missed.sort(key=lambda m: (m["patient_id"], m["issue_type"], m["drugs"]))
-
-    return Evaluation(
-        settings=settings,
-        stages_built=result.stages_built,
-        metrics=metrics,
-        score=mirror.score(metrics),
-        missed_near_misses=missed,
-        baselines=evaluate_baselines(truth, list(traces)) if with_baselines else {},
-        load=[{key: report.to_dict()[key] for key in
-               ("kind", "rows_read", "loaded", "loaded_clean", "loaded_degraded", "skipped",
-                "degraded_fields", "reasons")} for report in dataset.reports],
-    )
+    return {
+        "split": split,
+        "patients": len(ids),
+        "stages_built": list(result.stages_built),
+        "official": report,
+        "resolution": resolution_metrics(truth.tokens, ours),
+        "near_misses": near_misses,
+        "baselines": (score_references(data_dir(), ids, labels, truth_resolution,
+                                       folder / "references") if with_baselines else {}),
+    }
 
 
-def data_version(input_dir: Path) -> str:
-    """Short content hash of every CSV and JSON file in ``input_dir``: names and bytes."""
+def data_version(folder: Path) -> str:
+    """Short content hash of every CSV in the pack's data folder: names and bytes."""
     digest = hashlib.sha256()
-    for path in sorted(input_dir.glob("*")):
-        if path.suffix.lower() in (".csv", ".json"):
-            digest.update(path.name.encode())
-            digest.update(path.read_bytes())
+    for path in sorted(folder.glob("*.csv")):
+        digest.update(path.name.encode())
+        digest.update(path.read_bytes())
     return digest.hexdigest()[:12]
 
 
@@ -120,29 +125,19 @@ def git_revision() -> str:
     return f"{sha}-dirty" if dirty else sha
 
 
-def build_report(evaluation: Evaluation, input_dir: Path, generated_at: datetime) -> dict[str, Any]:
-    """The JSON report: provenance, every threshold, every metric, every missed near-miss."""
+def build_report(splits: dict[str, dict[str, Any]], settings: Settings,
+                 generated_at: datetime) -> dict[str, Any]:
+    """The JSON report: provenance, every threshold, and every split's results."""
     return {
         "generated_at": generated_at.isoformat(timespec="seconds"),
         "git_revision": git_revision(),
-        "input_dir": _display(input_dir),
-        "data_version": data_version(input_dir),
-        "stages_built": list(evaluation.stages_built),
-        "settings": {**asdict(evaluation.settings),
-                     "mirror": "eval.mirror.score",
-                     "low_value_alert_penalty": mirror.LOW_VALUE_ALERT_PENALTY},
-        "headline": {"serious_recall": evaluation.metrics["serious_recall"],
-                     "alerts_per_patient_before": evaluation.metrics["alerts_per_patient_before"],
-                     "alerts_per_patient_after": evaluation.metrics["alerts_per_patient_after"]},
-        "score": evaluation.score,
-        "metrics": evaluation.metrics,
-        "missed_near_misses": evaluation.missed_near_misses,
-        "baselines": evaluation.baselines,
-        "load": evaluation.load,
+        "data_version": data_version(data_dir()),
+        "settings": asdict(settings),
+        "splits": splits,
     }
 
 
-def write_report(report: dict[str, Any], reports_dir: Path) -> Path:
+def write_report(report: dict[str, Any], reports_dir: Path = REPORTS_DIR) -> Path:
     """Write ``report`` to ``<reports_dir>/<timestamp>-<git_revision>.json``. Returns the path."""
     stamp = datetime.fromisoformat(report["generated_at"]).strftime("%Y%m%dT%H%M%SZ")
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -152,44 +147,25 @@ def write_report(report: dict[str, Any], reports_dir: Path) -> Path:
 
 
 def compare(report: dict[str, Any], previous: dict[str, Any]) -> tuple[bool, str]:
-    """Regression gate. Returns (ok, message); not ok if serious-issue recall dropped."""
-    now = report["metrics"]["serious_recall"]
-    before = previous["metrics"]["serious_recall"]
-    dropped = before is not None and (now is None or now < before - 1e-9)
-    verdict = "REGRESSION: serious-issue recall dropped" if dropped else "ok: no recall drop"
-    return not dropped, (f"{verdict} ({_num(before)} in {previous.get('git_revision', '?')} -> "
-                         f"{_num(now)} now)")
+    """Regression gate on the holdout split. Returns (ok, message)."""
+    messages, ok = [], True
+    for name in ("primary_score", "serious_recall"):
+        def value(r: dict[str, Any]) -> float:
+            """The metric ``name`` on the holdout split of report ``r``."""
+            official_report = r["splits"]["holdout"]["official"]
+            return official_report.get(name, official_report["components"].get(name, 0.0))
+        before, now = value(previous), value(report)
+        if now < before - 1e-9:
+            ok = False
+            messages.append(f"REGRESSION: holdout {name} {before:.4f} -> {now:.4f}")
+        else:
+            messages.append(f"ok: holdout {name} {before:.4f} -> {now:.4f}")
+    return ok, "\n".join(messages)
 
 
-def _num(value: float | None, digits: int = 2) -> str:
-    """Format a metric for display; None means not measurable."""
+def _num(value: float | None, digits: int = 4) -> str:
+    """Format a metric; None means not measurable."""
     return "n/a" if value is None else f"{value:.{digits}f}"
-
-
-def _display(path: Path) -> str:
-    """A path relative to the repo root when it is inside it, with forward slashes."""
-    try:
-        return path.resolve().relative_to(ROOT).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
-def headline(metrics: dict[str, Any]) -> str:
-    """The two headline numbers, side by side. Never one without the other."""
-    return (f"{'Serious-issue recall':<28}Alerts per patient\n"
-            f"{_num(metrics['serious_recall']):<28}"
-            f"{metrics['alerts_per_patient_before']:.1f} -> {metrics['alerts_per_patient_after']:.1f}")
-
-
-def _stage_caveat(report: dict[str, Any]) -> str:
-    """A sentence on what the numbers can mean given the stages built, or an empty string."""
-    missing = [s for s in STAGES if s not in report["stages_built"]]
-    if not missing:
-        return ""
-    return (f"Built so far: {', '.join(report['stages_built'])}. Not yet built: "
-            f"{', '.join(missing)}. Nothing is flagged until those land, so recall is zero by "
-            f"construction; the calibration baselines and tests/test_metrics.py show the "
-            f"harness itself measures correctly.")
 
 
 def _table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> str:
@@ -199,141 +175,133 @@ def _table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> str:
     return "\n".join(lines)
 
 
+def _relative(path: Path) -> str:
+    """A path relative to the repo root, with forward slashes."""
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def render_markdown(report: dict[str, Any], report_path: str) -> str:
     """docs/evaluation.md, generated from one report."""
-    m = report["metrics"]
-    s = report["settings"]
+    splits = report["splits"]
+    names = [s for s in REPORTED_SPLITS if s in splits]
+    components = ("serious_recall", "near_miss_serious_recall", "precision_all",
+                  "graded_recall_non_minor", "resolution_accuracy", "base_score",
+                  "noise_alerts_per_patient", "alert_fatigue_multiplier")
+    built = splits[names[0]]["stages_built"]
     parts = [
         "# Evaluation",
-        f"Generated by `python -m eval.run` from `{report_path}`. Do not edit by hand.",
-        _table(["", ""], [
-            ["Git revision", f"`{report['git_revision']}`"],
-            ["Data", f"`{report['input_dir']}`, version `{report['data_version']}`"],
-            ["Stages built", ", ".join(report["stages_built"])],
-            ["Settings", f"alert_cap {s['alert_cap']}, min_confidence {s['min_confidence']}, "
-                         f"min_margin {s['min_margin']}"],
-            ["Mirror", f"`{s['mirror']}`, low-value alert penalty {s['low_value_alert_penalty']}"],
-        ]),
-        "## Headline",
-        "```\n" + headline(m) + "\n```",
-        f"Mirror score **{report['score']:.3f}**. Near-miss recall **{_num(m['near_miss_recall'])}** "
-        f"({m['near_misses_caught']} of {m['near_misses']} caught). "
-        f"{m['serious_caught']} of {m['serious_issues']} serious issues caught.",
+        f"Generated by `python -m eval.run` from `{report_path}` at `{report['git_revision']}`, "
+        f"data version `{report['data_version']}`. Do not edit by hand. Every score here is "
+        f"computed by the organisers' unmodified `evaluate.py`.",
+        f"Stages built: {', '.join(built)}. Not yet built: "
+        f"{', '.join(s for s in STAGES if s not in built)}. With no alerts yet, the primary "
+        f"score is only the resolution term: 0.15 x resolution accuracy.",
+        "## Official score",
+        _table(["", *[f"{n} ({splits[n]['patients']} patients)" for n in names]],
+               [["**primary score**", *[f"**{splits[n]['official']['primary_score']:.4f}**"
+                                        for n in names]]]
+               + [[c, *[_num(splits[n]["official"]["components"][c]) for n in names]]
+                  for c in components]),
+        "## Name resolution",
+        "Correct means the exact set of generics; an empty set is correct for a non-medicine "
+        "line. A false resolution names the wrong drug and can raise a confidently wrong alert; "
+        "an abstention names nothing and is flagged for manual check.",
+        _table(["", *names],
+               [[label, *[_num(splits[n]["resolution"][k]) for n in names]] for label, k in (
+                   ("accuracy", "accuracy"), ("false-resolution rate", "false_resolution_rate"),
+                   ("abstention rate", "abstention_rate"),
+                   ("accuracy on misspelled lines", "misspelled_accuracy"))]),
+        "### By token kind (" + names[-1] + ")",
+        _table(["Kind", "Lines", "Accuracy", "False", "Abstained"],
+               [[k, v["lines"], f"{v['accuracy']:.3f}", v["false"], v["abstained"]]
+                for k, v in splits[names[-1]]["resolution"]["by_token_kind"].items()]),
     ]
-    caveat = _stage_caveat(report)
-    if caveat:
-        parts.append(caveat)
 
-    parts += ["## Missed near-misses",
-              f"{len(report['missed_near_misses'])} of {m['near_misses']} missed, each with the "
-              f"stage where it was lost."]
-    if report["missed_near_misses"]:
-        parts.append(_table(
-            ["Patient", "Issue", "Severity", "Drugs", "As written", "Why it is a near-miss",
-             "Why it was missed"],
-            [[x["patient_id"], x["issue_type"], x["severity"], x["drugs"], x["as_written"],
-              x["near_miss_because"], x["missed_because"]] for x in report["missed_near_misses"]]))
-
-    by_severity = m["alerts_per_patient_by_severity"]
-    resolution = m["resolution"]
+    all_near = [n for name in names for n in splits[name]["near_misses"]]
+    resolved = sum(n["drugs_resolved"] for n in all_near)
     parts += [
-        "## Breakdowns",
-        "### Serious-issue recall by issue type",
-        _table(["Issue type", "Recall"],
-               [[k, _num(v)] for k, v in m["serious_recall_by_issue_type"].items()]),
-        "### Recall by true severity",
-        _table(["True severity", "Recall"],
-               [[k, _num(v)] for k, v in m["recall_by_true_severity"].items()]),
-        "### Alerts per patient by severity",
-        _table(["Severity", "Before collapse", "After collapse and cap"],
-               [[k, f"{by_severity['before'][k]:.2f}", f"{by_severity['after'][k]:.2f}"]
-                for k in by_severity["before"]]),
-        "### False positives by severity",
-        "Shipped alerts that match no true issue at all. Low-value alerts per patient (the mirror's "
-        f"penalty term): **{m['low_value_alerts_per_patient']:.2f}**.",
-        _table(["Alert severity", "False positives"],
-               [[k, v] for k, v in m["false_positives_by_severity"].items()]),
-        "### Name resolution",
-        ("Not available: name resolution is not built yet (Phase 2)." if resolution is None else
-         _table(["Measure", "Value"], [[k, v if k == "lines" else _num(v, 3)]
-                                       for k, v in resolution.items()])),
-        "### Patients with no alert",
-        f"{m['zero_alert_patients']['count']} of {m['patients']} patients had no alert; "
-        f"{m['zero_alert_patients']['with_serious_issue']} of those have a serious true issue.",
-        "## Load",
-        _table(["File", "Read", "Clean", "Degraded", "Skipped"],
-               [[x["kind"], x["rows_read"], x["loaded_clean"], x["loaded_degraded"],
-                 x["skipped"]] for x in report["load"]]),
+        "## Near-misses",
+        f"{len(all_near)} seeded near-misses across {' and '.join(names)}. **{resolved} of "
+        f"{len(all_near)}** have every drug resolved correctly, so the rule engine (Phase 3) "
+        f"can catch them.",
     ]
-    if report["baselines"]:
+    unresolved = [n for n in all_near if not n["drugs_resolved"]]
+    parts.append(_table(["Patient", "Issue", "Severity", "Drugs", "As written", "Status"],
+                        [[n["patient_id"], n["issue_type"], n["severity"], n["drugs"],
+                          n["as_written"], n["status"]] for n in unresolved])
+                 if unresolved else "None is lost at name resolution.")
+
+    holdout = splits.get("holdout", splits[names[-1]])
+    if holdout["baselines"]:
         parts += [
-            "## Calibration baselines",
-            "These read the true generics and skip name resolution. They check the harness and "
-            "the mirror, not the detector: flagging nothing must score 0, flagging everything "
-            "must score near 0, and the oracle sets the ceiling.",
-            _table(["Baseline", "Serious recall", "Near-miss recall", "Alerts per patient",
-                    "Low-value per patient", "Mirror score"],
-                   [[name, _num(b["serious_recall"]), _num(b["near_miss_recall"]),
-                     f"{b['alerts_per_patient']:.1f}", f"{b['low_value_alerts_per_patient']:.1f}",
-                     f"{b['score']:.3f}"] for name, b in report["baselines"].items()]),
+            "## Floor, ceiling and calibration (holdout)",
+            "Reference submissions on the same patients, scored by the same official scorer "
+            "(eval/baselines.py). The pack baseline is the floor. An alert on a true *minor* "
+            "issue earns nothing in any recall term and costs 0.25 noise units, so even a "
+            "perfect detector that reports minor issues scores below 1.0; without them the "
+            "ceiling is 1.0. Full-train figures: docs/baseline-floor.md.",
+            _table(["Reference", "Primary score", "Serious recall", "Precision",
+                    "Noise per patient"],
+                   [[name, f"{b['primary_score']:.4f}",
+                     _num(b["components"]["serious_recall"]),
+                     _num(b["components"]["precision_all"]),
+                     _num(b["components"]["noise_alerts_per_patient"])]
+                    for name, b in holdout["baselines"].items()]),
         ]
-    parts += ["## Reproduce",
-              "```\npython tools/make_fixtures.py\npython -m eval.run\npython -m eval.sweep\n```"]
+    parts += [
+        "## What these numbers measure",
+        "The labels were produced by the organisers' deterministic rule engine running the "
+        "published reference tables on each patient's true regimen; the hidden test labels "
+        "come from the same engine. Our rule engine (Phase 3) implements those same published "
+        "rules. So a training score measures whether name resolution, list parsing and our "
+        "implementation of the published rules are right. It does not measure whether the rules "
+        "are clinically right: the labeller and the detector share them by design. Expect the "
+        "test score to differ where the test lists are written differently, not where the rules "
+        "differ.",
+        "## Reproduce",
+        "```\npip install -r requirements.txt -r requirements-dev.txt\npython -m eval.sweep\n"
+        "python -m eval.run\n```",
+    ]
     return "\n\n".join(parts) + "\n"
 
 
-def render_console(report: dict[str, Any], report_path: str) -> str:
-    """The plain-text summary printed by ``python -m eval.run``."""
-    m = report["metrics"]
-    lines = [headline(m), "",
-             f"Near-miss recall {_num(m['near_miss_recall'])} "
-             f"({m['near_misses_caught']} of {m['near_misses']} caught)",
-             f"Mirror score {report['score']:.3f}"]
-    caveat = _stage_caveat(report)
-    if caveat:
-        lines += ["", caveat]
-    lines += ["", f"Missed near-misses ({len(report['missed_near_misses'])}):"]
-    lines += [f"  {x['patient_id']}  {x['issue_type']:<16} {x['drugs']:<34} {x['missed_because']}"
-              for x in report["missed_near_misses"]]
-    if report["baselines"]:
-        lines += ["", f"{'Baseline':<17}{'recall':>8}{'alerts/pt':>11}{'low-value/pt':>14}"
-                      f"{'score':>8}"]
-        lines += [f"{name:<17}{_num(b['serious_recall']):>8}{b['alerts_per_patient']:>11.1f}"
-                  f"{b['low_value_alerts_per_patient']:>14.1f}{b['score']:>8.3f}"
-                  for name, b in report["baselines"].items()]
-    lines += ["", f"report: {report_path}"]
-    return "\n".join(lines)
-
-
 def main(argv: list[str] | None = None) -> int:
-    """Command-line entry point. Returns 0 ok, 1 recall regression, 2 unusable input."""
-    parser = argparse.ArgumentParser(description="Score the pipeline against ground truth.")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT,
-                        help="input directory with labels beside it (default: fixtures)")
-    parser.add_argument("--reports-dir", type=Path, default=DEFAULT_REPORTS)
-    parser.add_argument("--docs", type=Path, default=DEFAULT_DOCS,
-                        help="where to write the Markdown summary")
-    parser.add_argument("--no-docs", action="store_true", help="do not write the Markdown summary")
-    parser.add_argument("--compare", type=Path, help="earlier report; exit 1 if recall dropped")
+    """Command-line entry point. Returns 0 ok, 1 regression, 2 pack or scorer missing."""
+    parser = argparse.ArgumentParser(description="Score the pipeline on the training patients.")
+    parser.add_argument("--no-docs", action="store_true", help="do not regenerate the docs")
+    parser.add_argument("--no-baselines", action="store_true", help="skip reference submissions")
+    parser.add_argument("--compare", type=Path, help="earlier report; exit 1 on a drop")
+    parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR)
+    parser.add_argument("--docs", type=Path, default=DOCS_PATH)
     args = parser.parse_args(argv)
-
     try:
-        dataset = load_dataset(args.input)
-    except SchemaError as error:
-        print(f"input error: {error}", file=sys.stderr)
-        return 2
-    truth = load_truth(args.input)
-    if truth is None:
-        print(f"no labels in {args.input}: recall cannot be measured", file=sys.stderr)
+        require_pack()
+        dataset = load_dataset(data_dir(), "train")
+        settings = Settings()
+        splits = {name: evaluate_split(dataset, name, settings,
+                                       with_baselines=not args.no_baselines and name == "holdout")
+                  for name in REPORTED_SPLITS}
+    except (FileNotFoundError, official.OfficialScorerError) as error:
+        print(f"cannot evaluate: {error}", file=sys.stderr)
         return 2
 
-    report = build_report(evaluate(dataset, truth), args.input, datetime.now(timezone.utc))
+    report = build_report(splits, settings, datetime.now(timezone.utc))
     path = write_report(report, args.reports_dir)
     if not args.no_docs:
-        args.docs.parent.mkdir(parents=True, exist_ok=True)
-        args.docs.write_text(render_markdown(report, _display(path)), encoding="utf-8")
-    print(render_console(report, _display(path)))
+        args.docs.write_text(render_markdown(report, _relative(path)), encoding="utf-8")
 
+    for name in REPORTED_SPLITS:
+        s = splits[name]
+        r = s["resolution"]
+        print(f"{name:<8} primary {s['official']['primary_score']:.4f}  resolution "
+              f"{r['accuracy']:.4f}  false {r['false_resolution_rate']:.4f}  abstained "
+              f"{r['abstention_rate']:.4f}  misspelled {_num(r['misspelled_accuracy'])}  "
+              f"near-misses resolved {sum(n['drugs_resolved'] for n in s['near_misses'])}/"
+              f"{len(s['near_misses'])}")
+    print(f"report: {_relative(path)}")
     if args.compare:
         ok, message = compare(report, json.loads(args.compare.read_text(encoding="utf-8")))
         print(message)
