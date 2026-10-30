@@ -55,6 +55,7 @@ MARGIN_GRID = (0.0, 0.02, 0.05, 0.10)
 DOCS_PATH = ROOT / "docs" / "ml-challenger.md"
 REPORTS_DIR = ROOT / "eval" / "reports"
 MISSPELLED = {"misspelled_brand", "misspelled_generic", "misspelled_truncated"}
+LEARNING_FRACTIONS = (0.05, 0.1, 0.25, 0.5, 0.75, 1.0)    # of dev patients, for the learning curve
 
 Label = tuple[str, ...]                 # sorted generics; () means "not a medicine"
 
@@ -189,7 +190,8 @@ def choose_thresholds(dataset: Dataset, dev_tokens: Sequence[Any]) -> dict[str, 
             grid.append((accuracy(rows), similarity, margin))
     best = max(grid, key=lambda g: (round(g[0], 6), g[1], -g[2]))
     return {"min_similarity": best[1], "min_margin": best[2], "cv_accuracy": round(best[0], 4),
-            "folds": FOLDS, "lines": len(held)}
+            "folds": FOLDS, "lines": len(held),
+            "grid": [[similarity, margin, round(acc, 4)] for acc, similarity, margin in grid]}
 
 
 def score_submission(dataset: Dataset, ids: frozenset[str], resolver: Any, folder: Path) -> tuple[dict, Any]:
@@ -224,7 +226,32 @@ def line_breakdown(result: Any, tokens: Sequence[Any], seen: set[str]) -> dict[s
         "unseen_misspelled_accuracy": round(accuracy(pairs(lambda r, t: unseen(r, t) and t.token_kind in MISSPELLED)), 4),
         "wrong_confident": sum(1 for r, t in rows if r.method != "abstained" and tuple(r.generics) != tuple(sorted(t.generics))),
         "abstained": sum(1 for r, _ in rows if r.method == "abstained"),
+        "by_kind": {kind: {"lines": len(pairs(lambda r, t, k=kind: t.token_kind == k)),
+                           "accuracy": round(accuracy(pairs(lambda r, t, k=kind: t.token_kind == k)), 4)}
+                    for kind in sorted({t.token_kind for _, t in rows})},
     }
+
+
+def learning_curve(dataset: Dataset, dev_tokens: Sequence[Any], holdout_tokens: Sequence[Any],
+                   chosen: dict[str, Any]) -> list[dict[str, Any]]:
+    """Holdout name accuracy as the matcher trains on more dev patients (the first fraction, by id).
+
+    Every point uses the thresholds cross-validation chose, and is scored line by line against
+    the holdout labels, without the rule engine.
+    """
+    patients = sorted({t.patient_id for t in dev_tokens})
+    curve = []
+    for fraction in LEARNING_FRACTIONS:
+        keep = set(patients[:max(1, round(len(patients) * fraction))])
+        train = [(t.written_token, tuple(sorted(t.generics))) for t in dev_tokens if t.patient_id in keep]
+        model = NgramNearestNeighbour(reference_examples(dataset) + train)
+        rows = [(to_resolution(t.written_token, model.predict(t.written_token), chosen["min_similarity"],
+                               chosen["min_margin"]).generics, tuple(sorted(t.generics)), t.token_kind)
+                for t in holdout_tokens]
+        curve.append({"fraction": fraction, "training_lines": len(train),
+                      "accuracy": round(accuracy([(p, y) for p, y, _ in rows]), 4),
+                      "misspelled_accuracy": round(accuracy([(p, y) for p, y, k in rows if k in MISSPELLED]), 4)})
+    return curve
 
 
 def run(dataset: Dataset) -> dict[str, Any]:
@@ -246,6 +273,7 @@ def run(dataset: Dataset) -> dict[str, Any]:
             folder = Path(tmp) / name.split()[0]
             report, result = score_submission(dataset, holdout, resolver, folder)
             out["submissions"][name] = {"official": report, "lines": line_breakdown(result, holdout_tokens, seen)}
+    out["learning_curve"] = learning_curve(dataset, dev_tokens, holdout_tokens, chosen)
     return out
 
 

@@ -40,6 +40,7 @@ FEATURES = ("severity_rank", "interaction", "duplicate", "renal", "egfr", "egfr_
             "recognised", "not_in_formulary", "prescribers", "pregnant", "patient_alerts",
             "renal_lowest_tier", "renal_highest_tier")
 THRESHOLD_GRID = tuple(round(0.1 * i, 1) for i in range(1, 10))
+TREE_STAGES = (1, 2, 3, 5, 8, 12, 20, 30, 45, 60)       # trees used for the training curve
 FOLDS = 5
 
 
@@ -133,10 +134,25 @@ class BoostedTrees:
         node.right = self._grow(X, grad, hess, [i for i in rows if X[i][f] > threshold], depth + 1)
         return node
 
-    def prob(self, x: Sequence[float]) -> float:
-        """The probability that this alert is worth showing."""
-        s = self.base + self.rate * sum(t.predict(x) for t in self.trees)
+    def prob(self, x: Sequence[float], trees: int | None = None) -> float:
+        """The probability that this alert is worth showing, using the first ``trees`` trees (all
+        when None): the staged prediction behind the training curve."""
+        s = self.base + self.rate * sum(t.predict(x) for t in self.trees[:trees])
         return 1 / (1 + math.exp(-s))
+
+
+def roc_points(scored: Sequence[tuple[float, int]], limit: int = 120) -> list[list[float]]:
+    """(false-positive rate, true-positive rate) at every distinct score, thinned to ``limit`` points."""
+    pos = sum(y for _, y in scored) or 1
+    neg = sum(1 - y for _, y in scored) or 1
+    points, tp, fp = [[0.0, 0.0]], 0, 0
+    ordered = sorted(scored, key=lambda sy: -sy[0])
+    for k, (score, y) in enumerate(ordered):
+        tp, fp = tp + y, fp + (1 - y)
+        if k + 1 == len(ordered) or ordered[k + 1][0] != score:
+            points.append([round(fp / neg, 4), round(tp / pos, 4)])
+    step = max(1, len(points) // limit)
+    return points[::step] + ([points[-1]] if (len(points) - 1) % step else [])
 
 
 def auc(scored: Sequence[tuple[float, int]]) -> float:
@@ -203,7 +219,14 @@ def run(dataset: Dataset, ehr: Mapping[str, EhrResult], dev: frozenset[str], hol
         as_is = score_kept(ehr, holdout, None, Path(tmp) / "as-is")
         triaged = score_kept(ehr, holdout, lambda pid, a: scores[(pid, id(a))] >= threshold, Path(tmp) / "triaged")
     importance = sorted(((FEATURES[f], round(g, 2)) for f, g in model.gain.items()), key=lambda kv: -kv[1])
+    labelled = [(scores[(r[0], id(r[1]))], r[3]) for r in holdout_rows]
+    trees_curve = [[k, round(auc([(model.prob(r[2], k), r[3]) for r in holdout_rows]), 4)]
+                   for k in TREE_STAGES if k <= len(model.trees)]
     return {
+        "roc": roc_points(labelled),
+        "trees_curve": trees_curve,
+        "grid": [[t, s] for s, t in grid],
+        "importance_all": importance,
         "training_alerts": len(dev_rows), "worth_showing": sum(r[3] for r in dev_rows),
         "threshold": threshold, "dev_score_at_threshold": dev_score, "folds": FOLDS,
         "holdout_alerts": len(holdout_rows),

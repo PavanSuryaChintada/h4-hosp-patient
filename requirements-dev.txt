@@ -3,3 +3,6 @@
 -r requirements.txt
 pandas==3.1.0
 numpy==2.4.6
+
+# Graphs of the trained-model experiments (python -m eval.ml_plots). Never used by run.py.
+matplotlib==3.11.2

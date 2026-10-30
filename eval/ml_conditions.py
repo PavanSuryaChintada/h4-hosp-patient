@@ -112,9 +112,10 @@ class Logistic:
     def __init__(self, epochs: int = 25, rate: float = 0.2, l2: float = 1e-4):
         self.epochs, self.rate, self.l2 = epochs, rate, l2
         self.weights: dict[str, float] = defaultdict(float)
+        self.history: list[float] = []         # mean log-loss on the training rows after each epoch
 
     def fit(self, rows: Sequence[list[str]], labels: Sequence[int]) -> Logistic:
-        """Learn the weights. Returns self."""
+        """Learn the weights, recording the training loss after every epoch. Returns self."""
         order = list(range(len(rows)))
         rng = random.Random(SEED)
         for epoch in range(self.epochs):
@@ -124,7 +125,15 @@ class Logistic:
                 error = labels[i] - self.prob(rows[i])
                 for f in rows[i]:
                     self.weights[f] += rate * (error - self.l2 * self.weights[f])
+            self.history.append(round(self.log_loss(rows, labels), 5))
         return self
+
+    def log_loss(self, rows: Sequence[list[str]], labels: Sequence[int]) -> float:
+        """Mean binary cross-entropy of the current weights on ``rows``."""
+        eps = 1e-12
+        total = sum(-math.log(max(self.prob(r), eps)) if y else -math.log(max(1 - self.prob(r), eps))
+                    for r, y in zip(rows, labels))
+        return total / max(len(rows), 1)
 
     def prob(self, row: Iterable[str]) -> float:
         """The probability that the condition is present."""
@@ -229,7 +238,8 @@ def train(dev_results: Sequence[Any], issues: Mapping[str, list[Any]], dataset: 
     model = Logistic().fit(rows, labels)
     return LearnedReader(model, conditions, threshold), {
         "examples": len(examples), "present": sum(labels), "threshold": threshold,
-        "cv_f1": round(best_f1, 4), "folds": FOLDS}
+        "cv_f1": round(best_f1, 4), "folds": FOLDS,
+        "grid": [[t, round(f, 4)] for f, t in grid], "loss_history": model.history}
 
 
 def pair_accuracy(results: Sequence[Any], examples: Sequence[Example], reader: Any) -> dict[str, Any]:
