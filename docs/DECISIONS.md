@@ -204,7 +204,7 @@ Guarded in `tests/test_guards.py`: nothing on the scoring path (`run.py`, `src/m
 
 This is a rule violation, not a gap: skipping an age-based rule when age is unknown treats unknown as safe. With severity fixed to the table (D-015), age now affects only the UI's context notes, but the rule still holds there. With age unknown, the age rule does not fire **and** `age` is named as unverifiable, exactly as an unknown eGFR is. `tests/test_phase4_contract.py` enforces it. It starts running the moment `src/medsafe/explain/context.py` exists, so Phase 4 cannot land without it.
 
-## D-022 Do not submit the current build
+## D-022 Do not submit the current build (superseded by D-025)
 
 With name resolution done and no rule engine yet, the predictions file is empty. The official score is then 0.15 (the resolution term alone), below the pack baseline's 0.4071. Until Phase 3 lands, the pack baseline is the better submission.
 
@@ -221,3 +221,21 @@ The pack forbids "having someone or something label [test patients] case by case
 - **Traceable.** Prompts live in `tools/prompts/` with a version; every generated file records the model name and a hash of the prompt.
 - **Measured.** The matcher's contraindication recall and precision on train, with and without the LLM-proposed vocabulary, go in `docs/ABLATION.md`. If the vocabulary does not help, it ships disabled and the doc says why.
 - **Order.** Phase 3 (the rule engine, with a deterministic condition matcher and negation detector) comes first, so the LLM layer is measured against a working baseline.
+
+## D-025 Phase 3: the rule engine reproduces every training label
+
+The four families in `docs/rules.md` reproduce all 3,241 training labels: none missed, none false, none at the wrong severity. The official scorer on all 1,500 training patients: **primary 1.0000** (serious recall 1.0000, near-miss 1.0000, precision 1.0000, graded 1.0000, resolution 0.9999, noise 0.0000), against the pack baseline's 0.4071.
+
+The first run scored 0.9852. Every gap was a rule bug, found by patient id and fixed by a general rule:
+
+- **"Stopped" has more words.** "(withdrawn)", "pt not taking since 2 months", "old, not taking now" mark a stopped medicine. Missing them caused all 30 false interaction, duplicate and renal alerts.
+- **Heart failure is also written as reduced heart function.** "LVEF 30%", "LV dysfunction", "DCMP", "ischaemic cardiomyopathy (EF 30%)" count as heart failure, while "LVEF normal - no HF" stays negated. This fixed 6 missed NSAID contraindications.
+- **Gout includes hyperuricaemia**, as conditions.csv itself says ("Gout / hyperuricaemia"). This fixed 2 missed thiazide contraindications.
+
+**Condition truth, back-derived (R7).** Of the 202 contraindication labels, 121 pin their condition down uniquely (24 of them pregnancy); 81 leave more than one possible. From these and from the labels a drug did *not* get, 83 (patient, condition) pairs are proven present and 3,418 proven absent. The matcher finds all 83 and fires on none of the 3,418 (`tools/derive_condition_truth.py`).
+
+**The vocabulary covers the 15 conditions that can change an alert.** The 12 diagnoses and 3 allergies the contraindication table uses. Terms such as "madhumeh" (diabetes) or "raised lipids" name conditions no table row uses, so recognising them could not change a single alert; they are left out rather than added as untested code.
+
+**Limits, stated plainly.** The stopped markers and the condition vocabulary were fixed by reading all 1,500 training patients, so the training score is in-sample: the 300-patient holdout is not a clean estimate for the rules. The test set has 807 diagnosis fragments that never appear in train; the vocabulary tolerates typos and abbreviations, but a phrasing it has never seen can still be missed (a missed contraindication) or wrongly matched (a false alert). Test text was not read to prepare for this (D-024).
+
+**When a submission is made, it is this build, not the pack baseline.** This supersedes D-022. Nothing has been submitted.

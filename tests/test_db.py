@@ -101,15 +101,10 @@ def test_build_db_replaces_rather_than_appends(tmp_path: Path) -> None:
 
 
 def test_canned_queries_return_the_right_rows(tmp_path: Path) -> None:
-    """Seed the later-phase tables by hand and check what each query reports."""
+    """The mini fixtures' real findings and alerts, plus a hand-seeded abstention and near-miss
+    result (the harness, not build_db, produces those)."""
     db = tmp_path / "medsafe.db"
     with closing(build(db)) as conn:
-        conn.executemany("INSERT INTO findings (patient_id, issue_type, rule_id, drugs, severity) "
-                         "VALUES (?, 'interaction', ?, '[]', ?)",
-                         [("H4P-MINI0001", "R1", "major"), ("H4P-MINI0001", "R2", "minor")])
-        conn.execute("INSERT INTO alerts (patient_id, issue_type, severity, drugs_involved, "
-                     "suggested_action, confidence) VALUES ('H4P-MINI0001', 'interaction', "
-                     "'major', 'a;b', 'Review', 0.9)")
         conn.execute("UPDATE medications SET abstained = 1, abstain_reason = 'ambiguous' "
                      "WHERE patient_id = 'H4P-MINI0004' AND med_index = 0")
         missed = [{"patient_id": "H4P-MINI0001", "rule_id": "RENAL", "drugs": ["metformin"],
@@ -122,9 +117,12 @@ def test_canned_queries_return_the_right_rows(tmp_path: Path) -> None:
         out = run("tools/query.py", name, "--db", str(db)).stdout.splitlines()
         return [line.split() for line in out[2:]]
 
-    assert query("most-alerts")[0][:3] == ["H4P-MINI0001", "1", "1"]
+    assert query("most-alerts")[0][:3] == ["H4P-MINI0001", "2", "2"]   # paracetamol x2, metformin
     assert query("abstained")[0][:2] == ["H4P-MINI0004", "0"]
-    assert query("severity") == [["major", "1", "1", "0.17", "0.17"], ["minor", "1", "0", "0.17", "0.0"]]
+    assert query("severity") == [["contraindicated", "1", "1", "0.17", "0.17"],
+                                 ["major", "2", "2", "0.33", "0.33"],
+                                 ["moderate", "2", "2", "0.33", "0.33"],
+                                 ["minor", "2", "0", "0.33", "0.0"]]   # detected, never submitted
     assert query("missed-near-misses")[0][:2] == ["H4P-MINI0001", "RENAL"]
     assert ["patients", "6"] in query("counts")
 

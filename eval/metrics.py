@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, TypeVar
 
 from eval.records import SEVERITIES, Alert, Issue, Resolution, TruthToken
+from medsafe.data.schema import ISSUE_TYPES
 from medsafe.output.writer import token_key
 
 R = TypeVar("R", Alert, Issue)
@@ -112,6 +113,31 @@ def resolution_metrics(tokens: Sequence[TruthToken],
                                  "false": c["false"], "abstained": c["abstained"]}
                           for kind, c in sorted(by_kind.items())},
     }
+
+
+def rule_fidelity(issues: Sequence[Issue], findings: Iterable[Alert],
+                  examples: int = 5) -> dict[str, dict[str, Any]]:
+    """How exactly each rule family reproduces the labels, minor issues included.
+
+    Per issue type: true count, our count, matched (same patient, type and drug set), missed,
+    false, and matched-but-wrong-severity, with the first few missed and false cases as
+    "patient: drug;drug" so each one can be reproduced.
+    """
+    true = {(i.patient_id, i.issue_type, i.drugs): i.severity for i in issues}
+    ours = {(f.patient_id, f.issue_type, f.drugs): f.severity for f in findings}
+    report = {}
+    for issue_type in ISSUE_TYPES:
+        t = {k: v for k, v in true.items() if k[1] == issue_type}
+        o = {k: v for k, v in ours.items() if k[1] == issue_type}
+        missed, false = sorted(set(t) - set(o)), sorted(set(o) - set(t))
+        cite = lambda keys: [f"{k[0]}: {';'.join(sorted(k[2]))}" for k in keys[:examples]]
+        report[issue_type] = {
+            "true": len(t), "ours": len(o), "matched": len(set(t) & set(o)),
+            "missed": len(missed), "false": len(false),
+            "wrong_severity": sum(1 for k in set(t) & set(o) if t[k] != o[k]),
+            "first_missed": cite(missed), "first_false": cite(false),
+        }
+    return report
 
 
 def index_resolutions(resolutions: Iterable[Resolution]) -> dict[tuple[str, str], Resolution]:

@@ -63,10 +63,14 @@ def test_diagnose_names_the_stage_that_lost_the_issue(trace, expected: str) -> N
     assert expected in diagnose(ISSUE, trace, TOKENS)
 
 
-def test_trace_seam_refuses_a_stage_it_cannot_convert() -> None:
+def test_trace_seam_converts_findings_and_alerts() -> None:
+    from medsafe.rules.types import Finding
     patient = Patient("P1", 70, "F", 60.0, 40.0, False, (), None, (MedicationEntry("Warf 5", 0),), 1)
-    with pytest.raises(NotImplementedError, match="Phase 3"):
-        trace_patient(PatientResult(patient, (), resolutions=(), findings=("not converted",)))
+    finding = Finding("interaction", ("aspirin", "warfarin"), "minor", "Review", "R")
+    alert = {"issue_type": "renal_dose", "severity": "major", "drugs_involved": "metformin"}
+    trace = trace_patient(PatientResult(patient, (), resolutions=(), findings=(finding,), alerts=(alert,)))
+    assert trace.findings[0].drugs == frozenset({"aspirin", "warfarin"})
+    assert trace.shipped[0].drugs == frozenset({"metformin"}) and trace.shipped[0].severity == "major"
 
 
 @requires_scorer

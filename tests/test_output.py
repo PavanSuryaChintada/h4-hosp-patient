@@ -21,7 +21,7 @@ def written(mini: Dataset, tmp_path: Path) -> Path:
     """The mini training patients' submission files, written to tmp_path."""
     result = run_pipeline(mini, Settings())
     write_resolution(result, tmp_path / "H4_resolution.csv")
-    write_predictions([], tmp_path / "H4_predictions.csv")
+    write_predictions([a for p in result.patients for a in p.alerts], tmp_path / "H4_predictions.csv")
     return tmp_path
 
 
@@ -47,9 +47,20 @@ def test_resolution_file_says_how_each_line_was_resolved(written: Path) -> None:
     assert {r["verify_manually"] for r in by_token.values()} == {"N"}
 
 
-def test_predictions_file_with_no_alerts_is_header_only(written: Path) -> None:
-    lines = (written / "H4_predictions.csv").read_text(encoding="utf-8").splitlines()
-    assert lines == [",".join(PREDICTION_COLUMNS)]
+def test_predictions_file_holds_the_table_severity_and_action_and_no_minor(written: Path) -> None:
+    alerts = rows(written / "H4_predictions.csv")
+    assert list(alerts[0]) == list(PREDICTION_COLUMNS)
+    assert {(a["patient_id"], a["issue_type"], a["drugs_involved"], a["severity"]) for a in alerts} == {
+        ("H4P-MINI0001", "duplicate_therapy", "paracetamol", "major"),
+        ("H4P-MINI0001", "renal_dose", "metformin", "major"),
+        ("H4P-MINI0003", "contraindication", "warfarin", "contraindicated"),
+        ("H4P-MINI0005", "duplicate_therapy", "cholecalciferol", "moderate"),
+        ("H4P-MINI0006", "duplicate_therapy", "telmisartan", "moderate")}
+    by_drug = {a["drugs_involved"]: a for a in alerts}
+    assert by_drug["metformin"]["suggested_action"] == "Stop metformin"       # the table, verbatim
+    assert all(a["suggested_action"] and 0 <= float(a["confidence"]) <= 1 for a in alerts)
+    keys = [(a["patient_id"], a["issue_type"], a["drugs_involved"]) for a in alerts]
+    assert len(keys) == len(set(keys))
 
 
 def test_minor_alerts_are_detected_but_not_submitted() -> None:
@@ -68,4 +79,5 @@ def test_official_scorer_accepts_our_files(written: Path, tmp_path: Path) -> Non
                             tmp_path / "score.json")
     assert report["components"]["resolution_accuracy"] == 1.0
     assert report["counts"]["tokens_without_prediction"] == 0
-    assert report["primary_score"] == pytest.approx(0.15)
+    assert report["counts"]["false_alerts"] == 0
+    assert report["primary_score"] == 1.0

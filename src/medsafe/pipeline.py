@@ -1,12 +1,9 @@
 """The pipeline in one call. What run.py ships and what eval/ measures are the same code.
 
-Stages land phase by phase. A stage that is not built yet is ``None`` on every patient result,
-so the evaluation harness can tell "not built" apart from "built and found nothing".
-
-    load      Phase 1    adapter + validation                          (built)
-    resolve   Phase 2    written line -> generic(s), or abstain        (built)
-    rules     Phase 3    interaction, duplicate, renal, contraindication -> findings
-    output    Phase 6    findings -> alerts at the table severity (docs/DECISIONS.md D-015)
+    load      Phase 1    adapter + validation
+    resolve   Phase 2    written line -> generic(s), or abstain
+    rules     Phase 3    regimen, conditions, and the four checks -> findings (minor included)
+    output    Phase 6    findings -> predictions rows: table severity, no minor (D-015, D-018)
 """
 
 from __future__ import annotations
@@ -17,11 +14,15 @@ from typing import Any
 from medsafe.data.adapter import Dataset
 from medsafe.data.schema import Patient
 from medsafe.explain.data_quality import data_quality_notes
+from medsafe.output.policy import alert_rows, submitted
 from medsafe.resolve import thresholds
 from medsafe.resolve.resolver import NameIndex, Resolution, Resolver
+from medsafe.rules.engine import RuleResult, run_rules
+from medsafe.rules.tables import RuleTables
+from medsafe.rules.types import Finding
 
 STAGES = ("load", "resolve", "rules", "output")
-BUILT_STAGES = ("load", "resolve")
+BUILT_STAGES = STAGES
 
 
 @dataclass(frozen=True)
@@ -42,9 +43,10 @@ class PatientResult:
 
     patient: Patient
     notes: tuple[str, ...]                          # data-quality notes, never silently incomplete
-    resolutions: tuple[Resolution, ...] | None = None   # Phase 2: one per medication, same order
-    findings: tuple[Any, ...] | None = None         # Phase 3: every finding
-    alerts: tuple[Any, ...] | None = None           # Phase 6: what the predictions file holds
+    resolutions: tuple[Resolution, ...] | None = None   # one per medication, same order
+    findings: tuple[Finding, ...] | None = None     # every finding, minor included
+    alerts: tuple[dict[str, Any], ...] | None = None    # what the predictions file holds
+    rules: RuleResult | None = None                 # regimen and conditions, for explanations
 
 
 @dataclass(frozen=True)
@@ -66,7 +68,7 @@ def build_resolver(dataset: Dataset, settings: Settings = Settings(),
 
 def run_pipeline(dataset: Dataset, settings: Settings = Settings(),
                  resolver: Resolver | None = None) -> PipelineResult:
-    """Run every built stage over a loaded dataset.
+    """Run every stage over a loaded dataset.
 
     Args:
         dataset: Output of ``medsafe.data.adapter.load_dataset``.
@@ -79,8 +81,14 @@ def run_pipeline(dataset: Dataset, settings: Settings = Settings(),
         dataset and settings always give the same result.
     """
     resolver = resolver if resolver is not None else build_resolver(dataset, settings)
-    results = tuple(
-        PatientResult(patient=patient, notes=data_quality_notes(patient),
-                      resolutions=tuple(resolver.resolve(m.raw) for m in patient.medications))
-        for patient in dataset.patients)
-    return PipelineResult(settings=settings, stages_built=BUILT_STAGES, patients=results)
+    tables = RuleTables.build(dataset)
+    results = []
+    for patient in dataset.patients:
+        resolutions = tuple(resolver.resolve(m.raw) for m in patient.medications)
+        rules = run_rules(patient, resolutions, tables)
+        results.append(PatientResult(
+            patient=patient, notes=data_quality_notes(patient), resolutions=resolutions,
+            findings=rules.findings,
+            alerts=tuple(submitted(alert_rows(patient.patient_id, rules.findings))),
+            rules=rules))
+    return PipelineResult(settings=settings, stages_built=BUILT_STAGES, patients=tuple(results))

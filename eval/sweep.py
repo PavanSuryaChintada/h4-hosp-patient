@@ -55,7 +55,7 @@ def measure(dataset: Dataset, split: str, settings: Settings,
     if not labels.is_file():
         write_truth_subset(data_dir(), ids, folder / "truth")
     write_resolution(result, folder / "H4_resolution.csv")
-    write_predictions([], folder / "H4_predictions.csv")
+    write_predictions([a for p in result.patients for a in p.alerts], folder / "H4_predictions.csv")
     report = official.score(folder / "H4_predictions.csv", folder / "H4_resolution.csv",
                             labels, truth_resolution, folder / "score.json")
 

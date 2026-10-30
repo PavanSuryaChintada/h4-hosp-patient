@@ -5,3 +5,4 @@ ISS-MINI0003,H4P-MINI0001,interaction,minor,amlodipine;telmisartan,Check standin
 ISS-MINI0004,H4P-MINI0003,contraindication,contraindicated,warfarin,Switch to low-molecular-weight heparin,0
 ISS-MINI0005,H4P-MINI0005,interaction,minor,amlodipine;telmisartan,Check standing blood pressure,0
 ISS-MINI0006,H4P-MINI0006,duplicate_therapy,moderate,telmisartan,Keep one telmisartan product,0
+ISS-MINI0007,H4P-MINI0005,duplicate_therapy,moderate,cholecalciferol,Cholecalciferol from two products - check the total dose,0

@@ -1,8 +1,8 @@
 """The seam between the pipeline and the harness, and the diagnosis of every miss.
 
-``trace_patient`` converts one ``PatientResult`` into a ``PatientTrace``. A stage the pipeline
-has not built is None and stays None. When a phase lands, replace its ``NotImplementedError``
-below with a converter from that phase's records; nothing else in ``eval/`` changes.
+``trace_patient`` converts one ``PatientResult`` into a ``PatientTrace``: resolutions, every
+finding (minor included) and the alerts the predictions file holds. A stage the pipeline has not
+run is None and stays None.
 """
 
 from __future__ import annotations
@@ -10,29 +10,24 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from eval.metrics import covers
-from eval.records import Issue, PatientTrace, Resolution, TruthToken
+from eval.records import Alert, Issue, PatientTrace, Resolution, TruthToken
 from medsafe.output.writer import token_key
 from medsafe.pipeline import PatientResult, PipelineResult
 
 
-def _unconverted(stage: str, phase: int) -> NotImplementedError:
-    """The error raised when a stage has landed but this seam was not updated for it."""
-    return NotImplementedError(f"Phase {phase} now produces {stage}; add its converter to "
-                               f"eval/trace.py so the harness can score it")
-
-
 def trace_patient(result: PatientResult) -> PatientTrace:
     """Convert one patient's pipeline output into the records the harness scores."""
-    if result.findings is not None:
-        raise _unconverted("findings", 3)
-    if result.alerts is not None:
-        raise _unconverted("alerts", 6)
     patient_id = result.patient.patient_id
     resolutions = None if result.resolutions is None else tuple(
         Resolution(patient_id, entry.raw, frozenset(r.generics), r.method)
         for entry, r in zip(result.patient.medications, result.resolutions))
-    return PatientTrace(patient_id=patient_id, resolutions=resolutions, findings=None,
-                        shipped=None)
+    findings = None if result.findings is None else tuple(
+        Alert(patient_id, f.issue_type, frozenset(f.drugs), f.severity) for f in result.findings)
+    shipped = None if result.alerts is None else tuple(
+        Alert(patient_id, a["issue_type"], frozenset(a["drugs_involved"].split(";")), a["severity"])
+        for a in result.alerts)
+    return PatientTrace(patient_id=patient_id, resolutions=resolutions, findings=findings,
+                        shipped=shipped)
 
 
 def traces_from(result: PipelineResult) -> dict[str, PatientTrace]:

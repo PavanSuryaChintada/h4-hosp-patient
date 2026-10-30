@@ -1,14 +1,14 @@
 """Medsafe entry point: writes the two submission files from the H4 data pack.
 
-    python run.py --input data/pack/data --split test --output submission
+    python run.py --input data/pack/data --split test --out submission
 
 Reads the supplied files directly through ``medsafe.data.adapter``. Never reads
 ``data/medsafe.db``: that database is a convenience cache built afterwards by
 ``tools/build_db.py``, and the pipeline gives identical output with it deleted.
 
 Writes ``<output>/H4_resolution.csv`` (every written medication line resolved to its generics,
-or flagged for manual check) and ``<output>/H4_predictions.csv`` (one row per alert; header only
-until the rule engine lands in Phase 3).
+or flagged for manual check) and ``<output>/H4_predictions.csv`` (one row per alert: the table's
+severity and action, minor issues left out).
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT,
                         help=f"the pack's data folder (default {DEFAULT_INPUT})")
     parser.add_argument("--split", choices=SPLITS, default="test", help="which patients to run")
-    parser.add_argument("--output", type=Path, default=Path("submission"),
+    parser.add_argument("--output", "--out", dest="output", type=Path, default=Path("submission"),
                         help="folder for H4_predictions.csv and H4_resolution.csv")
     return parser.parse_args(argv)
 
@@ -65,7 +65,9 @@ def main(argv: list[str] | None = None) -> int:
         print(report.summary())
     result = run_pipeline(dataset, Settings())
     rows = write_resolution(result, args.output / RESOLUTION_FILE)
-    alerts = write_predictions([], args.output / PREDICTIONS_FILE)
+    alerts = write_predictions([a for p in result.patients for a in p.alerts],
+                               args.output / PREDICTIONS_FILE)
+    findings = Counter(f.severity for p in result.patients for f in p.findings)
 
     methods = Counter(r.method for p in result.patients for r in p.resolutions)
     lines = sum(methods.values())
@@ -73,7 +75,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"medication lines: {lines} ({rows} resolution rows) - "
           + ", ".join(f"{method} {count}" for method, count in sorted(methods.items())))
     print(f"lines to verify manually: {methods['abstained']}")
-    print(f"alerts: {alerts} (rule engine not built yet)")
+    print(f"findings: {sum(findings.values())} (" + ", ".join(f"{s} {n}" for s, n in sorted(findings.items())) + ")")
+    print(f"alerts submitted: {alerts} (minor findings are shown, not submitted)")
     print(f"wrote {args.output / RESOLUTION_FILE} and {args.output / PREDICTIONS_FILE}")
     print(f"runtime: {time.perf_counter() - started:.2f}s")
     return 0

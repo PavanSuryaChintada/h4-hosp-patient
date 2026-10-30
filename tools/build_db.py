@@ -134,6 +134,16 @@ def insert_patients(conn: sqlite3.Connection, result: PipelineResult) -> None:
         [(r.patient.patient_id, m.index, m.raw, res.normalised, res.resolved_generic,
           res.method, res.confidence, int(res.verify_manually), res.abstain_reason)
          for r in result.patients for m, res in zip(r.patient.medications, r.resolutions)])
+    conn.executemany(
+        "INSERT INTO findings (patient_id, issue_type, rule_id, drugs, severity, evidence) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        [(r.patient.patient_id, f.issue_type, f.rule_id, json.dumps(list(f.drugs)), f.severity,
+          json.dumps(f.evidence)) for r in result.patients for f in r.findings])
+    conn.executemany(
+        "INSERT INTO alerts (patient_id, issue_type, severity, drugs_involved, suggested_action, "
+        "confidence) VALUES (:patient_id, :issue_type, :severity, :drugs_involved, "
+        ":suggested_action, :confidence)",
+        [a for r in result.patients for a in r.alerts])
 
 
 def insert_load_metrics(conn: sqlite3.Connection, dataset: Dataset, input_dir: Path) -> None:

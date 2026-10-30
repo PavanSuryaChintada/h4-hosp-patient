@@ -11,9 +11,18 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from medsafe.rules.types import Finding
+
 EMIT_MINOR = False
 
 
 def submitted(alerts: Iterable[Mapping[str, Any]], emit_minor: bool = EMIT_MINOR) -> list[Mapping[str, Any]]:
     """The alerts that go into the predictions file: all of them, or all but the minor ones."""
     return [alert for alert in alerts if emit_minor or alert["severity"] != "minor"]
+
+
+def alert_rows(patient_id: str, findings: Iterable[Finding]) -> list[dict[str, Any]]:
+    """Findings as predictions-file rows: table severity and table action, unchanged."""
+    return [{"patient_id": patient_id, "issue_type": f.issue_type, "severity": f.severity,
+             "drugs_involved": ";".join(f.drugs), "suggested_action": f.action,
+             "confidence": round(f.confidence, 4)} for f in findings]
