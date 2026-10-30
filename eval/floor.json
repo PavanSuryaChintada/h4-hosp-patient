@@ -1,0 +1,71 @@
+{
+  "git_revision": "67cbe1d",
+  "data_version": "a19dbe7099d2",
+  "references": {
+    "oracle": {
+      "primary_score": 0.948167,
+      "components": {
+        "serious_recall": 1.0,
+        "near_miss_serious_recall": 1.0,
+        "precision_all": 1.0,
+        "graded_recall_non_minor": 1.0,
+        "resolution_accuracy": 1.0,
+        "base_score": 1.0,
+        "noise_alerts_per_patient": 0.103667,
+        "alert_fatigue_multiplier": 0.948167
+      }
+    },
+    "oracle, no minor": {
+      "primary_score": 1.0,
+      "components": {
+        "serious_recall": 1.0,
+        "near_miss_serious_recall": 1.0,
+        "precision_all": 1.0,
+        "graded_recall_non_minor": 1.0,
+        "resolution_accuracy": 1.0,
+        "base_score": 1.0,
+        "noise_alerts_per_patient": 0.0,
+        "alert_fatigue_multiplier": 1.0
+      }
+    },
+    "pack baseline": {
+      "primary_score": 0.40711,
+      "components": {
+        "serious_recall": 0.29539,
+        "near_miss_serious_recall": 0.0,
+        "precision_all": 0.926298,
+        "graded_recall_non_minor": 0.349752,
+        "resolution_accuracy": 0.778695,
+        "base_score": 0.426368,
+        "noise_alerts_per_patient": 0.090333,
+        "alert_fatigue_multiplier": 0.954833
+      }
+    },
+    "pack baseline, no minor": {
+      "primary_score": 0.412104,
+      "components": {
+        "serious_recall": 0.29539,
+        "near_miss_serious_recall": 0.0,
+        "precision_all": 0.91326,
+        "graded_recall_non_minor": 0.349752,
+        "resolution_accuracy": 0.778695,
+        "base_score": 0.424412,
+        "noise_alerts_per_patient": 0.058,
+        "alert_fatigue_multiplier": 0.971
+      }
+    },
+    "flag nothing": {
+      "primary_score": 0.15,
+      "components": {
+        "serious_recall": 0.0,
+        "near_miss_serious_recall": 0.0,
+        "precision_all": 0.0,
+        "graded_recall_non_minor": 0.0,
+        "resolution_accuracy": 1.0,
+        "base_score": 0.15,
+        "noise_alerts_per_patient": 0.0,
+        "alert_fatigue_multiplier": 1.0
+      }
+    }
+  }
+}
