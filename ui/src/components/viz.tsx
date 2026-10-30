@@ -62,6 +62,7 @@ const PATHS: Record<string, string> = {
   swap: 'M4 8h14 M15 5l3 3l-3 3 M20 16H6 M9 13l-3 3l3 3',
   phone: 'M7 2h10v20H7z M11 18h2',
   guide: 'M5 4h11l3 3v13H5z M8 9h8 M8 13h8 M8 17h5',
+  bolt: 'M13 3L5 13h6l-1 8l8-10h-6z',
 };
 
 export type IconName = keyof typeof PATHS;

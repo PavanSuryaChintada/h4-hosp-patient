@@ -1023,3 +1023,23 @@ body.modal-open { overflow: hidden; }
 }
 .drawer-open .toasts { right: 504px; }
 .handed-n { font-size: 12px; color: var(--unknown); white-space: nowrap; }
+
+/* quick fill: one-click examples beside a field, for a demo without typing */
+.quick-fill { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.quick-k { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; line-height: 14px; font-weight: 600; color: var(--action); }
+.quick-btn { height: 28px; padding: 0 8px; font-size: 12px; line-height: 16px; cursor: pointer; color: var(--action); background: var(--action-weak); border: 1px dashed var(--action); }
+.quick-btn:hover { color: #fff; background: var(--action); border-style: solid; }
+.modal .quick-fill { margin-top: 12px; }
+.modal .quick-btn { height: auto; min-height: 28px; padding: 4px 8px; text-align: left; }
+.handoff-form .quick-fill { margin-top: 8px; }
+.handoff-form .quick-btn { height: auto; min-height: 28px; padding: 4px 8px; text-align: left; }
+.role-confirm .role-row, .role-list { align-items: flex-end; }
+.role-list .quick-fill { margin-top: 4px; }
+.demo-patients { display: grid; gap: 8px; margin-bottom: 16px; }
+.demo-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.demo-card { display: grid; align-content: start; gap: 4px; padding: 16px; text-align: left; cursor: pointer; font: inherit; color: var(--ink); background: var(--paper); border: 1px dashed var(--action); border-left: 4px solid var(--action); transition: background-color 120ms; }
+.demo-card:hover { background: var(--action-weak); }
+.demo-card strong { font-size: 15px; line-height: 20px; }
+.demo-card span { font-size: 12px; line-height: 16px; color: var(--ink-2); }
+.demo-card .demo-card-go { margin-top: 4px; font-weight: 600; color: var(--action); }
+@media (max-width: 900px) { .demo-cards { grid-template-columns: minmax(0, 1fr); } }

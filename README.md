@@ -44,7 +44,7 @@ The ward runs the real pipeline on every patient typed in, so it needs its local
 4. **Prescriber**: accept, override (a reason is required) or defer each alert.
 5. **Pharmacist**: answer what was deferred. Then open *Override patterns*.
 
-Switch role from the top bar without signing out; the bell lists each role's tasks, new tasks pop up as other roles create them, and the *Demo guide* drawer ticks the steps off as they happen. Colour means the state of the work everywhere: blue is your turn, amber is waiting on someone (or overridden), purple is with the pharmacist, green is done, and red is kept for serious alerts in the data. A contraindicated combination nobody has decided on opens one hard-stop dialog for the prescriber; nothing else interrupts.
+Nothing needs typing: every field has two one-click examples (two demo patients for the admission form, eGFR 28 and 80, the two closest names for a line the system would not read, two override reasons, two review notes). They go through the same server and pipeline as anything typed. Switch role from the top bar without signing out; the bell lists each role's tasks, new tasks pop up as other roles create them, and the *Demo guide* drawer ticks the steps off as they happen. Colour means the state of the work everywhere: blue is your turn, amber is waiting on someone (or overridden), purple is with the pharmacist, green is done, and red is kept for serious alerts in the data. A contraindicated combination nobody has decided on opens one hard-stop dialog for the prescriber; nothing else interrupts.
 
 The hosted site has no ward server: the ward pages say how to start one, and the training-set patients work as they are, with decisions kept in the browser.
 

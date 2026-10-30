@@ -4,7 +4,7 @@
 // medsafe.workflow, enforced there. This screen sends what people type and shows the result,
 // and says in a toast what each re-run changed.
 
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { DEMO_USERS, useAuth, type RoleKey } from '../auth';
 import type { AbhaBundle, AlertEvent, Consent, Entry, OverridePattern, PatientView, WardRecord, WardRow, WardTask } from '../data/contract';
@@ -18,6 +18,8 @@ import { useSwitchRole } from '../components/Shell';
 import { useToast, type Tone, type ToastInput } from '../components/Toast';
 import { Segmented, StatusCell } from '../components/ui';
 import { Icon, Meter } from '../components/viz';
+import { QuickFill } from '../components/QuickFill';
+import { ADD_LINE_EXAMPLES, DEMO_PATIENTS, EGFR_EXAMPLES, type DemoPatient } from '../data/examples';
 
 function ServerDown() {
   return (
@@ -223,9 +225,7 @@ function AbhaFetch({ onFetched }: { onFetched: (b: AbhaBundle) => void }) {
             </label>
             <button type="button" className="btn btn-turn btn-sm" disabled={!address || !!consent} onClick={request}>Request consent</button>
           </div>
-          {!consent && examples.length > 0 && (
-            <p className="meta">Sandbox addresses, click one: {examples.map((a) => <button key={a} type="button" className="btn-link mono" onClick={() => setAddress(a)}>{a}</button>).reduce((acc: ReactNode[], el, i) => (i ? [...acc, ' · ', el] : [el]), [])}</p>
-          )}
+          {!consent && <QuickFill label="Sandbox addresses" picks={examples.map((a) => ({ label: a, onPick: () => setAddress(a) }))} />}
         </li>
         <li className={step > 1 ? 'done' : step === 1 ? 'now' : ''}>
           <span className="abha-step">The patient approves on their phone</span>
@@ -250,7 +250,7 @@ function AbhaFetch({ onFetched }: { onFetched: (b: AbhaBundle) => void }) {
 
 export function WardAdmit() {
   const { x, byId } = useData();
-  const up = useWardUp();
+  const { up, refresh } = useWard();
   const may = useMay();
   const actor = useActor();
   const toast = useToast();
@@ -274,12 +274,21 @@ export function WardAdmit() {
     toast({ tone: 'done', title: `Form filled from ${id}`, body: `${label}: ${plural(p.medications.length, 'line')} as written. eGFR stays the lab's entry.` });
   };
 
+  const fillDemo = (d: DemoPatient) => {
+    setFields(d.fields);
+    setList(d.medication_list);
+    setFetched(null);
+    toast({ tone: 'done', title: `Form filled: ${d.label.split(':')[0]}`, body: 'Check the form below, then press "Admit and run the check".' });
+    document.querySelector('.admit')?.scrollIntoView({ block: 'start' });
+  };
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
       const record = await api<WardRecord>('records', { actor, fields, medication_list: list, consent_id: fetched?.consent.id });
+      await refresh();
       const m = record.result.compare.medsafe;
       toast({
         tone: 'done', title: `${record.id} admitted and checked`,
@@ -303,6 +312,18 @@ export function WardAdmit() {
         <p className="meta">Copy everything the patient brought, exactly as written. eGFR comes from the lab after admission.</p>
       </div>
       {up === false && <ServerDown />}
+      <section className="demo-patients" aria-label="Demo patients">
+        <p className="quick-k"><Icon name="bolt" size={14} />Quick fill for the demo: one click fills the whole form</p>
+        <div className="demo-cards">
+          {DEMO_PATIENTS.map((d) => (
+            <button key={d.label} type="button" className="demo-card" onClick={() => fillDemo(d)}>
+              <strong>{d.label}</strong>
+              <span>{d.story}</span>
+              <span className="demo-card-go">Fill the form →</span>
+            </button>
+          ))}
+        </div>
+      </section>
       {may('abha_pull') && up && <AbhaFetch onFetched={fromAbha} />}
       {fetched && (
         <p className="abha-filled status-line tone-done" role="status">
@@ -313,7 +334,7 @@ export function WardAdmit() {
       )}
       {x.demo && (
         <div className="admit-seed">
-          <span className="meta">Or start from a training-set patient:</span>
+          <span className="meta">Or copy a training-set patient:</span>
           {x.demo.pins.flatMap((p) => p.patient_ids.map((id) => (
             <button key={id} type="button" className="btn btn-secondary btn-sm" onClick={() => startFrom(id, PIN_LABEL[p.slot])}>{PIN_LABEL[p.slot]} <span className="mono ink-3">{id}</span></button>
           )))}
@@ -435,6 +456,7 @@ function RolePanel({ r, send }: { r: WardRecord; send: (action: string, body: ob
             <input inputMode="decimal" value={egfr} onChange={(e) => setEgfr(e.target.value)} />
           </label>
           <button type="submit" className="btn btn-turn" disabled={!String(egfr).trim()}>{r.egfr ? 'Update eGFR and re-run' : 'Record eGFR and re-run'}</button>
+          <QuickFill picks={EGFR_EXAMPLES.map((ex) => ({ label: ex.label, title: ex.hint, onPick: () => setEgfr(ex.value) }))} />
           <span className="meta">
             {!r.egfr && r.abha_egfr ? <>Prefilled from the ABHA records ({r.abha_egfr}): confirm it against the latest result before recording. </> : null}
             The kidney-dose rules re-run on the value you record.
@@ -454,12 +476,12 @@ function RolePanel({ r, send }: { r: WardRecord; send: (action: string, body: ob
                 await act(`"${m.raw}" confirmed as ${generics.join(' + ')}`, 'confirm', { actor, line: m.index, generics });
               }}>
                 <span className="mono role-raw">"{m.raw}"</span>
-                {m.candidates.length > 0 && <span className="meta">closest: {m.candidates.map(([g]) => <button key={g} type="button" className="btn-link" onClick={() => setNames((n) => ({ ...n, [m.index]: g }))}>{g}</button>).reduce((acc: ReactNode[], el, i) => (i ? [...acc, ' · ', el] : [el]), [])}</span>}
                 <label className="field" style={{ marginTop: 0 }}>
                   <span className="label">Generic(s), from the drug reference; join two with +</span>
                   <input list="generics" value={names[m.index] ?? ''} onChange={(e) => setNames((n) => ({ ...n, [m.index]: e.target.value }))} />
                 </label>
                 <button type="submit" className="btn btn-turn btn-sm" disabled={!(names[m.index] ?? '').trim()}>Confirm and re-run</button>
+                <QuickFill label="Closest names" picks={m.candidates.slice(0, 2).map(([g, score]) => ({ label: g, title: `similarity ${score.toFixed(2)}: too close to call, so a person decides`, onPick: () => setNames((n) => ({ ...n, [m.index]: g })) }))} />
               </form>
             ))}
           </div>
@@ -477,6 +499,8 @@ function RolePanel({ r, send }: { r: WardRecord; send: (action: string, body: ob
               <span className="label">Medication list, as written</span>
               <textarea className="mono" rows={8} value={list} onChange={(e) => setList(e.target.value)} spellCheck={false} />
             </label>
+            <QuickFill label="Add a line" picks={ADD_LINE_EXAMPLES.map((line) => ({ label: `+ ${line}`, onPick: () => setList((l) => `${l.trimEnd()}
+${line}`) }))} />
             <div className="handoff-actions">
               <button type="submit" className="btn btn-turn btn-sm">Save and re-run</button>
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditing(false)}>Cancel</button>

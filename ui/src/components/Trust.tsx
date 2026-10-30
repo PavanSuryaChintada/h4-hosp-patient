@@ -7,6 +7,8 @@ import { useAuth } from '../auth';
 import type { PatientView, WardRecord } from '../data/contract';
 import { useHandoffs } from '../data/handoff';
 import { useData } from '../data/load';
+import { REVIEW_NOTES } from '../data/examples';
+import { QuickFill } from './QuickFill';
 import { Icon } from './viz';
 
 export type WardTrust = {
@@ -31,6 +33,7 @@ function Escalate({ onSubmit, label }: { onSubmit: (note: string) => Promise<boo
         <span className="label">Note for the pharmacist (optional)</span>
         <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
       </label>
+      <QuickFill picks={REVIEW_NOTES.map((n) => ({ label: n, onPick: () => setNote(n) }))} />
       <div className="handoff-actions">
         <button type="button" className="btn btn-primary btn-sm" onClick={async () => { await onSubmit(note); setNote(''); setOpen(false); }}>Record handoff</button>
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => setOpen(false)}>Cancel</button>

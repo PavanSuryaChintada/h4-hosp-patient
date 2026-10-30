@@ -7,7 +7,9 @@ import { useAuth } from '../auth';
 import type { AlertEvent, AuditEvent, Collapse, MedsafeAlert, PatientView } from '../data/contract';
 import { ISSUE_LABEL, SEVERITY_TONE, conf, plural } from '../data/format';
 import { useData } from '../data/load';
+import { OVERRIDE_EXAMPLES } from '../data/examples';
 import { Modal } from './Modal';
+import { QuickFill } from './QuickFill';
 import { useToast, type Tone } from './Toast';
 import { NotBuilt, StatusInline } from './ui';
 
@@ -44,6 +46,7 @@ function OverrideDialog({ alert, onClose, onDone }: { alert: MedsafeAlert; onClo
         <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
       </>}>
       <p className="modal-quote">{alert.suggested_action}</p>
+      <QuickFill picks={OVERRIDE_EXAMPLES.map((ex) => ({ label: `${ex.reason}: ${ex.note}`, onPick: () => { setReason(ex.reason); setNote(ex.note); } }))} />
       <label className="field">
         <span className="label">Reason for overriding (required)</span>
         <select value={reason} onChange={(e) => setReason(e.target.value)}>
