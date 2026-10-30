@@ -3,12 +3,21 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
-export type DemoUser = { email: string; password: string; name: string; role: string; focus: string };
+/** `key` is the role the ward server enforces (medsafe.workflow.ROLES); reviewer is read-only. */
+export type RoleKey = 'prescriber' | 'pharmacist' | 'nurse' | 'lab' | 'reviewer';
+export type DemoUser = { email: string; password: string; name: string; role: string; key: RoleKey; focus: string; home: string };
 
 export const DEMO_USERS: DemoUser[] = [
-  { email: 'prescriber@medsafe.demo', password: 'Medsafe@2026', name: 'Dr. Kavya Iyer', role: 'Consultant physician', focus: 'Checks prescriptions before they leave the ward' },
-  { email: 'pharmacist@medsafe.demo', password: 'Pharma@2026', name: 'Arjun Mehta', role: 'Clinical pharmacist', focus: 'Audits name matches and duplicate therapy' },
-  { email: 'reviewer@medsafe.demo', password: 'Review@2026', name: 'Evaluation panel', role: 'Reviewer', focus: 'Reads the method and the evaluation' },
+  { email: 'nurse@medsafe.demo', password: 'Nurse@2026', name: 'Lakshmi Rao', role: 'Ward nurse', key: 'nurse',
+    focus: 'Admits patients and copies the medication list exactly as written', home: '/app/ward' },
+  { email: 'lab@medsafe.demo', password: 'Lab@2026', name: 'Ravi Kumar', role: 'Lab technician', key: 'lab',
+    focus: 'Enters eGFR; the kidney-dose checks re-run on it', home: '/app/ward?queue=lab' },
+  { email: 'prescriber@medsafe.demo', password: 'Medsafe@2026', name: 'Dr. Kavya Iyer', role: 'Consultant physician', key: 'prescriber',
+    focus: 'Decides on each alert: accept, override with a reason, or defer', home: '/app/ward' },
+  { email: 'pharmacist@medsafe.demo', password: 'Pharma@2026', name: 'Arjun Mehta', role: 'Clinical pharmacist', key: 'pharmacist',
+    focus: 'Confirms names the system would not guess and answers deferred alerts', home: '/app/ward?queue=pharmacist' },
+  { email: 'reviewer@medsafe.demo', password: 'Review@2026', name: 'Evaluation panel', role: 'Reviewer', key: 'reviewer',
+    focus: 'Reads the method, the evidence and the evaluation', home: '/app/why' },
 ];
 
 /** localStorage can be missing or throw (private windows, blocked storage); every access goes through here. */
@@ -19,13 +28,9 @@ export const store = {
 };
 
 const SESSION_KEY = 'medsafe.session';
-export const TOUR_PENDING_KEY = 'medsafe.tour.pending';
-export const TOUR_SEEN_KEY = 'medsafe.tour.seen';
 
 type Auth = {
   user: DemoUser | null;
-  /** True right after an explicit sign-out, so protected pages send people to the overview, not the sign-in form. */
-  signedOut: boolean;
   signIn: (email: string, password: string) => DemoUser | null;
   signOut: () => void;
 };
@@ -36,24 +41,21 @@ const find = (email: string | null) => DEMO_USERS.find((u) => u.email === email?
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<DemoUser | null>(() => find(store.get(SESSION_KEY)));
-  const [signedOut, setSignedOut] = useState(false);
 
   const signIn = (email: string, password: string) => {
     const match = find(email);
     if (!match || match.password !== password) return null;
     store.set(SESSION_KEY, match.email);
-    setSignedOut(false);
     setUser(match);
     return match;
   };
 
   const signOut = () => {
     store.remove(SESSION_KEY);
-    setSignedOut(true);
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, signedOut, signIn, signOut }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, signIn, signOut }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
@@ -63,9 +65,8 @@ export function useAuth() {
 }
 
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, signedOut } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
-  if (!user && signedOut) return <Navigate to="/" replace />;
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   return <>{children}</>;
 }

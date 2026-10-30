@@ -12,14 +12,30 @@ from collections import Counter, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-ROLES = ("prescriber", "pharmacist", "nurse")
+ROLES = ("prescriber", "pharmacist", "nurse", "lab")
 EVENTS = ("shown", "accept", "override", "defer", "escalate")
 
-# What each role may do with an alert. A nurse can see and escalate, never decide.
+# What each role may do with an alert. A nurse can see and escalate, never decide. A lab
+# technician sees alerts and acts on none: their part is the values the rules read.
 PERMISSIONS: dict[str, tuple[str, ...]] = {
     "prescriber": ("accept", "override", "defer"),
     "pharmacist": ("accept", "override", "defer", "escalate"),
     "nurse": ("escalate",),
+    "lab": (),
+}
+
+# What each role may enter on a patient's record, as on a ward:
+#   admit            open a record: age, sex, weight, pregnancy, diagnoses, allergies
+#   medication_list  the consolidated list exactly as written from slips, strips and bottles
+#   abha_pull        request the patient's records through ABHA; the patient must consent
+#   egfr             a lab value; the renal checks re-run on it
+#   confirm_name     name the generic(s) on a line the resolver would not guess
+# A prescriber decides on alerts and enters no data here.
+ENTRIES: dict[str, tuple[str, ...]] = {
+    "nurse": ("admit", "medication_list", "abha_pull"),
+    "lab": ("egfr",),
+    "pharmacist": ("confirm_name",),
+    "prescriber": (),
 }
 
 # An override must say why. "other" must also say what.
@@ -57,6 +73,12 @@ def check(event: AuditEvent) -> AuditEvent:
         if event.reason == "other" and not (event.note or "").strip():
             raise NotAllowed('an override for "other" needs a note')
     return event
+
+
+def check_entry(role: str, entry: str) -> None:
+    """Raise NotAllowed unless ``role`` may enter ``entry`` on a record (see ENTRIES)."""
+    if entry not in ENTRIES.get(role, ()):
+        raise NotAllowed(f"a {role} may not enter {entry}")
 
 
 @dataclass(frozen=True)

@@ -8,74 +8,81 @@ Alert fatigue is the problem it targets. A screen with three alerts and a clear 
 
 ## The idea in one click
 
-Patient `2291`: 74 years, eGFR 28, nine medicines, eleven raw warnings.
+One switch on every patient: **Standard EHR check** or **Medsafe**. The same list, the same reference tables, two screens.
 
-| View | Alerts | Top line |
+| | Standard EHR check | Medsafe |
 |---|---|---|
-| Every pair | 11 | Five separate warnings about diclofenac, three low-severity notes |
-| Collapsed | 3 | *Stop diclofenac — clears 4 of the 5 serious interactions* |
+| Names | Exact formulary match; misspellings and combination brands left out, unchecked | Every line resolved, combinations expanded, unresolvable lines marked "verify manually" |
+| Alerts | Every listed pair at the reference severity, plus one flat renal warning per drug | Prioritised actions, the drug to review first, minor issues shown last |
+| eGFR | Never read | Shown with the renal tier the rules applied |
 
-Use the `Collapsed / Every pair` toggle on any patient to switch between the two views.
+The standard check is a reproduction built from the pack's tables (`tools/ehr_reference.py`), not a vendor product. `docs/ui-demo.md` says exactly what it does and why that is fair.
 
 ## Live demo
 
 **https://pavansuryachintada.github.io/h4-hosp-patient/**
 
-Sign in with any demo account below; clicking an account on the sign-in page signs you in directly. A guided walkthrough starts after the first sign-in and can be restarted from the top bar.
+Sign in with any demo account below; clicking an account on the sign-in page signs you in directly. Add `?demo=1` to any page to pin the five demo patients under the top bar.
 
-| Role | Email | Password |
-|---|---|---|
-| Consultant physician | `prescriber@medsafe.demo` | `Medsafe@2026` |
-| Clinical pharmacist | `pharmacist@medsafe.demo` | `Pharma@2026` |
-| Reviewer | `reviewer@medsafe.demo` | `Review@2026` |
+| Role | Email | Password | On the ward |
+|---|---|---|---|
+| Ward nurse | `nurse@medsafe.demo` | `Nurse@2026` | Admits a patient and types the medication list exactly as written |
+| Lab technician | `lab@medsafe.demo` | `Lab@2026` | Enters eGFR; the kidney-dose rules re-run on it |
+| Consultant physician | `prescriber@medsafe.demo` | `Medsafe@2026` | Accepts, overrides (with a reason) or defers each alert |
+| Clinical pharmacist | `pharmacist@medsafe.demo` | `Pharma@2026` | Confirms names the system would not guess; answers deferred alerts |
+| Reviewer | `reviewer@medsafe.demo` | `Review@2026` | Read-only |
 
-These are hardcoded demo accounts. There is no real authentication; the session is kept in the browser.
+These are hardcoded demo accounts with no real authentication. Who may enter what and do what is `src/medsafe/workflow.py` (`ENTRIES`, `PERMISSIONS`), enforced by the ward server; the UI only hides what a role cannot do. The ward needs the local server below; the hosted demo shows the training-data screens only.
 
 ## Screens
 
+Every figure on every screen is read from `ui/public/data/pipeline.json`, which `tools/export_ui.py` writes from pipeline output. The UI holds no detection logic. Panels whose pipeline stage is not built say "not built yet", never "no issue found".
+
 | Route | What it shows |
 |---|---|
-| `/` | Overview: live collapse demo, architecture, a worked end-to-end example, comparison with a typical checker, tech stack |
 | `/login` | Sign-in with the demo accounts listed underneath |
-| `/app` | Patient queue, ranked by severity, with filter counts |
-| `/app/patient/:id` | Context strip, capped alert list with collapse toggle, alert graph, medicines as written → resolved, limitations footer |
-| `/app/resolution` | Every raw medicine string in the cohort, what it resolved to, confidence, method, and a ground-truth check |
-| `/app/method` | The four-step pipeline, the same renal flag on two patients, the graph before and after the collapse |
-| `/app/evaluation` | Alerts per patient against near-miss recall, alerts by severity, and the cases that were missed |
-
-`/app/patient/2291?view=all` opens straight into the every-pair view.
-
-## Guided walkthrough
-
-Thirteen steps that move through the app on their own and highlight one thing at a time: the queue, patient 2291's context, the three collapsed alerts, the every-pair view, the alert graph, the slip as written, the limitations footer, name resolution, the method and the evaluation. Arrow keys move between steps; Esc closes it.
+| `/app` | The 1,500 training patients; `?demo=1` adds the pinned demo patients |
+| `/app/patient/:id` | The EHR / Medsafe switch, a comparison strip, medicines as written → resolved, and the trust panel with the pharmacist handoff. `?mode=ehr` opens the EHR screen |
+| `/app/why` | Four ways a standard check fails, each on one real training patient |
+| `/app/intake` | Paste a list; a list the pipeline has seen opens its result. The ABHA tab explains consent-based sync |
+| `/app/resolution` | Every line in the cohort, what it resolved to, confidence, method, and the training label |
+| `/app/evaluation` | The latest `eval/reports/` run, scored by `evaluate.py`, next to the reference submissions and the trained-model challenger, misses included |
+| `/app/ward` | Patients admitted on the ward, with the pharmacist and lab queues (needs the ward server) |
+| `/app/ward/new` | The nurse's admission form, with the ABHA step: request consent, the patient approves, the records prefill the form (a simulated sandbox: `@sbx` addresses, synthetic patients, no ABDM connection) |
+| `/app/ward/:id` | A ward patient: the role's own panel (eGFR, name confirmation, list edits), the same two-check screen, and a decision on every alert |
+| `/app/ward/patterns` | Which alerts the ward overrides most, and why, from the audit log |
 
 ## How it works
 
 1. **Resolve names.** Raw slip text such as `"Warf 5"`, `"crocine"` or `"PAN-D"` maps to a generic with a confidence. When the top two candidates are too close, the system abstains and asks for a manual check instead of guessing.
 2. **Check rules.** Interaction pairs (class-level rules such as NSAID + ACE inhibitor), duplicate therapy (including the same drug under two brands), renal dose against eGFR, and pregnancy contraindications.
-3. **Re-score in context.** Each rule carries a modifier. A moderate NSAID + spironolactone flag becomes high at eGFR 28. The same metformin renal flag is high at eGFR 28 and low at eGFR 80. Both the table severity and the re-scored severity are stored and shown.
-4. **Collapse and cap.** Drugs are nodes and serious interactions are edges. The system finds the drug whose removal clears the most serious edges, among the drugs the rule table allows stopping. Warfarin, lithium and insulin are never suggested for stopping. What remains is ranked by severity and confidence and capped at five.
+3. **Severity from the table, tier from the patient.** Every alert carries the reference table's severity and action, word for word. Renal rules are tiered by eGFR and the most restrictive tier that applies sets the severity: the same metformin line is major at eGFR 28 and raises nothing at eGFR 79.
+4. **Prioritise and collapse, for the clinician.** Alerts are ordered by severity. When one drug sits in two or more serious interactions, the clinician view leads with "review that drug first". Minor issues are shown last and left out of the predictions file.
 
 Every suggested action comes from the rule tables, not from a model.
 
+No model is trained into the pipeline. `python -m eval.ml_challenger` trains three on the dev split, each in the standard library, and scores each against the rules on holdout with `evaluate.py`: a drug-name matcher (character n-gram TF-IDF, nearest neighbour), a reader of conditions and negation (logistic regression), and alert triage (gradient-boosted trees). The results, and why the submission stays rules only, are in `docs/ml-challenger.md`.
+
 ## Running it
 
-The Round 1 UI lives in `ui/`. The repo root holds the Round 2 Python pipeline (`run.py`, `src/medsafe/`), which is under construction.
+The demo UI lives in `ui/` and reads one data file written from pipeline output. Regenerate it after any pipeline change:
 
 ```bash
+python tools/export_ui.py   # -> ui/public/data/pipeline.json
 cd ui
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # type-check and production build
+npm run build               # type-check and production build
+cd ..
+python tools/serve_ui.py    # http://127.0.0.1:8765: the app, plus the ward server
 ```
 
-There is no backend, no API and no network access at runtime.
+`tools/serve_ui.py` runs the real pipeline on each patient entered on the ward and keeps records and an append-only audit log in `data/ward/` (ignored by git). For UI work, `npm run dev` (http://localhost:5173) forwards `/api` to it. Nothing reaches the network; the server listens on localhost only.
 
 ## Deploying
 
 **GitHub Pages (live now).** `.github/workflows/pages.yml` builds on every push to `main` with `BASE_PATH=/h4-hosp-patient/` and copies `index.html` to `404.html`, so deep links work on Pages.
 
-**Vercel.** Import the repo, set the project's Root Directory to `ui`, deploy. `ui/vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/app/patient/2291` survive a refresh. Vercel serves from the root, so no base path is needed.
+**Vercel.** Import the repo, set the project's Root Directory to `ui`, deploy. `ui/vercel.json` pins the build (`npm ci`, `npm run build`, output `dist`) and rewrites every path to `index.html`, so deep links such as `/app/patient/H4P-AYE5BBKT` survive a refresh. Vercel serves from the root, so no base path is needed.
 
 ```bash
 cd ui
@@ -86,30 +93,34 @@ npx vercel --prod   # production
 ## Project layout
 
 ```
-ui/src/
-  data/
-    drugs.ts        generics, Indian brand names, interaction / renal / pregnancy rules
-    patients.ts     simulated cohort, medicine lists as written
-    engine.ts       rule pass: re-scoring, duplicates, renal, pregnancy, collapse, cap, metrics
-    evaluation.ts   near-miss labels and the reported misses
-  components/       shell, status primitives, alert graph, SVG charts, guided walkthrough
-  screens/          landing, sign-in, queue, patient detail, resolution, method, evaluation
-  auth.tsx          hardcoded demo accounts and the protected-route guard
+tools/
+  export_ui.py      pipeline output -> ui/public/data/pipeline.json (the UI's training-data input)
+  serve_ui.py       the ward server: real pipeline on hand-entered patients, workflow policy, audit log
+  ehr_reference.py  the standard EHR check the demo compares against
+eval/
+  ml_challenger.py  a trained name-resolution model scored against the rules (off the scoring path)
+ui/
+  public/data/      pipeline.json, generated; never edited by hand
+  src/data/         contract.ts (the file's schema), loader, display formats, handoff log
+  src/components/   shell, EHR screen, medication panel, trust panel, tier ladder
+  src/screens/      sign-in, queue, patient, why, intake, resolution, evaluation, ward
+  src/auth.tsx      hardcoded demo accounts and the protected-route guard
 docs/round1-specs/  Round 1 technical requirements and design specifications
 docs/phases/        Round 2 build plan, one document per phase
 ```
 
 ## What is real and what is not
 
-- **Real:** the drug interactions and renal rules (clinically genuine, commonly cited). The patient-context re-scoring, the graph collapse and the five-alert cap, which run over the data in the app.
-- **Simulated:** all patients and medicine lists. The name-resolution outputs with their ground-truth labels, and the near-miss labels, are fixtures. No real patient data was used.
-- **Reduced:** 68 generics and 89 interaction rules, expanding to 195 drug pairs, rather than a full reference set.
+- **Real:** the pipeline's name resolution, shown line by line in the app, and the evaluation numbers from the organisers' scorer. The standard EHR check is a real reproduction run over the same tables.
+- **Simulated:** all patients and medicine lists (the synthetic H4 pack). No real patient data was used.
+- **Not built yet:** rules, context severity, collapse and the alert budget. The app shows those panels as not built rather than inventing them.
+- **Reduced:** the pack's tables are simplified subsets (496 generics, 2,196 interaction pairs, 169 renal tiers), authoritative for this exercise and not a clinical reference.
 
 ## Safety framing
 
 - The app never describes a patient as safe. When nothing is flagged it says no issue was found in what was seen.
 - A medicine name it cannot resolve is shown as unresolved and marked as not checked.
-- A permanent footer on every patient states that the list may be incomplete and that a clinician decides.
+- A persistent trust panel on every patient says what was checked and what was not, that the list may be incomplete and that a clinician decides, and records a handoff for pharmacist review.
 
 ## Design
 

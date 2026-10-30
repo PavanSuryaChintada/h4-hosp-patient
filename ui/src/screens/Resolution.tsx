@@ -1,118 +1,95 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { DRUG } from '../data/drugs';
-import { METRICS, RESOLUTION_ROWS } from '../data/engine';
-import type { Method } from '../data/patients';
-import { Segmented } from '../components/ui';
-import { Kpi, Meter, StackedBar, Units, repeat } from '../components/viz';
+import { useMemo, useState } from 'react';
+import type { Medication, Method } from '../data/contract';
+import { METHOD_LABEL, METHOD_TAG, conf, pct } from '../data/format';
+import { useData } from '../data/load';
+import { Kpi } from '../components/viz';
+import { PatientLink, Segmented } from '../components/ui';
 
-type Filter = 'all' | Method;
-const TAG: Record<Method, string> = { exact: 'tag-ok', fuzzy: 'tag-action', abstained: 'tag-warn' };
-const METHOD_COLOR: Record<Method, string> = { exact: 'var(--ok)', fuzzy: 'var(--action)', abstained: 'var(--warn)' };
+type Filter = 'all' | Method | 'mismatch';
+const ORDER: Method[] = ['exact', 'synonym', 'parts', 'prefix', 'fuzzy', 'non_drug', 'abstained'];
+const PAGE = 100;
 
-// Confidence histogram, 0.50 to 1.00 in steps of 0.05, stacked by method.
-const BINS = Array.from({ length: 10 }, (_, i) => 0.5 + i * 0.05);
-const binOf = (c: number) => Math.min(9, Math.max(0, Math.floor((c - 0.5) / 0.05 + 1e-9)));
-const hist = BINS.map((_, i) => {
-  const inBin = RESOLUTION_ROWS.filter((r) => binOf(r.confidence) === i);
-  return { exact: inBin.filter((r) => r.method === 'exact').length, fuzzy: inBin.filter((r) => r.method === 'fuzzy').length, abstained: inBin.filter((r) => r.method === 'abstained').length };
-});
-const histMax = Math.max(...hist.map((h) => h.exact + h.fuzzy + h.abstained));
-
-function ConfidenceHistogram() {
-  const H = 96;
-  return (
-    <div className="chist" role="img" aria-label="Confidence distribution of every resolved line, by method">
-      <div className="chist-bars">
-        {hist.map((h, i) => (
-          <div key={i} className="chist-col" title={`${BINS[i].toFixed(2)}–${(BINS[i] + 0.05).toFixed(2)}: ${h.exact + h.fuzzy + h.abstained}`}>
-            {(['abstained', 'fuzzy', 'exact'] as Method[]).map((m) => h[m] > 0 && (
-              <span key={m} style={{ height: (h[m] / histMax) * H, background: METHOD_COLOR[m] }} />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="chist-axis mono"><span>0.50</span><span>0.75</span><span>1.00</span></div>
-    </div>
-  );
+function LabelCheck({ m }: { m: Medication }) {
+  if (!m.truth) return <span className="ink-3">no label</span>;
+  if (m.truth.match) return <span className="ink-3">matches</span>;
+  return <span style={{ color: 'var(--critical)' }}>label: {m.truth.generics?.join(' ; ') || 'not a medicine'}</span>;
 }
 
 export function Resolution() {
+  const { x } = useData();
   const [filter, setFilter] = useState<Filter>('all');
-  const r = METRICS.resolution;
-  const pct = Math.round((r.fuzzyCorrect / r.fuzzy) * 100);
-  const rows = filter === 'all' ? RESOLUTION_ROWS : RESOLUTION_ROWS.filter((x) => x.method === filter);
+  const [shown, setShown] = useState(PAGE);
+  const r = x.resolution;
+  const split = x.evaluation.report?.splits.holdout;
+  const dev = x.evaluation.report?.splits.dev;
+
+  const all = useMemo(() => x.patients.flatMap((p) => p.medications.map((m) => ({ id: p.id, m }))), [x.patients]);
+  const rows = useMemo(() => all.filter(({ m }) => filter === 'all'
+    || (filter === 'mismatch' ? m.truth !== null && !m.truth.match : m.method === filter)), [all, filter]);
 
   return (
     <div className="content">
       <div className="page-head">
         <h1 className="display">Name resolution</h1>
-        <p className="meta">Every medicine string in the cohort, exactly as written on the slip, and what it resolved to.</p>
+        <p className="meta">Every line in the {x.source.split} split, exactly as written, and what the pipeline resolved it to.</p>
       </div>
 
       <div className="kpis kpis-3">
-        <div data-tour="resolution-stat">
-          <Kpi label="Accuracy on misspelled inputs" value={`${pct}%`}
-            sub={<><span className="mono">{r.fuzzyCorrect}</span> of <span className="mono">{r.fuzzy}</span> fuzzy matches agree with the ground-truth labels. Abstentions are not counted as correct.</>}>
-            <Units label={`${r.fuzzyCorrect} correct, ${r.fuzzy - r.fuzzyCorrect} wrong`} size={8} gap={2} columns={28}
-              items={[...repeat(r.fuzzyCorrect, { color: 'var(--action)' }), ...repeat(r.fuzzy - r.fuzzyCorrect, { color: 'var(--critical)', hollow: true, title: 'Wrong match' })]} />
-          </Kpi>
-        </div>
-        <Kpi label="How each line was matched" value={<>{r.total} <span className="kpi-of">lines</span></>}>
-          <StackedBar label="Match method" height={14} segments={[
-            { name: 'Exact', value: r.exact, color: METHOD_COLOR.exact },
-            { name: 'Fuzzy', value: r.fuzzy, color: METHOD_COLOR.fuzzy },
-            { name: 'Abstained', value: r.abstained, color: METHOD_COLOR.abstained },
-          ]} />
-        </Kpi>
-        <Kpi label="Confidence" value={<>{r.abstained} <span className="kpi-of">too close to call</span></>}>
-          <ConfidenceHistogram />
-        </Kpi>
+        <Kpi label="Accuracy on misspelled lines, holdout split"
+          value={split ? pct(split.resolution.misspelled_accuracy) : <span className="kpi-of">no report</span>}
+          sub={split ? <>All lines: <span className="mono">{pct(split.resolution.accuracy)}</span> of <span className="mono">{split.resolution.lines}</span>. Dev split, misspelled: <span className="mono">{dev ? pct(dev.resolution.misspelled_accuracy) : '—'}</span>. From <span className="mono">{x.evaluation.path}</span>.</> : x.evaluation.unavailable} />
+        <Kpi label="Resolved to the wrong medicine, holdout split"
+          value={split ? <>{split.resolution.false_resolutions} <span className="kpi-of">lines</span></> : '—'}
+          sub={<>A confident wrong answer is worse than an abstention, so the resolver abstains when two candidates are too close.</>} />
+        <Kpi label="Marked for a manual check, all exported lines"
+          value={<>{r.by_method.abstained ?? 0} <span className="kpi-of">of {r.lines}</span></>}
+          sub={<>Never dropped: shown as "could not resolve, verify manually" wherever the line appears.</>} />
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <Segmented label="Filter by method" value={filter} onChange={setFilter} segments={[
-          { value: 'all', label: 'All', count: r.total },
-          { value: 'exact', label: 'Exact', count: r.exact },
-          { value: 'fuzzy', label: 'Fuzzy', count: r.fuzzy },
-          { value: 'abstained', label: 'Abstained', count: r.abstained },
+      <div className="queue-tools">
+        <Segmented label="Filter by how the line was resolved" value={filter} onChange={(f) => { setFilter(f); setShown(PAGE); }} segments={[
+          { value: 'all', label: 'All', count: r.lines },
+          ...ORDER.filter((mth) => r.by_method[mth]).map((mth) => ({ value: mth as Filter, label: METHOD_LABEL[mth], count: r.by_method[mth] })),
+          ...(r.label_mismatches !== null ? [{ value: 'mismatch' as Filter, label: 'Label disagrees', count: r.label_mismatches }] : []),
         ]} />
       </div>
 
       <div className="panel">
         <table className="t">
           <colgroup>
-            <col style={{ width: 96 }} /><col style={{ width: 240 }} /><col style={{ width: 280 }} />
-            <col style={{ width: 152 }} /><col style={{ width: 120 }} /><col />
+            <col style={{ width: 144 }} /><col style={{ width: 280 }} /><col style={{ width: 280 }} />
+            <col style={{ width: 104 }} /><col style={{ width: 168 }} /><col />
           </colgroup>
           <thead>
-            <tr><th>Patient</th><th>As written</th><th>Resolved</th><th>Confidence</th><th>Method</th><th>Ground truth</th></tr>
+            <tr><th>Patient</th><th>As written</th><th>Resolved to</th><th className="num">Confidence</th><th>How</th><th>Training label</th></tr>
           </thead>
           <tbody>
-            {rows.map((x, i) => (
-              <tr key={i}>
-                <td className="mono"><Link to={`/app/patient/${x.patient}`}>{x.patient}</Link></td>
-                <td className="mono ink-2">"{x.raw}"</td>
-                <td className="mono" style={{ color: x.code ? undefined : 'var(--warn)' }}>
-                  {x.code ? DRUG[x.code].name : `could not resolve: ${x.candidates!.map(([c, s]) => `${c} ${s.toFixed(2)}`).join(' / ')}`}
+            {rows.slice(0, shown).map(({ id, m }) => (
+              <tr key={`${id}-${m.index}`}>
+                <td><PatientLink id={id} /></td>
+                <td className="mono ink-2 cell-clip" title={m.raw}>"{m.raw}"</td>
+                <td className="mono cell-clip" style={{ color: m.method === 'abstained' ? 'var(--warn)' : undefined }}>
+                  {m.method === 'abstained' ? `could not resolve${m.candidates.length ? `: ${m.candidates.map(([g, s]) => `${g} ${conf(s)}`).join(' / ')}` : ''}`
+                    : m.generics.join(' ; ') || <span className="ink-3">not a medicine</span>}
                 </td>
+                <td className="num">{conf(m.confidence)}</td>
                 <td>
-                  <span className="cell-conf">
-                    <Meter value={x.confidence} width={72} color={METHOD_COLOR[x.method]} />
-                    <span className="mono">{x.confidence.toFixed(2)}</span>
-                  </span>
+                  <span className={`tag ${METHOD_TAG[m.method]}`}>{METHOD_LABEL[m.method]}</span>
+                  {m.combination === 'brand' && <span className="tag tag-action" style={{ marginLeft: 4 }}>combination</span>}
                 </td>
-                <td><span className={`tag ${TAG[x.method]}`}>{x.method}</span></td>
-                <td>
-                  {x.method === 'abstained' ? <span className="ink-3">sent to manual check</span>
-                    : x.truth ? <span style={{ color: 'var(--critical)' }}>wrong: was {DRUG[x.truth].name}</span>
-                      : <span className="ink-3">matches</span>}
-                </td>
+                <td><LabelCheck m={m} /></td>
               </tr>
             ))}
           </tbody>
         </table>
+        {rows.length === 0 && <p className="empty">No line in this group.</p>}
       </div>
+      {rows.length > shown && (
+        <div className="more">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShown((n) => n + PAGE)}>Show {Math.min(PAGE, rows.length - shown)} more</button>
+          <span className="meta">Showing <span className="mono">{shown}</span> of <span className="mono">{rows.length}</span></span>
+        </div>
+      )}
     </div>
   );
 }

@@ -51,3 +51,26 @@ def test_override_patterns_show_what_is_overridden_most_and_why() -> None:
         ("interaction", 3, 2), ("renal_dose", 1, 1)]
     assert patterns[0].reasons == (("intended therapy", 2),)
     assert patterns[1].rate == 1.0
+
+
+@pytest.mark.parametrize(("role", "entry", "allowed"), [
+    ("nurse", "admit", True), ("nurse", "medication_list", True), ("nurse", "egfr", False),
+    ("nurse", "abha_pull", True), ("prescriber", "abha_pull", False), ("lab", "abha_pull", False),
+    ("lab", "egfr", True), ("lab", "medication_list", False),
+    ("pharmacist", "confirm_name", True), ("pharmacist", "egfr", False),
+    ("prescriber", "admit", False), ("prescriber", "confirm_name", False),
+])
+def test_who_may_enter_what(role: str, entry: str, allowed: bool) -> None:
+    from medsafe.workflow import check_entry
+    if allowed:
+        check_entry(role, entry)
+    else:
+        with pytest.raises(NotAllowed):
+            check_entry(role, entry)
+
+
+def test_a_lab_technician_sees_alerts_and_acts_on_none() -> None:
+    assert check(event("lab", "shown"))
+    for kind in ("accept", "override", "defer", "escalate"):
+        with pytest.raises(NotAllowed):
+            check(event("lab", kind, OVERRIDE_REASONS[0] if kind == "override" else None))

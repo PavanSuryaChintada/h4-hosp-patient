@@ -1,26 +1,21 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { DEMO_USERS, store, TOUR_PENDING_KEY, TOUR_SEEN_KEY, useAuth, type DemoUser } from '../auth';
-import { METRICS } from '../data/engine';
-import { NEAR_MISS } from '../data/evaluation';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { DEMO_USERS, useAuth, type DemoUser } from '../auth';
 
 export function Login() {
   const { user, signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [params] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [failed, setFailed] = useState(false);
-  const [tour, setTour] = useState(params.get('tour') === '1' || store.get(TOUR_SEEN_KEY) !== '1');
 
-  const from = (location.state as { from?: string } | null)?.from ?? '/app';
-  if (user) return <Navigate to={from} replace />;
+  const from = (location.state as { from?: string } | null)?.from;
+  if (user) return <Navigate to={from ?? user.home} replace />;
 
   const enter = (u: DemoUser | null) => {
     if (!u) { setFailed(true); return; }
-    if (tour) store.set(TOUR_PENDING_KEY, '1');
-    navigate(from, { replace: true });
+    navigate(from ?? u.home, { replace: true });
   };
 
   const onSubmit = (e: FormEvent) => {
@@ -37,7 +32,7 @@ export function Login() {
   return (
     <div className="login">
       <main className="login-main">
-        <Link to="/" className="lp-brand"><span className="brand-mark" aria-hidden="true" />Medsafe</Link>
+        <span className="lp-brand"><span className="brand-mark" aria-hidden="true" />Medsafe</span>
 
         <div className="login-form-wrap">
           <h1 className="display">Sign in</h1>
@@ -57,10 +52,6 @@ export function Login() {
                 That email and password do not match a demo account. Pick an account below to fill both in.
               </p>
             )}
-            <label className="check">
-              <input type="checkbox" checked={tour} onChange={(e) => setTour(e.target.checked)} />
-              Start the guided walkthrough after signing in
-            </label>
             <button type="submit" className="btn btn-primary btn-block">Sign in</button>
           </form>
 
@@ -82,22 +73,20 @@ export function Login() {
           </section>
         </div>
 
-        <p className="login-foot">Prototype on a simulated dataset. No real patient data. <Link to="/">Back to the overview</Link></p>
+        <p className="login-foot">Prototype on the synthetic H4 dataset. No real patient data.</p>
       </main>
 
       <aside className="login-side" aria-label="What you will see">
         <div className="login-side-inner">
           <h2 className="lp-h3">What you will see</h2>
           <ol className="login-list">
-            <li><strong>A queue of 40 prescriptions</strong> ranked by how urgently each needs a change.</li>
-            <li><strong>Patient 2291</strong>, whose eleven raw warnings collapse into three alerts and one clear action.</li>
-            <li><strong>The slip as written</strong> next to what each line resolved to, including the one it would not guess.</li>
-            <li><strong>The evaluation</strong>: alert volume and near-miss recall reported side by side, misses included.</li>
+            <li><strong>A ward, end to end.</strong> A nurse admits a patient, the lab adds eGFR, the pharmacist confirms names, the prescriber decides on each alert.</li>
+            <li><strong>One patient, two checks.</strong> A switch flips the same list between a standard EHR check and Medsafe.</li>
+            <li><strong>Four ways a standard check fails</strong>, each on a real patient from the training set.</li>
+            <li><strong>The list as written</strong> next to what each line resolved to, including the ones it would not guess.</li>
+            <li><strong>The evaluation</strong> from the organisers' scorer, misses included.</li>
           </ol>
-          <dl className="login-figs">
-            <div><dt>Alerts per patient</dt><dd className="mono">{METRICS.alertsBefore.toFixed(1)} to {METRICS.alertsAfter.toFixed(1)}</dd></div>
-            <div><dt>Near-miss recall</dt><dd className="mono">{NEAR_MISS.caught} / {NEAR_MISS.seeded}</dd></div>
-          </dl>
+          <p className="login-note">Every check runs the real pipeline in Python, on the pack's data or on the patient you enter. The browser computes nothing.</p>
         </div>
       </aside>
     </div>
