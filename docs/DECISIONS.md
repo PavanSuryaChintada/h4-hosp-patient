@@ -166,6 +166,12 @@ Chosen policy: the setting with the best official primary score whose false-reso
 
 **Re-run after Phase 3.** With no alerts, a false resolution costs only its own line. Once alerts exist it can also raise a false alert (a full noise unit, a precision hit, and a missed true issue), so the trade-off changes.
 
+**Re-run after Phase 3: the optimum did not move.** All 140 settings were scored on the full pipeline's alerts (docs/sweep.md), and the choice is still 0.45 / 0.00 / 5.
+- **Thresholds from 0.30 to 0.45 all score 1.0000 on dev.** Below 0.45, one dev line resolves wrongly (rate 0.0001), and it raises no false alert. The tie-break already takes the strictest setting on that plateau, which is the most abstention that costs nothing.
+- **Above 0.45 the score falls steadily**, to 0.8624 at 0.72.
+- **Abstaining is not cheap.** The expectation was that abstaining costs only the resolution component. An abstained line also hides every true issue involving its drug, so it costs serious recall (weight 0.40). The fall to 0.8624 is mostly that: resolution accuracy alone could explain at most about 0.009 of it.
+- **Dev cannot price a wrong resolution.** No wrong resolution on dev raised a false alert at any setting, because dev is in-sample for the synonym list. The asymmetry is real on unseen spellings, but dev holds no evidence that would move the threshold, so it stays.
+
 ## D-017 Where the resolver departs from the Phase 2 spec
 
 Each change came from a dev failure and is general, not a patch for one string:
