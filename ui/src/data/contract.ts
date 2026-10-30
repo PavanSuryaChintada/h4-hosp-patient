@@ -149,6 +149,11 @@ export type Cards = {
   alert_fatigue: {
     patient_id: string; ehr_alerts: number; serious_labelled: number; serious_raised: number; missed: Label[];
   } | null;
+  /** The home page's patient: standard-check alerts against Medsafe actions, and the serious labels each raised. */
+  landing: {
+    patient_id: string; ehr_alerts: number; actions: number; serious_labelled: number;
+    serious_ehr: number; serious_medsafe: number; missed_by_ehr: Label[];
+  } | null;
 };
 
 /** The organisers' evaluate.py report, unchanged. */
@@ -287,6 +292,11 @@ export type Export = {
     patients_with_lines_to_verify: number; label_mismatches: number | null;
   };
   demo: { pins: Pin[]; cards: Cards } | null;
+  /** Rows in each of the pack's reference tables. */
+  reference: {
+    drugs: number; combinations: number; interactions: number; renal_rules: number;
+    duplicate_groups: number; contraindications: number; conditions: number;
+  };
   ehr_reference: {
     cohort: {
       patients: number; alerts: number; alerts_per_patient: number;

@@ -16,9 +16,10 @@ import { Resolution } from './screens/Resolution';
 import { Patterns, WardAdmit, WardList, WardRecordScreen } from './screens/Ward';
 import './styles.css';
 
+// A link to a home-page section (/#problem) scrolls there instead; Home handles the hash.
 function ScrollTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => { if (!window.location.hash) window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
 

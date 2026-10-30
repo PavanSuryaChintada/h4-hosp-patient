@@ -47,3 +47,7 @@ export const conf = (n: number) => n.toFixed(2);
 export const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 export const num = (n: number, digits = 2) => n.toFixed(digits);
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+/** A count as a capitalised word for headlines ("Seven warnings"); digits past twelve. */
+export const countWord = (n: number) => WORDS[n] ?? String(n);

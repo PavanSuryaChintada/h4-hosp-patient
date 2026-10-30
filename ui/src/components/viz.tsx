@@ -34,6 +34,24 @@ const PATHS: Record<string, string> = {
   alert: 'M12 3l10 18H2z M12 10v5 M12 17.5v.5',
   person: 'M12 4a3.5 3.5 0 1 1 0 7a3.5 3.5 0 0 1 0-7z M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5',
   arrow: 'M4 12h15 M14 7l5 5l-5 5',
+  slip: 'M6 3h9l3 3v15H6z M15 3v3h3 M9 10h6 M9 14h6 M9 18h4',
+  resolve: 'M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 0 1 0-13z M15.5 15.5L21 21 M8 10.5h5',
+  rules: 'M4 6h2 M9 6h11 M4 12h2 M9 12h11 M4 18h2 M9 18h11',
+  context: 'M4 17a8 8 0 0 1 16 0 M12 17l4-5 M4 20h16',
+  collapse: 'M3 4h4v4H3z M17 4h4v4h-4z M10 16h4v4h-4z M7 6h10 M6 8l5 8 M18 8l-5 8',
+  screen: 'M3 4h18v12H3z M8 20h8 M12 16v4 M6 8h8 M6 12h5',
+  database: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3v12c0 1.7-3.6 3-8 3s-8-1.3-8-3z M4 6c0 1.7 3.6 3 8 3s8-1.3 8-3 M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+  chart: 'M4 20V11 M10 20V5 M16 20v-6 M3 20h18',
+  question: 'M12 3a9 9 0 1 1 0 18a9 9 0 0 1 0-18z M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.5V14 M12 17v.5',
+  commit: 'M3 12h6 M15 12h6 M12 9a3 3 0 1 1 0 6a3 3 0 0 1 0-6z',
+  box: 'M4 7l8-4l8 4v10l-8 4l-8-4z M4 7l8 4l8-4 M12 11v10',
+  globe: 'M12 3a9 9 0 1 1 0 18a9 9 0 0 1 0-18z M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18',
+  browser: 'M3 4h18v16H3z M3 8h18 M6 6h1 M9 6h1',
+  check: 'M4 12l5 5L20 6',
+  queue: 'M4 5h16 M4 10h16 M4 15h10 M4 20h7',
+  toggle: 'M3 7h18v10H3z M12 7v10 M15 12h3',
+  graph: 'M5 5h3v3H5z M16 5h3v3h-3z M10.5 16h3v3h-3z M8 6.5h8 M7 8l4 8 M17 8l-4 8',
+  lock: 'M6 11h12v10H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3',
 };
 
 export type IconName = keyof typeof PATHS;
@@ -45,6 +63,10 @@ export function Icon({ name, size = 20, className }: { name: IconName; size?: nu
       <path d={PATHS[name]} />
     </svg>
   );
+}
+
+export function IconTile({ name, tone = 'action', size = 40 }: { name: IconName; tone?: 'action' | 'ink' | 'warn' | 'critical' | 'ok'; size?: number }) {
+  return <span className={`icon-tile tone-${tone}`} style={{ width: size, height: size }}><Icon name={name} size={Math.round(size * 0.5)} /></span>;
 }
 
 export function Kpi({ label, value, children, sub }: { label: string; value: ReactNode; children?: ReactNode; sub?: ReactNode }) {

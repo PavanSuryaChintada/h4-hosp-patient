@@ -549,9 +549,42 @@ def pick_no_issue(patients: Sequence[Patient], labels: TruthIndex) -> dict[str, 
     return min(candidates, key=lambda c: c[0])[1] if candidates else None
 
 
+def pick_landing(views: Sequence[dict[str, Any]], results: Mapping[str, PatientResult],
+                 ehr: Mapping[str, EhrResult], labels: TruthIndex) -> dict[str, Any] | None:
+    """The home page's patient: the most standard-check alerts given up for Medsafe's actions.
+
+    Only patients where the collapse covers every serious interaction and the standard check
+    misses a serious labelled issue that Medsafe raises, so one list shows both the noise and
+    the miss. Most alerts given up first, then most serious interactions covered, then the
+    shortest list, then patient id.
+    """
+    candidates = []
+    for view in views:
+        pid = view["id"]
+        collapse, actions = view["medsafe"]["collapse"], view["compare"]["medsafe"]["actions"]
+        if not collapse or not collapse["chosen"] or actions is None:
+            continue
+        serious_edges = [e for e in collapse["edges"] if e["severity"] in SERIOUS]
+        if not all(e["cleared"] for e in serious_edges):
+            continue
+        serious = [i for i in labels.issues.get(pid, []) if i.severity in SERIOUS]
+        found = [i for i in serious if medsafe_alert(results[pid], _label(i)) is not None]
+        missed = [i for i in found if _raised_by(ehr[pid], i) is None]
+        if not missed:
+            continue
+        alerts = len(ehr[pid].alerts)
+        candidates.append(((actions - alerts, -len(serious_edges), len(view["medications"]), pid),
+                           {"patient_id": pid, "ehr_alerts": alerts, "actions": actions,
+                            "serious_labelled": len(serious),
+                            "serious_ehr": sum(1 for i in serious if _raised_by(ehr[pid], i) is not None),
+                            "serious_medsafe": len(found),
+                            "missed_by_ehr": [_label(i) for i in sorted(missed, key=lambda i: (_rank(i), sorted(i.drugs)))]}))
+    return min(candidates, key=lambda c: c[0])[1] if candidates else None
+
+
 def demo_view(result: PipelineResult, dataset: Dataset, ehr: Mapping[str, EhrResult],
-              labels: TruthIndex) -> dict[str, Any]:
-    """The pinned demo patients and the four /why cards."""
+              labels: TruthIndex, views: Sequence[dict[str, Any]] = ()) -> dict[str, Any]:
+    """The pinned demo patients, the four /why cards and the home page's patient."""
     patients = [r.patient for r in result.patients]
     hero = pick_collapse_hero(patients, labels)
     pair = pick_egfr_pair(patients, dataset, ehr, labels)
@@ -574,6 +607,8 @@ def demo_view(result: PipelineResult, dataset: Dataset, ehr: Mapping[str, EhrRes
     ]
     cards = {"brand_chaos": pick_brand_chaos(patients, ehr, labels), "hidden_generic": hidden,
              "egfr_pair": pair, "alert_fatigue": pick_alert_fatigue(patients, ehr, labels)}
+    by_result = {r.patient.patient_id: r for r in result.patients}
+    cards["landing"] = pick_landing(views, by_result, ehr, labels)
     # Which Medsafe alert raises each card's labelled issue, by index into that patient's alerts,
     # matched here so the UI never matches alerts to labels itself.
     by_id = {r.patient.patient_id: r for r in result.patients}
@@ -744,6 +779,14 @@ def latest_challenger(reports_dir: Path = REPORTS_DIR) -> dict[str, Any] | None:
 
 # ---- the file ----------------------------------------------------------------------------------
 
+def reference_counts(dataset: Dataset) -> dict[str, int]:
+    """How many rows each of the pack's reference tables holds, for the architecture figure."""
+    return {"drugs": len(dataset.drugs), "combinations": len(dataset.combinations),
+            "interactions": len(dataset.interactions), "renal_rules": len(dataset.renal_rules),
+            "duplicate_groups": len(dataset.duplicate_groups),
+            "contraindications": len(dataset.contraindications), "conditions": len(dataset.conditions)}
+
+
 def build_export(dataset: Dataset, result: PipelineResult, truth: Truth | None,
                  reports_dir: Path = REPORTS_DIR, score_ehr: bool = True) -> dict[str, Any]:
     """Assemble the UI data file.
@@ -779,7 +822,8 @@ def build_export(dataset: Dataset, result: PipelineResult, truth: Truth | None,
         "workflow": workflow_view(dataset),
         "resolution": resolution_summary(result, patients),
         "cohort": cohort_view(patients, ehr),
-        "demo": demo_view(result, dataset, ehr, labels) if labels else None,
+        "demo": demo_view(result, dataset, ehr, labels, patients) if labels else None,
+        "reference": reference_counts(dataset),
         "ehr_reference": {"cohort": ehr_cohort_stats(ehr),
                           "score": score_ehr_reference(dataset, ehr) if score_ehr and truth is not None else None},
         "evaluation": evaluation,

@@ -20,7 +20,7 @@ from medsafe.pipeline import run_pipeline
 from tools.export_ui import SCHEMA_VERSION, build_export, medsafe_view
 
 TOP_LEVEL = {"schema_version", "source", "stages", "settings", "patients", "workflow", "resolution",
-             "cohort", "demo", "ehr_reference", "evaluation", "ml_challenger"}
+             "cohort", "demo", "reference", "ehr_reference", "evaluation", "ml_challenger"}
 
 
 @pytest.fixture(scope="module")

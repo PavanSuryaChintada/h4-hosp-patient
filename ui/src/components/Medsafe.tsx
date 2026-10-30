@@ -136,25 +136,39 @@ export function Actions({ p, d }: { p: PatientView; d?: Decisions }) {
 /**
  * Drugs as nodes, interactions as edges, on fixed positions around an ellipse: no force
  * simulation, so nodes never move between renders. The drugs to review first are filled.
+ * `removed` draws the list once those drugs are reviewed: the edges they clear fade out.
+ * `unchecked` adds the lines the resolver would not guess, as dashed "?" nodes.
  */
-export function AlertGraph({ c, width = 440, height = 260 }: { c: Collapse; width?: number; height?: number }) {
+export function AlertGraph({ c, width = 440, height = 260, removed = false, unchecked = [] }: {
+  c: Collapse; width?: number; height?: number; removed?: boolean; unchecked?: string[];
+}) {
   const order = [...c.chosen, ...c.nodes.filter((n) => !c.chosen.includes(n))];
-  const cx = width / 2, cy = height / 2, rx = width / 2 - 96, ry = height / 2 - 40;
-  const at = new Map(order.map((n, i) => {
-    const t = -Math.PI / 2 + (i / Math.max(order.length, 1)) * Math.PI * 2;
-    return [n, { x: cx + rx * Math.cos(t), y: cy + ry * Math.sin(t), cos: Math.cos(t), sin: Math.sin(t) }];
-  }));
+  const total = Math.max(order.length + unchecked.length, 1);
+  const compact = width < 440;
+  const cx = width / 2, cy = height / 2, rx = compact ? width / 2 - 80 : width / 2 - 96, ry = height / 2 - 40;
+  const pos = (i: number) => {
+    const t = -Math.PI / 2 + (i / total) * Math.PI * 2;
+    return { x: cx + rx * Math.cos(t), y: cy + ry * Math.sin(t), cos: Math.cos(t), sin: Math.sin(t) };
+  };
+  const at = new Map(order.map((n, i) => [n, pos(i)]));
   const serious = (s: string) => s === 'contraindicated' || s === 'major';
   const aria = c.summary ?? `Alert graph: ${order.length} drugs, ${c.edges.length} interactions; no single drug clears two serious ones.`;
+  const label = (p: ReturnType<typeof pos>, text: string, color: string, mono = false) => (
+    <text x={p.x + p.cos * 18} y={p.y + p.sin * 18 + (p.sin > 0.3 ? 8 : p.sin < -0.3 ? 0 : 4)}
+      textAnchor={p.cos > 0.3 ? 'start' : p.cos < -0.3 ? 'end' : 'middle'}
+      fontSize={11} fill={color} fontFamily={mono ? 'var(--mono)' : 'var(--sans)'}>{text}</text>
+  );
 
   return (
     <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={aria} style={{ display: 'block', maxWidth: width, overflow: 'visible' }}>
       {c.edges.map((e) => {
         const p = at.get(e.a)!, q = at.get(e.b)!;
+        // Always drawn, so reviewing the chosen drugs fades the edges out rather than cutting them.
         return (
-          <line key={`${e.a}+${e.b}`} x1={p.x} y1={p.y} x2={q.x} y2={q.y}
+          <line key={`${e.a}+${e.b}`} x1={p.x} y1={p.y} x2={q.x} y2={q.y} className="ag-edge"
             stroke={serious(e.severity) ? 'var(--critical)' : 'var(--ink-3)'}
-            strokeWidth={e.cleared ? 2.5 : serious(e.severity) ? 1.5 : 1} opacity={serious(e.severity) ? 1 : 0.55}>
+            strokeWidth={!removed && e.cleared ? 2.5 : serious(e.severity) ? 1.5 : 1}
+            style={{ opacity: removed && e.cleared ? 0 : serious(e.severity) ? 1 : 0.55 }}>
             <title>{`${e.a} + ${e.b} (${e.severity})`}</title>
           </line>
         );
@@ -162,13 +176,24 @@ export function AlertGraph({ c, width = 440, height = 260 }: { c: Collapse; widt
       {order.map((n) => {
         const p = at.get(n)!;
         const chosen = c.chosen.includes(n);
-        const anchor = p.cos > 0.3 ? 'start' : p.cos < -0.3 ? 'end' : 'middle';
+        const gone = removed && chosen;
         return (
           <g key={n}>
-            <circle cx={p.x} cy={p.y} r={11} fill={chosen ? 'var(--critical)' : 'var(--paper)'}
-              stroke={chosen ? 'var(--critical)' : 'var(--action)'} strokeWidth={1.3} />
-            <text x={p.x + p.cos * 18} y={p.y + p.sin * 18 + (p.sin > 0.3 ? 8 : p.sin < -0.3 ? 0 : 4)} textAnchor={anchor}
-              fontSize={11} fill={chosen ? 'var(--critical)' : 'var(--ink-2)'}>{n}</text>
+            <circle cx={p.x} cy={p.y} r={11} className="ag-node" fill={chosen && !gone ? 'var(--critical)' : 'var(--paper)'}
+              stroke={gone ? 'var(--ink-3)' : chosen ? 'var(--critical)' : 'var(--action)'} strokeWidth={1.3} strokeDasharray={gone ? '3 2' : undefined} />
+            <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={9} fontFamily="var(--mono)" fontWeight={500}
+              fill={chosen && !gone ? '#fff' : gone ? 'var(--ink-3)' : 'var(--ink)'}>{n.slice(0, 3).toUpperCase()}</text>
+            {label(p, gone && !compact ? `${n} (reviewed)` : n, chosen && !gone ? 'var(--critical)' : gone ? 'var(--ink-3)' : 'var(--ink-2)')}
+          </g>
+        );
+      })}
+      {unchecked.map((raw, i) => {
+        const p = pos(order.length + i);
+        return (
+          <g key={`${raw}-${i}`}>
+            <circle cx={p.x} cy={p.y} r={11} fill="var(--paper)" stroke="var(--warn)" strokeWidth={1.3} strokeDasharray="3 2" />
+            <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={9} fontFamily="var(--mono)" fill="var(--warn)">?</text>
+            {label(p, compact ? 'unchecked' : `"${raw}" unchecked`, 'var(--warn)', true)}
           </g>
         );
       })}
