@@ -3,3 +3,5 @@ tests/fixtures/** text eol=lf
 
 # Windows batch files need CRLF to run reliably.
 *.cmd text eol=crlf
+# Shell scripts must keep LF to run on macOS and Linux.
+*.sh text eol=lf
