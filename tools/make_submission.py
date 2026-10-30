@@ -72,8 +72,8 @@ def uncommitted(repo: Path) -> list[str]:
 
 def run_pipeline(clone: Path, pack: Path, out: Path) -> None:
     """The clone's run.py on the test split, writing the two submission files into ``out``."""
-    env = {**os.environ, "MEDSAFE_DATA_DIR": str(pack)}
-    subprocess.run([sys.executable, "run.py", "--split", "test", "--output", str(out)], cwd=clone, env=env, check=True)
+    subprocess.run([sys.executable, "run.py", "--input", str(pack / "data"), "--split", "test", "--output", str(out)],
+                   cwd=clone, check=True)
 
 
 def validate(clone: Path, pack: Path, folder: Path) -> bool:

@@ -64,7 +64,7 @@ pip install -r requirements.txt        # rapidfuzz, pytest
 pip install -r requirements-dev.txt    # pandas and numpy for the organisers' evaluate.py; matplotlib for the graphs
 ```
 
-**2. Put the data in place.** The organisers' pack is not in the zip (their rule). Copy the pack folder, the one holding `evaluate.py`, `baseline/` and `data/`, to `FULL_CODE/data/pack/`, so that `FULL_CODE/data/pack/data/patients_test.csv` exists. Or set `MEDSAFE_DATA_DIR` to wherever the pack is. **No model has to be downloaded**: the pipeline uses none, and the three experimental models train from the pack's data with one command (step 4).
+**2. Put the data in place.** The organisers' pack is not in the zip (their rule). Copy the pack folder, the one holding `evaluate.py`, `baseline/` and `data/`, to `FULL_CODE/data/pack/`, so that `FULL_CODE/data/pack/data/patients_test.csv` exists. (Elsewhere works too: pass `--input <pack>/data` to `run.py` and set `MEDSAFE_DATA_DIR=<pack>` for the `eval` commands.) **No model has to be downloaded**: the pipeline uses none, and the three experimental models train from the pack's data with one command (step 4).
 
 **3. Make and check the submission.**
 
